@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #0e1117;
+    color: #e2e8f0;
+  }
+}
+
+/* Custom Tactical Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0e1117;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a313d;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f4756;
+}
+
+/* Vue Virtual Scroller styles */
+.vue-recycle-scroller {
+  position: relative;
+}
+.vue-recycle-scroller.direction-vertical .vue-recycle-scroller__item-wrapper {
+  width: 100%;
+}
+.vue-recycle-scroller.direction-horizontal .vue-recycle-scroller__item-wrapper {
+  height: 100%;
+}
+.vue-recycle-scroller__item-view {
+  width: 100%;
+}

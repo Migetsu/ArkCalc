@@ -1,0 +1,73 @@
+# ==========================================
+# Зависимости (Dependencies)
+# ==========================================
+node_modules/
+/.pnp
+.pnp.js
+package-lock.json.log
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# ==========================================
+# Сборка и дистрибуция (Build & Production)
+# ==========================================
+dist/
+build/
+out/
+.next/
+.nuxt/
+.vuepress/dist/
+.output/
+.svelte-kit/
+.astro/
+.cache/
+.parcel-cache/
+
+# ==========================================
+# Переменные окружения и секреты (Env & Secrets)
+# ==========================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+
+# ==========================================
+# Логи и временные файлы (Logs & Temp)
+# ==========================================
+logs
+*.log
+npm-debug.log*
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# ==========================================
+# Настройки редакторов и ОС (IDEs & OS)
+# ==========================================
+# macOS
+.DS_Store
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+
+# VS Code (локальные настройки разработчика)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains / WebStorm
+.idea/
+*.iws
+*.iml
+*.ipr
