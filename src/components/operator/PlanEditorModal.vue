@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue';
 import type { OperatorSummary } from '@/types/game';
 import { usePlannerStore } from '@/stores/planner';
 import { useGameDataStore } from '@/stores/gamedata';
+import { useRosterStore } from '@/stores/roster';
 import { calculateOperatorPlanCosts } from '@/services/calculatorEngine';
 import type { OperatorTargetPlan } from '@/services/db';
 import ItemIcon from '@/components/common/ItemIcon.vue';
@@ -27,6 +28,7 @@ const emit = defineEmits<{
 
 const planner = usePlannerStore();
 const gameData = useGameDataStore();
+const rosterStore = useRosterStore();
 
 const localPlan = ref<OperatorTargetPlan>({
   charId: '',
@@ -51,27 +53,49 @@ watch(
   (op) => {
     if (!op) return;
     const existing = planner.plans[op.id];
-    const maxElite = Math.max(0, op.phases.length - 1);
+    const maxEl = Math.max(0, op.phases.length - 1);
     const initialSkillCount = op.skills.length || 1;
 
     if (existing) {
       localPlan.value = JSON.parse(JSON.stringify(existing));
     } else {
+      const rosterOp = rosterStore.roster[op.id];
+      const current = rosterOp
+        ? {
+            elite: rosterOp.elite ?? 0,
+            level: rosterOp.level ?? 1,
+            skills: Array.isArray(rosterOp.skills) && rosterOp.skills.length > 0 ? [...rosterOp.skills] : [7],
+            masteries:
+              Array.isArray(rosterOp.masteries) && rosterOp.masteries.length > 0
+                ? [...rosterOp.masteries]
+                : new Array(initialSkillCount).fill(0),
+            modules: rosterOp.modules ? { ...rosterOp.modules } : {},
+          }
+        : {
+            elite: 0,
+            level: 1,
+            skills: [1],
+            masteries: new Array(initialSkillCount).fill(0),
+            modules: {},
+          };
+
+      // Default target: FULL UPGRADE (as requested)
+      const defaultModules: Record<string, number> = {};
+      if (op.modules) {
+        for (const m of op.modules) {
+          defaultModules[m.id] = 3;
+        }
+      }
+
       localPlan.value = {
         charId: op.id,
-        current: {
-          elite: 0,
-          level: 1,
-          skills: [1],
-          masteries: new Array(initialSkillCount).fill(0),
-          modules: {},
-        },
+        current,
         target: {
-          elite: maxElite,
-          level: op.maxLevels[maxElite] || 50,
+          elite: maxEl,
+          level: op.maxLevels[maxEl] || (op.rarity === 6 ? 90 : (op.rarity === 5 ? 80 : 70)),
           skills: [7],
-          masteries: new Array(initialSkillCount).fill(0),
-          modules: {},
+          masteries: op.rarity >= 4 ? new Array(initialSkillCount).fill(3) : new Array(initialSkillCount).fill(0),
+          modules: defaultModules,
         },
       };
     }

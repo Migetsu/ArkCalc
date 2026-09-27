@@ -2,15 +2,19 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type {
   OperatorSummary,
+  OperatorSkill,
+  SkillLevelDetail,
   ItemSummary,
   WorkshopRecipe,
   GameConstants,
   Profession,
   OperatorModule,
+  ModuleStageDetail,
   RangeInfo,
   OperatorSkin,
 } from '@/types/game';
 import { getAvatarUrl } from '@/utils/imageUrl';
+import { formatSkillDescription } from '@/utils/skillUtils';
 import {
   getLocalizedItemName,
   isCraftResource,
@@ -23,7 +27,7 @@ import { CN_OPERATOR_TRANSLATIONS } from '@/data/cnOperatorTranslations';
 
 const CACHE_DB_NAME = 'ARKCalcCacheDB';
 const CACHE_STORE_NAME = 'gamedata_cache';
-const CACHE_KEY = 'ark_cleaned_gamedata_v15_playable';
+const CACHE_KEY = 'ark_cleaned_gamedata_v20_lang_cn';
 
 // Open simple IndexedDB for game data cache
 function openCacheDb(): Promise<IDBDatabase> {
@@ -84,19 +88,19 @@ export const useGameDataStore = defineStore('gamedata', () => {
   const constants = ref<GameConstants | null>(null);
   const ranges = ref<Record<string, RangeInfo>>({});
 
-  function getSavedLanguage(): 'ru' | 'en' {
+  function getSavedLanguage(): 'ru' | 'en' | 'cn' {
     try {
       const saved = localStorage.getItem('ark_item_language');
-      if (saved === 'ru' || saved === 'en') return saved;
+      if (saved === 'ru' || saved === 'en' || saved === 'cn') return saved;
     } catch {
       // ignore
     }
     return 'en';
   }
 
-  const itemLanguage = ref<'ru' | 'en'>(getSavedLanguage());
+  const itemLanguage = ref<'ru' | 'en' | 'cn'>(getSavedLanguage());
 
-  function setItemLanguage(lang: 'ru' | 'en') {
+  function setItemLanguage(lang: 'ru' | 'en' | 'cn') {
     itemLanguage.value = lang;
     try {
       localStorage.setItem('ark_item_language', lang);
@@ -249,10 +253,10 @@ export const useGameDataStore = defineStore('gamedata', () => {
       }
       recipes.value = parsedRecipes;
 
-      // 3. uniequip_table.json
+      // 3. uniequip_table.json & battle_equip_table.json
       loadingStatus.value = 'Загрузка модулей оперативников...';
       loadingProgress.value = 45;
-      const [uniequipData, enUniequipData] = await Promise.all([
+      const [uniequipData, enUniequipData, battleEquipData, enBattleEquipData] = await Promise.all([
         fetchJsonWithFallback(
           `${rawBase}/uniequip_table.json`,
           `${jsdelivrBase}/uniequip_table.json`
@@ -260,6 +264,14 @@ export const useGameDataStore = defineStore('gamedata', () => {
         fetchJsonWithFallback(
           `${rawEnBase}/uniequip_table.json`,
           `${jsdelivrEnBase}/uniequip_table.json`
+        ).catch(() => ({})),
+        fetchJsonWithFallback(
+          `${rawBase}/battle_equip_table.json`,
+          `${jsdelivrBase}/battle_equip_table.json`
+        ).catch(() => ({})),
+        fetchJsonWithFallback(
+          `${rawEnBase}/battle_equip_table.json`,
+          `${jsdelivrEnBase}/battle_equip_table.json`
         ).catch(() => ({})),
       ]);
       const equipDict = uniequipData.equipDict || {};
@@ -396,9 +408,23 @@ export const useGameDataStore = defineStore('gamedata', () => {
         });
       }
 
-      // 7. character_table.json
-      loadingStatus.value = 'Загрузка данных оперативников...';
+      // 7. skill_table.json
+      loadingStatus.value = 'Загрузка базы навыков (Skills)...';
       loadingProgress.value = 85;
+      const [skillData, enSkillData] = await Promise.all([
+        fetchJsonWithFallback(
+          `${rawBase}/skill_table.json`,
+          `${jsdelivrBase}/skill_table.json`
+        ).catch(() => ({})),
+        fetchJsonWithFallback(
+          `${rawEnBase}/skill_table.json`,
+          `${jsdelivrEnBase}/skill_table.json`
+        ).catch(() => ({})),
+      ]);
+
+      // 8. character_table.json
+      loadingStatus.value = 'Загрузка данных оперативников...';
+      loadingProgress.value = 90;
       const [charData, enCharData] = await Promise.all([
         fetchJsonWithFallback(
           `${rawBase}/character_table.json`,
@@ -444,18 +470,74 @@ export const useGameDataStore = defineStore('gamedata', () => {
           lvlUpCost: (s.lvlUpCost || []).map((c: any) => ({ id: c.id, count: c.count })),
         }));
 
-        // Clean skills & masteries
-        const skills = (char.skills || []).map((s: any) => {
+        // Clean skills & masteries with full level details
+        const skills: OperatorSkill[] = (char.skills || []).map((s: any) => {
           const masteries = (s.levelUpCostCond || []).map((m: any, mIdx: number) => ({
             masteryLevel: mIdx + 1,
             costs: (m.levelUpCost || []).map((c: any) => ({ id: c.id, count: c.count })),
           }));
 
+          const rawSkill = skillData[s.skillId] || {};
+          const enRawSkill = enSkillData[s.skillId] || {};
+
+          const skillName = enRawSkill.levels?.[0]?.name || rawSkill.levels?.[0]?.name || s.skillId;
+          const iconId =
+            s.overrideSkillIcon ||
+            s.overridePrefabKey ||
+            rawSkill.iconId ||
+            rawSkill.levels?.[0]?.prefabId ||
+            s.skillId;
+
+          const rawLevels = rawSkill.levels || [];
+          const enLevels = enRawSkill.levels || [];
+          const levelsCount = rawLevels.length;
+
+          const levels: SkillLevelDetail[] = [];
+          for (let lvlIdx = 0; lvlIdx < levelsCount; lvlIdx++) {
+            const rawLvl = rawLevels[lvlIdx] || {};
+            const enLvl = enLevels[lvlIdx] || {};
+
+            const descTemplate = enLvl.description || rawLvl.description || '';
+            const bb = enLvl.blackboard || rawLvl.blackboard || [];
+            const formattedDesc = formatSkillDescription(descTemplate, bb);
+
+            const isInfinite =
+              Boolean(rawLvl.description && (
+                rawLvl.description.includes('持续时间无限') ||
+                rawLvl.description.includes('无限持续时间') ||
+                rawLvl.description.includes('持续时间变为无限')
+              )) ||
+              Boolean(enLvl.description && (
+                enLvl.description.toLowerCase().includes('unlimited duration') ||
+                enLvl.description.toLowerCase().includes('duration becomes infinite') ||
+                enLvl.description.toLowerCase().includes('infinite duration')
+              ));
+
+            levels.push({
+              level: lvlIdx + 1,
+              name: enLvl.name || rawLvl.name || skillName,
+              nameCn: rawLvl.name || undefined,
+              rangeId: rawLvl.rangeId || undefined,
+              description: formattedDesc,
+              descriptionCn: rawLvl.description ? formatSkillDescription(rawLvl.description, rawLvl.blackboard || []) : undefined,
+              skillType: rawLvl.skillType || 'MANUAL',
+              durationType: rawLvl.durationType || 'NONE',
+              duration: rawLvl.duration ?? 0,
+              isInfinite,
+              spType: rawLvl.spData?.spType || 'INCREASE_WITH_TIME',
+              spCost: rawLvl.spData?.spCost ?? 0,
+              initSp: rawLvl.spData?.initSp ?? 0,
+            });
+          }
+
           return {
             skillId: s.skillId,
-            name: s.skillId,
-            iconId: s.overrideSkillIcon || s.skillId,
+            name: skillName,
+            nameCn: rawSkill.levels?.[0]?.name || s.skillId,
+            iconId,
             masteries,
+            levels,
+            unlockCond: s.unlockCond,
           };
         });
 
@@ -481,6 +563,7 @@ export const useGameDataStore = defineStore('gamedata', () => {
 
           const enEq = enEquipDict[mId];
           const modName = enEq?.uniEquipName || eq.uniEquipName || mId;
+          const modDesc = enEq?.uniEquipDesc || eq.uniEquipDesc || '';
 
           const typeName1 = eq.typeName1 || 'ADVANCED';
           const typeName2 = eq.typeName2 || '';
@@ -488,9 +571,89 @@ export const useGameDataStore = defineStore('gamedata', () => {
             ? `Module ${typeName2} (${typeName1})`
             : `Module (${typeName1})`;
 
+          // Parse battle equip phases (stages 1, 2, 3)
+          const battlePhases = battleEquipData?.[mId]?.phases || [];
+          const enBattlePhases = enBattleEquipData?.[mId]?.phases || [];
+          const stages: ModuleStageDetail[] = [];
+
+          for (let pIdx = 0; pIdx < battlePhases.length; pIdx++) {
+            const rawPhase = battlePhases[pIdx] || {};
+            const enPhase = enBattlePhases[pIdx] || {};
+            const stageNum = rawPhase.equipLevel || (pIdx + 1);
+
+            // Attribute bonuses
+            const attributes = (rawPhase.attributeBlackboard || []).map((a: any) => ({
+              key: a.key,
+              value: a.value,
+            }));
+
+            // Trait and talent changes
+            let traitChange: string | undefined = undefined;
+            let talentChange: { name?: string; description?: string } | undefined = undefined;
+
+            const rawParts = rawPhase.parts || [];
+            const enParts = enPhase.parts || [];
+
+            for (let partIdx = 0; partIdx < rawParts.length; partIdx++) {
+              const rawPart = rawParts[partIdx];
+              const enPart = enParts[partIdx] || {};
+
+              if (rawPart.target === 'TRAIT') {
+                const rawCand = rawPart.overrideTraitDataBundle?.candidates?.[0];
+                const enCand = enPart.overrideTraitDataBundle?.candidates?.[0];
+                if (rawCand || enCand) {
+                  const descTemplate = enCand?.additionalDescription || enCand?.overrideDescripton || rawCand?.additionalDescription || rawCand?.overrideDescripton || '';
+                  const bb = enCand?.blackboard || rawCand?.blackboard || [];
+                  traitChange = formatSkillDescription(descTemplate, bb);
+                }
+              } else if (rawPart.target === 'TALENT' || rawPart.target === 'TALENT_DATA_ONLY') {
+                const rawCandList = rawPart.addOrOverrideTalentDataBundle?.candidates || [];
+                const enCandList = enPart.addOrOverrideTalentDataBundle?.candidates || [];
+
+                const rawCand = rawCandList.find((c: any) => c.requiredPotentialRank === 0) || rawCandList[0];
+                const enCand = enCandList.find((c: any) => c.requiredPotentialRank === 0) || enCandList[0];
+
+                if (rawCand || enCand) {
+                  const tName = enCand?.name || rawCand?.name || '';
+                  const descTemplate = enCand?.upgradeDescription || enCand?.description || rawCand?.upgradeDescription || rawCand?.description || '';
+                  const bb = enCand?.blackboard || rawCand?.blackboard || [];
+                  const formattedDesc = formatSkillDescription(descTemplate, bb);
+
+                  if (tName || formattedDesc) {
+                    talentChange = {
+                      name: tName,
+                      description: formattedDesc,
+                    };
+                  }
+                }
+              }
+            }
+
+            stages.push({
+              stage: stageNum,
+              attributes,
+              traitChange,
+              talentChange,
+              costs: itemCosts[stageNum] || [],
+            });
+          }
+
+          if (stages.length === 0 && Object.keys(itemCosts).length > 0) {
+            for (const sNum of [1, 2, 3]) {
+              if (itemCosts[sNum]) {
+                stages.push({
+                  stage: sNum,
+                  attributes: [],
+                  costs: itemCosts[sNum],
+                });
+              }
+            }
+          }
+
           modules.push({
             id: mId,
             name: modName,
+            nameCn: eq.uniEquipName || undefined,
             uniEquipIcon: eq.uniEquipIcon || mId,
             typeIcon: eq.typeIcon || 'original',
             typeName: typeName1,
@@ -498,6 +661,9 @@ export const useGameDataStore = defineStore('gamedata', () => {
             typeName2,
             formattedName,
             costs: itemCosts,
+            stages,
+            desc: modDesc,
+            descCn: eq.uniEquipDesc || undefined,
           });
         }
 
@@ -523,16 +689,23 @@ export const useGameDataStore = defineStore('gamedata', () => {
         };
 
         // Parse talents - prefer enChar talents, fallback to curated CN dictionary, then char.talents
-        const rawTalents = (enChar && enChar.talents && enChar.talents.length > 0) ? enChar.talents : (char.talents || []);
+        const cnCharTalents = char.talents || [];
+        const rawTalents = (enChar && enChar.talents && enChar.talents.length > 0) ? enChar.talents : cnCharTalents;
         const talents = rawTalents.map((t: any, tIdx: number) => {
           const curatedTalent = curated?.talents?.[tIdx];
+          const cnCandidates = cnCharTalents[tIdx]?.candidates || [];
           return {
-            candidates: (t.candidates || []).map((c: any) => ({
-              unlockPhase: c.unlockCondition?.phase === 'PHASE_2' ? 2 : c.unlockCondition?.phase === 'PHASE_1' ? 1 : 0,
-              unlockLevel: c.unlockCondition?.level || 1,
-              name: curatedTalent?.name || c.name || '',
-              description: curatedTalent?.description || stripArknightsTags(c.description || ''),
-            })),
+            candidates: (t.candidates || []).map((c: any, cIdx: number) => {
+              const cnCand = cnCandidates[cIdx] || cnCandidates[0] || {};
+              return {
+                unlockPhase: c.unlockCondition?.phase === 'PHASE_2' ? 2 : c.unlockCondition?.phase === 'PHASE_1' ? 1 : 0,
+                unlockLevel: c.unlockCondition?.level || 1,
+                name: curatedTalent?.name || c.name || '',
+                nameCn: cnCand.name || c.name || '',
+                description: curatedTalent?.description || stripArknightsTags(c.description || ''),
+                descriptionCn: stripArknightsTags(cnCand.description || c.description || ''),
+              };
+            }),
           };
         });
 
@@ -553,6 +726,7 @@ export const useGameDataStore = defineStore('gamedata', () => {
         parsedOperators[charId] = {
           id: charId,
           name: opName,
+          nameCn: char.name,
           appellation: canonicalEn || rawApp,
           rarity: rNum,
           profession: char.profession as Profession,
@@ -564,8 +738,10 @@ export const useGameDataStore = defineStore('gamedata', () => {
           skills,
           modules,
           description: traitDescription,
+          descriptionCn: stripArknightsTags(char.description || ''),
           itemUsage: stripArknightsTags(enChar?.itemUsage || char.itemUsage || ''),
           itemDesc,
+          itemDescCn: stripArknightsTags(char.itemDesc || ''),
           position: char.position || 'MELEE',
           tagList,
           talents,

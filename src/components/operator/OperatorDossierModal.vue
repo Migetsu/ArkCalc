@@ -1,12 +1,21 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
-import type { OperatorSummary, OperatorSkin } from '@/types/game';
+import type {
+  OperatorSummary,
+  OperatorSkin,
+  OperatorSkill,
+  SkillLevelDetail,
+  OperatorModule,
+  ModuleStageDetail,
+} from '@/types/game';
 import { useGameDataStore } from '@/stores/gamedata';
 import AttackRangeGrid from '@/components/operator/AttackRangeGrid.vue';
 import {
   getTranslatedTalents,
   getTranslatedQuote,
   getTranslatedModules,
+  getTranslatedSkillInfo,
+  getTranslatedSkinInfo,
   needsTranslation,
   translateText,
 } from '@/services/translationService';
@@ -19,6 +28,9 @@ import {
   getSkinIllustrationFallbackUrl,
   getSkinAvatarUrl,
   getEquipIconUrl,
+  getEquipIconFallbackUrl,
+  getSkillIconUrl,
+  getSkillIconFallbackUrl,
   PLACEHOLDER_AVATAR,
   PLACEHOLDER_EQUIP_ICON,
 } from '@/utils/imageUrl';
@@ -28,7 +40,31 @@ import {
   getProfessionName,
   getOperatorTag,
 } from '@/data/materialTranslations';
-import { X, Shield, Swords, Zap, UserCheck, Layers, Sparkles, Palette, Maximize2 } from 'lucide-vue-next';
+import {
+  getSpTypeName,
+  getSkillTypeName,
+  getSkillRankLabel,
+  formatSkillDuration,
+} from '@/utils/skillUtils';
+import {
+  formatModuleAttributeName,
+  formatModuleAttributeValue,
+  getModuleStageLabel,
+} from '@/utils/moduleUtils';
+import {
+  X,
+  Shield,
+  Swords,
+  Zap,
+  UserCheck,
+  Layers,
+  Palette,
+  Maximize2,
+  Flame,
+  ChevronDown,
+  ChevronUp,
+  BookOpen,
+} from 'lucide-vue-next';
 
 const gameData = useGameDataStore();
 
@@ -42,35 +78,46 @@ const emit = defineEmits<{
   (e: 'open-plan', operator: OperatorSummary): void;
 }>();
 
+// ==================== STATE DECLARATIONS ====================
 // Selected outfit identifier: 'default_1', 'default_2', or skin.skinId
 const selectedSkinId = ref<string>('default_2');
 
 // Fullscreen high-resolution art modal state
 const isArtFullscreen = ref<boolean>(false);
 
-function openFullscreenArt() {
-  isArtFullscreen.value = true;
-}
+// Selected skill index (0 = S1, 1 = S2, 2 = S3)
+const selectedSkillIndex = ref<number>(0);
 
-function closeFullscreenArt() {
-  isArtFullscreen.value = false;
-}
+// Selected skill rank/mastery level (1 to 10)
+const selectedSkillLevel = ref<number>(10);
 
-function handleKeyDown(e: KeyboardEvent) {
-  if (e.key === 'Escape' && isArtFullscreen.value) {
-    isArtFullscreen.value = false;
-    e.stopPropagation();
-  }
-}
+// Selected module index (0, 1, 2)
+const selectedModuleIndex = ref<number>(0);
 
-onMounted(() => {
-  window.addEventListener('keydown', handleKeyDown);
-});
+// Selected module stage (1, 2, 3)
+const selectedModuleStage = ref<number>(3);
 
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyDown);
-});
+// Collapsible module story
+const showModuleStory = ref<boolean>(false);
 
+// Dynamic translations for skill name & description
+const dynamicSkillName = ref<string>('');
+const dynamicSkillDesc = ref<string>('');
+
+// Dynamic translation for the current skin's name, brand, content, dialog
+const dynamicSkinName = ref<string>('');
+const dynamicSkinBrand = ref<string>('');
+const dynamicSkinContent = ref<string>('');
+const dynamicSkinDialog = ref<string>('');
+
+// Dynamic operator wiki translations
+const dynamicTalents = ref<any[]>([]);
+const dynamicQuote = ref<string>('');
+const dynamicTrait = ref<string>('');
+const dynamicModules = ref<OperatorModule[]>([]);
+const isTranslating = ref<boolean>(false);
+
+// ==================== COMPUTED PROPERTIES ====================
 const maxElite = computed(() => {
   return props.operator ? Math.max(0, props.operator.phases.length - 1) : 0;
 });
@@ -89,19 +136,6 @@ const currentSelectedSkin = computed<OperatorSkin | null>(() => {
   return specialSkins.value.find((s) => s.skinId === selectedSkinId.value) || null;
 });
 
-// Reset to E2 or E0 on operator change
-watch(
-  () => props.operator?.id,
-  () => {
-    isArtFullscreen.value = false;
-    if (props.operator) {
-      const maxEl = Math.max(0, props.operator.phases.length - 1);
-      selectedSkinId.value = maxEl >= 2 ? 'default_2' : 'default_1';
-    }
-  },
-  { immediate: true }
-);
-
 // Art URL
 const currentArtUrl = computed(() => {
   if (!props.operator) return '';
@@ -112,58 +146,67 @@ const currentArtUrl = computed(() => {
   return getCharacterPortraitUrl(props.operator.id, elite);
 });
 
-// Dynamic translation for the current skin's name, brand, content, dialog
-const dynamicSkinName = ref<string>('');
-const dynamicSkinBrand = ref<string>('');
-const dynamicSkinContent = ref<string>('');
-const dynamicSkinDialog = ref<string>('');
+// Currently selected skill object
+const currentSkill = computed<OperatorSkill | null>(() => {
+  if (!props.operator?.skills || props.operator.skills.length === 0) return null;
+  return props.operator.skills[selectedSkillIndex.value] || props.operator.skills[0] || null;
+});
 
-async function resolveSkinTranslations() {
-  const skin = currentSelectedSkin.value;
-  if (!skin) {
-    dynamicSkinName.value = '';
-    dynamicSkinBrand.value = '';
-    dynamicSkinContent.value = '';
-    dynamicSkinDialog.value = '';
-    return;
-  }
+// Currently selected skill level detail (1 to 10)
+const currentSkillLevelDetail = computed<SkillLevelDetail | null>(() => {
+  const s = currentSkill.value;
+  if (!s || !s.levels || s.levels.length === 0) return null;
+  const lvl = Math.min(selectedSkillLevel.value, s.levels.length);
+  return s.levels[lvl - 1] || s.levels[s.levels.length - 1] || null;
+});
 
-  const lang = gameData.itemLanguage;
-  dynamicSkinName.value = skin.skinName;
-  dynamicSkinBrand.value = skin.skinGroupName;
-  dynamicSkinContent.value = skin.content || '';
-  dynamicSkinDialog.value = skin.dialog || '';
+// Currently selected module object (from dynamicModules)
+const currentModule = computed<OperatorModule | null>(() => {
+  if (!dynamicModules.value || dynamicModules.value.length === 0) return null;
+  const idx = Math.min(selectedModuleIndex.value, dynamicModules.value.length - 1);
+  return dynamicModules.value[idx] || dynamicModules.value[0] || null;
+});
 
-  if (
-    needsTranslation(skin.skinName, lang) ||
-    needsTranslation(skin.skinGroupName, lang) ||
-    needsTranslation(skin.content, lang) ||
-    needsTranslation(skin.dialog, lang)
-  ) {
-    try {
-      const [tlName, tlBrand, tlContent, tlDialog] = await Promise.all([
-        needsTranslation(skin.skinName, lang) ? translateText(skin.skinName, lang) : Promise.resolve(skin.skinName),
-        needsTranslation(skin.skinGroupName, lang) ? translateText(skin.skinGroupName, lang) : Promise.resolve(skin.skinGroupName),
-        needsTranslation(skin.content, lang) ? translateText(skin.content || '', lang) : Promise.resolve(skin.content || ''),
-        needsTranslation(skin.dialog, lang) ? translateText(skin.dialog || '', lang) : Promise.resolve(skin.dialog || ''),
-      ]);
-      dynamicSkinName.value = tlName;
-      dynamicSkinBrand.value = tlBrand;
-      dynamicSkinContent.value = tlContent;
-      dynamicSkinDialog.value = tlDialog;
-    } catch {
-      // ignore
-    }
+// Currently selected module stage detail (Stage 1, 2, 3)
+const currentModuleStageDetail = computed<ModuleStageDetail | null>(() => {
+  const m = currentModule.value;
+  if (!m || !m.stages || m.stages.length === 0) return null;
+  return m.stages.find((s) => s.stage === selectedModuleStage.value) || m.stages[0] || null;
+});
+
+// ==================== METHODS ====================
+function openFullscreenArt() {
+  isArtFullscreen.value = true;
+}
+
+function closeFullscreenArt() {
+  isArtFullscreen.value = false;
+}
+
+function handleKeyDown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && isArtFullscreen.value) {
+    isArtFullscreen.value = false;
+    e.stopPropagation();
   }
 }
 
-watch(
-  () => [currentSelectedSkin.value?.skinId, gameData.itemLanguage],
-  () => {
-    resolveSkinTranslations();
-  },
-  { immediate: true }
-);
+function handleSkillIconError(event: Event, iconId: string) {
+  const img = event.target as HTMLImageElement;
+  const fallback = getSkillIconFallbackUrl(iconId);
+  if (img.src !== fallback) {
+    img.src = fallback;
+  }
+}
+
+function handleEquipIconError(event: Event, iconId: string) {
+  const img = event.target as HTMLImageElement;
+  if (!img.dataset.fallbackTried) {
+    img.dataset.fallbackTried = 'true';
+    img.src = getEquipIconFallbackUrl(iconId);
+  } else {
+    img.src = PLACEHOLDER_EQUIP_ICON;
+  }
+}
 
 function handleArtError(event: Event) {
   const img = event.target as HTMLImageElement;
@@ -204,16 +247,103 @@ function handleOpenPlan() {
   }
 }
 
-const dynamicTalents = ref<any[]>([]);
-const dynamicQuote = ref<string>('');
-const dynamicTrait = ref<string>('');
-const dynamicModules = ref<any[]>([]);
-const isTranslating = ref<boolean>(false);
+async function resolveSkillTranslations() {
+  const detail = currentSkillLevelDetail.value;
+  if (!detail || !currentSkill.value) {
+    dynamicSkillName.value = '';
+    dynamicSkillDesc.value = '';
+    return;
+  }
+
+  const lang = gameData.itemLanguage;
+  if (lang === 'cn') {
+    dynamicSkillName.value = detail.nameCn || detail.name || '';
+    dynamicSkillDesc.value = detail.descriptionCn || detail.description || '';
+    return;
+  }
+
+  try {
+    const res = await getTranslatedSkillInfo(
+      props.operator?.id || '',
+      currentSkill.value.skillId,
+      detail.name,
+      detail.description,
+      detail.nameCn,
+      detail.descriptionCn,
+      lang
+    );
+    dynamicSkillName.value = res.name;
+    dynamicSkillDesc.value = res.description;
+  } catch {
+    dynamicSkillName.value = detail.name || '';
+    dynamicSkillDesc.value = detail.description || '';
+  }
+}
+
+async function resolveSkinTranslations() {
+  const skin = currentSelectedSkin.value;
+  if (!skin) {
+    dynamicSkinName.value = '';
+    dynamicSkinBrand.value = '';
+    dynamicSkinContent.value = '';
+    dynamicSkinDialog.value = '';
+    return;
+  }
+
+  const lang = gameData.itemLanguage;
+  if (lang === 'cn') {
+    dynamicSkinName.value = skin.skinName;
+    dynamicSkinBrand.value = skin.skinGroupName;
+    dynamicSkinContent.value = skin.content || '';
+    dynamicSkinDialog.value = skin.dialog || '';
+    return;
+  }
+
+  try {
+    const res = await getTranslatedSkinInfo(
+      props.operator?.id || '',
+      skin.skinId,
+      skin.skinName,
+      skin.skinGroupName,
+      skin.content || '',
+      skin.dialog || '',
+      lang
+    );
+    dynamicSkinName.value = res.skinName;
+    dynamicSkinBrand.value = res.skinGroupName;
+    dynamicSkinContent.value = res.content;
+    dynamicSkinDialog.value = res.dialog;
+  } catch {
+    dynamicSkinName.value = skin.skinName;
+    dynamicSkinBrand.value = skin.skinGroupName;
+    dynamicSkinContent.value = skin.content || '';
+    dynamicSkinDialog.value = skin.dialog || '';
+  }
+}
 
 async function resolveDynamicTranslations() {
   if (!props.operator) return;
   const op = props.operator;
   const lang = gameData.itemLanguage;
+
+  if (lang === 'cn') {
+    dynamicTalents.value = (op.talents || []).map((t) => ({
+      ...t,
+      candidates: (t.candidates || []).map((c: any) => ({
+        ...c,
+        name: c.nameCn || c.name,
+        description: c.descriptionCn || c.description,
+      })),
+    }));
+    dynamicQuote.value = op.itemDescCn || op.itemDesc || '';
+    dynamicTrait.value = op.descriptionCn || op.description || '';
+    dynamicModules.value = (op.modules || []).map((m) => ({
+      ...m,
+      name: m.nameCn || m.name,
+      desc: m.descCn || m.desc,
+    }));
+    return;
+  }
 
   dynamicTalents.value = op.talents || [];
   dynamicQuote.value = op.itemDesc || '';
@@ -227,16 +357,25 @@ async function resolveDynamicTranslations() {
   );
   const needsQuote = needsTranslation(op.itemDesc, lang);
   const needsTrait = needsTranslation(op.description, lang);
-  const needsModules = (op.modules || []).some((m) => needsTranslation(m.name, lang));
+  const needsModules = (op.modules || []).some(
+    (m) =>
+      needsTranslation(m.name, lang) ||
+      (m.stages || []).some(
+        (s: any) =>
+          needsTranslation(s.traitChange, lang) ||
+          needsTranslation(s.talentChange?.name, lang) ||
+          needsTranslation(s.talentChange?.description, lang)
+      )
+  );
 
   if (needsTalents || needsQuote || needsTrait || needsModules) {
     isTranslating.value = true;
     try {
       const [tlTalents, tlQuote, tlTrait, tlModules] = await Promise.all([
         needsTalents ? getTranslatedTalents(op.id, op.talents || [], lang) : Promise.resolve(op.talents || []),
-        needsQuote ? getTranslatedQuote(op.id, op.itemDesc || '', lang) : Promise.resolve(op.itemDesc || ''),
+        needsQuote ? getTranslatedQuote(op.id, op.itemDesc || '', op.itemDescCn, lang) : Promise.resolve(op.itemDesc || ''),
         needsTrait ? translateText(op.description || '', lang) : Promise.resolve(op.description || ''),
-        needsModules ? getTranslatedModules(op.modules || [], lang) : Promise.resolve(op.modules || []),
+        needsModules ? getTranslatedModules(op.id, op.modules || [], lang) : Promise.resolve(op.modules || []),
       ]);
       dynamicTalents.value = tlTalents || [];
       dynamicQuote.value = tlQuote || '';
@@ -249,6 +388,54 @@ async function resolveDynamicTranslations() {
     }
   }
 }
+
+// ==================== LIFECYCLE & WATCHERS ====================
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown);
+});
+
+// Reset to E2 or E0 on operator change
+watch(
+  () => props.operator?.id,
+  () => {
+    isArtFullscreen.value = false;
+    selectedSkillIndex.value = 0;
+    selectedModuleIndex.value = 0;
+    selectedModuleStage.value = 3;
+    showModuleStory.value = false;
+    if (props.operator) {
+      const maxEl = Math.max(0, props.operator.phases.length - 1);
+      selectedSkinId.value = maxEl >= 2 ? 'default_2' : 'default_1';
+      const firstSkill = props.operator.skills?.[0];
+      selectedSkillLevel.value = firstSkill?.levels?.length || 7;
+    }
+  },
+  { immediate: true }
+);
+
+watch(
+  () => [
+    currentSkill.value?.skillId,
+    selectedSkillLevel.value,
+    gameData.itemLanguage,
+  ],
+  () => {
+    resolveSkillTranslations();
+  },
+  { immediate: true }
+);
+
+watch(
+  () => [currentSelectedSkin.value?.skinId, gameData.itemLanguage],
+  () => {
+    resolveSkinTranslations();
+  },
+  { immediate: true }
+);
 
 watch(
   () => [props.operator?.id, props.isOpen, gameData.itemLanguage],
@@ -317,6 +504,14 @@ watch(
               @click="gameData.setItemLanguage('en')"
             >
               EN
+            </button>
+            <button
+              type="button"
+              class="px-2 py-0.5 rounded text-[11px] font-bold transition-all"
+              :class="gameData.itemLanguage === 'cn' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+              @click="gameData.setItemLanguage('cn')"
+            >
+              CN
             </button>
           </div>
 
@@ -548,6 +743,161 @@ watch(
               </p>
             </div>
 
+            <!-- Skills & Masteries Section -->
+            <div
+              v-if="operator.skills && operator.skills.length > 0 && currentSkill"
+              class="p-4 bg-ark-card rounded-2xl border border-ark-border space-y-4"
+            >
+              <div class="flex items-center justify-between">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                  <Flame class="w-4 h-4 text-amber-400" />
+                  {{ gameData.itemLanguage === 'ru' ? 'Навыки и мастерства (Skills)' : 'Skills & Masteries' }}
+                </h4>
+                <span class="text-[10px] font-mono text-slate-500">
+                  {{ operator.skills.length }} {{ gameData.itemLanguage === 'ru' ? 'навыка' : 'skills' }}
+                </span>
+              </div>
+
+              <!-- Skill Selector Tabs (S1, S2, S3) -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <button
+                  v-for="(skill, sIdx) in operator.skills"
+                  :key="skill.skillId"
+                  type="button"
+                  class="p-2.5 rounded-xl border text-left transition-all flex items-center gap-2.5 relative overflow-hidden"
+                  :class="[
+                    selectedSkillIndex === sIdx
+                      ? 'bg-gradient-to-r from-amber-950/40 to-slate-900 border-amber-500 text-slate-100 shadow-md ring-1 ring-amber-500/50'
+                      : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                  ]"
+                  @click="selectedSkillIndex = sIdx"
+                >
+                  <div class="w-10 h-10 rounded-lg bg-slate-950 border border-slate-800 p-0.5 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                    <img
+                      :src="getSkillIconUrl(skill.iconId)"
+                      :alt="skill.name"
+                      class="w-full h-full object-contain"
+                      @error="handleSkillIconError($event, skill.iconId)"
+                    />
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5">
+                      <span
+                        class="px-1.5 py-0.5 rounded text-[10px] font-mono font-extrabold uppercase"
+                        :class="selectedSkillIndex === sIdx ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-400'"
+                      >
+                        S{{ sIdx + 1 }}
+                      </span>
+                      <span class="text-xs font-bold truncate">
+                        {{ skill.name }}
+                      </span>
+                    </div>
+                    <span v-if="skill.levels && skill.levels.length > 7" class="text-[10px] text-amber-400/80 font-mono block mt-0.5">
+                      M1 &bull; M2 &bull; M3
+                    </span>
+                    <span v-else class="text-[10px] text-slate-500 font-mono block mt-0.5">
+                      {{ gameData.itemLanguage === 'ru' ? 'Ранг 1-7' : 'Rank 1-7' }}
+                    </span>
+                  </div>
+                </button>
+              </div>
+
+              <!-- Selected Skill Details Card -->
+              <div v-if="currentSkill && currentSkillLevelDetail" class="space-y-3 pt-1">
+                <!-- Skill Level / Rank Segmented Bar -->
+                <div class="space-y-1.5">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="text-slate-400 font-medium">
+                      {{ gameData.itemLanguage === 'ru' ? 'Уровень навыка / Мастерство:' : 'Skill Level / Mastery:' }}
+                    </span>
+                    <span class="font-mono font-bold" :class="selectedSkillLevel >= 8 ? 'text-amber-400' : 'text-cyan-400'">
+                      {{ getSkillRankLabel(selectedSkillLevel, gameData.itemLanguage) }}
+                    </span>
+                  </div>
+
+                  <div class="flex items-center gap-1 overflow-x-auto pb-1 custom-scrollbar">
+                    <button
+                      v-for="lvl in (currentSkill.levels?.length || 7)"
+                      :key="lvl"
+                      type="button"
+                      class="flex-1 min-w-[36px] py-1.5 rounded-lg text-xs font-mono font-bold transition-all border text-center"
+                      :class="[
+                        selectedSkillLevel === lvl
+                          ? (lvl >= 8
+                              ? 'bg-amber-500 border-amber-400 text-slate-950 shadow-md shadow-amber-900/30'
+                              : 'bg-cyan-600 border-cyan-500 text-white shadow-md shadow-cyan-900/30')
+                          : (lvl >= 8
+                              ? 'bg-slate-900/90 border-amber-500/30 text-amber-300/80 hover:border-amber-400 hover:text-amber-200'
+                              : 'bg-slate-900/90 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200')
+                      ]"
+                      @click="selectedSkillLevel = lvl"
+                    >
+                      {{ lvl <= 7 ? lvl : `M${lvl - 7}` }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Parameters Row (SP, Trigger, Duration) -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                  <!-- SP Cost & Initial SP -->
+                  <div class="p-2.5 bg-slate-900/90 rounded-xl border border-slate-800 space-y-0.5">
+                    <span class="text-[10px] text-slate-500 font-mono block">
+                      {{ gameData.itemLanguage === 'ru' ? 'SP (Старт / Стоимость)' : (gameData.itemLanguage === 'cn' ? '技力 (初始 / 消耗)' : 'SP (Init / Cost)') }}
+                    </span>
+                    <span class="font-mono font-bold text-cyan-300">
+                      {{ currentSkillLevelDetail.initSp }} / {{ currentSkillLevelDetail.spCost }}
+                    </span>
+                  </div>
+
+                  <!-- SP Recovery Type -->
+                  <div class="p-2.5 bg-slate-900/90 rounded-xl border border-slate-800 space-y-0.5">
+                    <span class="text-[10px] text-slate-500 font-mono block">
+                      {{ gameData.itemLanguage === 'ru' ? 'Зарядка SP' : (gameData.itemLanguage === 'cn' ? '技力回复' : 'SP Recovery') }}
+                    </span>
+                    <span class="font-mono font-bold text-slate-200 truncate block">
+                      {{ getSpTypeName(currentSkillLevelDetail.spType, gameData.itemLanguage) }}
+                    </span>
+                  </div>
+
+                  <!-- Trigger / Activation Type -->
+                  <div class="p-2.5 bg-slate-900/90 rounded-xl border border-slate-800 space-y-0.5">
+                    <span class="text-[10px] text-slate-500 font-mono block">
+                      {{ gameData.itemLanguage === 'ru' ? 'Активация' : (gameData.itemLanguage === 'cn' ? '触发方式' : 'Activation') }}
+                    </span>
+                    <span class="font-mono font-bold text-slate-200 truncate block">
+                      {{ getSkillTypeName(currentSkillLevelDetail.skillType, gameData.itemLanguage) }}
+                    </span>
+                  </div>
+
+                  <!-- Duration -->
+                  <div class="p-2.5 bg-slate-900/90 rounded-xl border border-slate-800 space-y-0.5">
+                    <span class="text-[10px] text-slate-500 font-mono block">
+                      {{ gameData.itemLanguage === 'ru' ? 'Длительность' : (gameData.itemLanguage === 'cn' ? '持续时间' : 'Duration') }}
+                    </span>
+                    <span class="font-mono font-bold text-amber-300">
+                      {{ formatSkillDuration(currentSkillLevelDetail.duration, currentSkillLevelDetail.skillType, dynamicSkillDesc || currentSkillLevelDetail.description, currentSkillLevelDetail.isInfinite, gameData.itemLanguage) }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Skill Description Content -->
+                <div class="p-3.5 bg-slate-900/90 rounded-xl border border-slate-800 space-y-1.5">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-100 text-xs flex items-center gap-1.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                      {{ dynamicSkillName || currentSkillLevelDetail.name }}
+                    </span>
+                    <span class="text-[10px] font-mono text-slate-500">
+                      {{ getSkillRankLabel(selectedSkillLevel, gameData.itemLanguage) }}
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-300 leading-relaxed">
+                    {{ dynamicSkillDesc || currentSkillLevelDetail.description }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <!-- Talents -->
             <div v-if="dynamicTalents && dynamicTalents.length > 0" class="p-4 bg-ark-card rounded-2xl border border-ark-border space-y-3">
               <div class="flex items-center justify-between">
@@ -584,46 +934,161 @@ watch(
               </div>
             </div>
 
-            <!-- Modules List -->
-            <div v-if="dynamicModules && dynamicModules.length > 0" class="p-4 bg-ark-card rounded-2xl border border-ark-border space-y-3">
-              <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                <Layers class="w-4 h-4" />
-                {{ gameData.itemLanguage === 'ru' ? 'Модули экипировки' : 'Equip Modules' }}
-              </h4>
+            <!-- Equip Modules (Interactive Viewer) -->
+            <div v-if="dynamicModules && dynamicModules.length > 0" class="p-4 bg-ark-card rounded-2xl border border-ark-border space-y-4">
+              <div class="flex items-center justify-between">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                  <Layers class="w-4 h-4" />
+                  {{ gameData.itemLanguage === 'ru' ? 'Модули экипировки' : 'Equip Modules' }}
+                </h4>
+                <span class="text-[11px] font-mono text-slate-500">
+                  {{ dynamicModules.length }} {{ dynamicModules.length === 1 ? (gameData.itemLanguage === 'ru' ? 'модуль' : 'module') : (gameData.itemLanguage === 'ru' ? 'модуля' : 'modules') }}
+                </span>
+              </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div
-                  v-for="mod in dynamicModules"
+              <!-- Module Tabs (Selector) -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                <button
+                  v-for="(mod, mIdx) in dynamicModules"
                   :key="mod.id"
-                  class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 flex items-center gap-3"
+                  type="button"
+                  class="flex items-center gap-2.5 p-2.5 rounded-xl border text-left transition-all"
+                  :class="[
+                    selectedModuleIndex === mIdx
+                      ? 'bg-amber-950/40 border-amber-500/80 shadow-md shadow-amber-950/20'
+                      : 'bg-slate-900/80 border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200'
+                  ]"
+                  @click="selectedModuleIndex = mIdx"
                 >
-                  <div class="w-10 h-10 rounded-lg bg-slate-950 border border-slate-800 p-1 flex-shrink-0 flex items-center justify-center">
+                  <div class="w-10 h-10 rounded-lg bg-slate-950 border border-slate-800 p-1 flex-shrink-0 flex items-center justify-center overflow-hidden">
                     <img
                       :src="getEquipIconUrl(mod.uniEquipIcon)"
                       :alt="mod.name"
                       class="w-full h-full object-contain"
-                      @error="($event.target as HTMLImageElement).src = PLACEHOLDER_EQUIP_ICON"
+                      @error="handleEquipIconError($event, mod.uniEquipIcon)"
                     />
                   </div>
-                  <div class="min-w-0">
+                  <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-1.5">
                       <span
-                        class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold border"
+                        class="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold border uppercase"
                         :class="[
-                          mod.typeName2.toUpperCase() === 'X'
+                          (mod.typeName2 || '').toUpperCase() === 'X'
                             ? 'bg-sky-950 text-sky-300 border-sky-700'
-                            : mod.typeName2.toUpperCase() === 'Y'
+                            : (mod.typeName2 || '').toUpperCase() === 'Y'
                             ? 'bg-amber-950 text-amber-300 border-amber-700'
                             : 'bg-rose-950 text-rose-300 border-rose-700'
                         ]"
                       >
                         {{ mod.typeName2 || 'MOD' }}
                       </span>
-                      <span class="text-xs font-bold text-slate-200 truncate">{{ mod.name }}</span>
+                      <span class="text-xs font-bold truncate" :class="selectedModuleIndex === mIdx ? 'text-amber-200' : 'text-slate-200'">
+                        {{ mod.name }}
+                      </span>
                     </div>
-                    <span class="text-[11px] text-slate-500 font-mono block">
+                    <span class="text-[10px] text-slate-500 font-mono block truncate mt-0.5">
                       {{ gameData.itemLanguage === 'ru' ? `Ветка: ${mod.typeName1}` : `Branch: ${mod.typeName1}` }}
                     </span>
+                  </div>
+                </button>
+              </div>
+
+              <!-- Selected Module Details Card -->
+              <div v-if="currentModule" class="space-y-3 pt-1">
+                <!-- Stage Selector (Stage 1, 2, 3) -->
+                <div class="space-y-1.5">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="text-slate-400 font-medium">
+                      {{ gameData.itemLanguage === 'ru' ? 'Уровень модуля:' : 'Module Stage:' }}
+                    </span>
+                    <span class="font-mono font-bold text-amber-400">
+                      {{ getModuleStageLabel(selectedModuleStage, gameData.itemLanguage) }}
+                    </span>
+                  </div>
+
+                  <div class="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
+                    <button
+                      v-for="stg in (currentModule.stages?.length || 3)"
+                      :key="stg"
+                      type="button"
+                      class="flex-1 min-w-[70px] py-1.5 px-3 rounded-lg text-xs font-mono font-bold transition-all border text-center"
+                      :class="[
+                        selectedModuleStage === stg
+                          ? 'bg-amber-500 border-amber-400 text-slate-950 shadow-md shadow-amber-900/30'
+                          : 'bg-slate-900/90 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                      ]"
+                      @click="selectedModuleStage = stg"
+                    >
+                      {{ getModuleStageLabel(stg, gameData.itemLanguage) }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Combat Stat Bonuses Grid -->
+                <div v-if="currentModuleStageDetail?.attributes && currentModuleStageDetail.attributes.length > 0" class="space-y-1.5">
+                  <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">
+                    {{ gameData.itemLanguage === 'ru' ? 'Бонусы к характеристикам:' : 'Attribute Bonuses:' }}
+                  </span>
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <div
+                      v-for="attr in currentModuleStageDetail.attributes"
+                      :key="attr.key"
+                      class="p-2.5 bg-slate-900/90 rounded-xl border border-slate-800 space-y-0.5"
+                    >
+                      <span class="text-[10px] text-slate-500 font-mono block truncate">
+                        {{ formatModuleAttributeName(attr.key, gameData.itemLanguage) }}
+                      </span>
+                      <span class="font-mono font-bold text-emerald-400 text-sm">
+                        {{ formatModuleAttributeValue(attr.key, attr.value, gameData.itemLanguage) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Trait Addition / Override -->
+                <div v-if="currentModuleStageDetail?.traitChange" class="p-3.5 bg-slate-900/90 rounded-xl border border-sky-900/40 space-y-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-sky-950 text-sky-400 border border-sky-800">
+                      {{ gameData.itemLanguage === 'ru' ? 'Особенность класса (Trait)' : 'Class Trait Update' }}
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-300 leading-relaxed font-sans">
+                    {{ currentModuleStageDetail.traitChange }}
+                  </p>
+                </div>
+
+                <!-- Talent Upgrade -->
+                <div v-if="currentModuleStageDetail?.talentChange" class="p-3.5 bg-slate-900/90 rounded-xl border border-purple-900/40 space-y-1.5">
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-1.5">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-purple-950 text-purple-400 border border-purple-800">
+                        {{ gameData.itemLanguage === 'ru' ? 'Улучшение таланта' : 'Talent Upgrade' }}
+                      </span>
+                      <span v-if="currentModuleStageDetail.talentChange.name" class="text-xs font-bold text-purple-300">
+                        {{ currentModuleStageDetail.talentChange.name }}
+                      </span>
+                    </div>
+                  </div>
+                  <p v-if="currentModuleStageDetail.talentChange.description" class="text-xs text-slate-300 leading-relaxed font-sans">
+                    {{ currentModuleStageDetail.talentChange.description }}
+                  </p>
+                </div>
+
+                <!-- Module Lore / Story Accordion -->
+                <div v-if="currentModule.desc" class="pt-2 border-t border-slate-800/80">
+                  <button
+                    type="button"
+                    class="flex items-center justify-between w-full text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors py-1"
+                    @click="showModuleStory = !showModuleStory"
+                  >
+                    <span class="flex items-center gap-1.5">
+                      <BookOpen class="w-3.5 h-3.5 text-amber-400" />
+                      {{ gameData.itemLanguage === 'ru' ? 'История модуля (Lore)' : 'Module Lore Story' }}
+                    </span>
+                    <component :is="showModuleStory ? ChevronUp : ChevronDown" class="w-4 h-4 text-slate-500" />
+                  </button>
+                  <div v-if="showModuleStory" class="mt-2 p-3 bg-slate-950/70 rounded-xl border border-slate-800/80 text-xs text-slate-400 whitespace-pre-line leading-relaxed font-sans">
+                    {{ currentModule.desc }}
                   </div>
                 </div>
               </div>

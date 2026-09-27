@@ -2,9 +2,11 @@
 import { ref } from 'vue';
 import { useInventoryStore } from '@/stores/inventory';
 import { usePlannerStore } from '@/stores/planner';
+import { useRosterStore } from '@/stores/roster';
 import { useGameDataStore } from '@/stores/gamedata';
 import { exportDatabaseToJson, parseAndImportData } from '@/services/syncService';
-import { X, Download, CheckCircle, AlertCircle, RefreshCw, Globe, Trash2, Clipboard } from 'lucide-vue-next';
+import { syncPenguinStatsOnline } from '@/services/penguinStatsService';
+import { X, Download, CheckCircle, AlertCircle, RefreshCw, Globe, Trash2, Clipboard, Zap } from 'lucide-vue-next';
 
 defineProps<{
   isOpen: boolean;
@@ -16,11 +18,13 @@ const emit = defineEmits<{
 
 const inventory = useInventoryStore();
 const planner = usePlannerStore();
+const rosterStore = useRosterStore();
 const gameData = useGameDataStore();
 
 const statusMessage = ref<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
 const isOperating = ref(false);
 const isRefreshing = ref(false);
+const isSyncingPenguin = ref(false);
 
 const pasteInputText = ref('');
 
@@ -61,6 +65,7 @@ async function handleImportFromPaste() {
     const res = await parseAndImportData(pasteInputText.value);
     if (res.success) {
       await inventory.loadInventory();
+      await rosterStore.loadRoster();
       await planner.loadPlans();
       statusMessage.value = { type: 'success', text: res.message };
       pasteInputText.value = '';
@@ -81,6 +86,13 @@ async function handleClearWarehouse() {
   }
 }
 
+async function handleClearRoster() {
+  if (confirm('Вы уверены, что хотите очистить ростер импортированных оперативников?')) {
+    await rosterStore.clearAllRoster();
+    statusMessage.value = { type: 'info', text: 'Ростер оперативников успешно очищен.' };
+  }
+}
+
 async function handleClearAllPlans() {
   if (confirm('Вы уверены, что хотите удалить все добавленные планы оперативников?')) {
     await planner.clearAllPlans();
@@ -98,6 +110,25 @@ async function handleRefreshGameData() {
     statusMessage.value = { type: 'error', text: `Ошибка обновления: ${err.message || err}` };
   } finally {
     isRefreshing.value = false;
+  }
+}
+
+async function handleSyncPenguin() {
+  isSyncingPenguin.value = true;
+  statusMessage.value = null;
+  try {
+    const count = await syncPenguinStatsOnline();
+    statusMessage.value = {
+      type: 'success',
+      text: `Penguin Stats успешно обновлён онлайн! Синхронизировано ${count} записей выпадения материалов.`,
+    };
+  } catch (err: any) {
+    statusMessage.value = {
+      type: 'error',
+      text: `Не удалось загрузить данные Penguin Stats (${err.message || err}). Продолжает использоваться локальная база.`,
+    };
+  } finally {
+    isSyncingPenguin.value = false;
   }
 }
 
@@ -143,11 +174,11 @@ async function handleRefreshGameData() {
             Подключена полная база данных Arknights со всеми актуальными оперативниками, альтернативными модулями (X/Y/D) и крафтами. Имена персонажей отображаются на английском.
           </p>
 
-          <!-- Language selector for material names -->
+          <!-- Language selector for material names & wiki -->
           <div class="flex items-center justify-between flex-wrap gap-3 p-3 rounded-lg bg-slate-900/80 border border-ark-border">
             <div>
-              <span class="text-xs font-bold text-slate-200 block">Язык названий материалов</span>
-              <span class="text-[11px] text-slate-400 block">Отображение ресурсов на складе, в калькуляторе и планах</span>
+              <span class="text-xs font-bold text-slate-200 block">Язык материалов и Вики</span>
+              <span class="text-[11px] text-slate-400 block">Отображение ресурсов, навыков, талантов и модулей</span>
             </div>
             <div class="inline-flex bg-slate-950 p-1 rounded-lg border border-ark-border">
               <button
@@ -166,21 +197,41 @@ async function handleRefreshGameData() {
               >
                 English (EN)
               </button>
+              <button
+                type="button"
+                class="px-3 py-1.5 rounded-md text-xs font-bold transition-all"
+                :class="gameData.itemLanguage === 'cn' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+                @click="gameData.setItemLanguage('cn')"
+              >
+                Оригинал (CN)
+              </button>
             </div>
           </div>
 
-          <div class="pt-1">
+          <div class="pt-1 flex flex-wrap gap-2.5">
             <button
               type="button"
-              class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold transition-colors"
+              class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold transition-colors text-xs"
               :disabled="isRefreshing"
               @click="handleRefreshGameData"
             >
               <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': isRefreshing }" />
-              {{ isRefreshing ? 'Обновление...' : 'Принудительно обновить игровые данные' }}
+              {{ isRefreshing ? 'Обновление данных...' : 'Обновить данные игры' }}
             </button>
-            <p class="text-slate-500 mt-1.5">Сбросит кэш и загрузит самые свежие данные с GitHub.</p>
+
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-cyan-950/70 hover:bg-cyan-900 text-cyan-300 border border-cyan-800 font-semibold transition-colors text-xs"
+              :disabled="isSyncingPenguin"
+              @click="handleSyncPenguin"
+            >
+              <Zap class="w-4 h-4" :class="{ 'animate-spin': isSyncingPenguin }" />
+              {{ isSyncingPenguin ? 'Синхронизация дропов...' : 'Синхронизировать Penguin Stats' }}
+            </button>
           </div>
+          <p class="text-slate-500 mt-1.5">
+            Обновление базы персонажей с GitHub и актуальной матрицы дропа стадий с penguin-stats.io.
+          </p>
         </div>
 
         <!-- ArkPRTS Clipboard Import Section -->
@@ -275,7 +326,15 @@ async function handleRefreshGameData() {
               @click="handleClearWarehouse"
             >
               <Trash2 class="w-3.5 h-3.5 text-red-400" />
-              Очистить склад (Стереть все ресурсы)
+              Очистить склад (Склад)
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-red-950/40 text-slate-300 hover:text-red-300 border border-slate-800 text-xs font-semibold transition-colors"
+              @click="handleClearRoster"
+            >
+              <Trash2 class="w-3.5 h-3.5 text-red-400" />
+              Очистить мой ростер
             </button>
             <button
               type="button"

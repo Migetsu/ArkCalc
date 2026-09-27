@@ -1,16 +1,17 @@
-import { db, type UserInventory, type OperatorTargetPlan } from '@/services/db';
+import { db, type UserInventory, type OperatorTargetPlan, type UserRosterOperator } from '@/services/db';
 import { isCraftResource } from '@/data/materialTranslations';
 
 export interface ArkCalcBackupData {
   app: 'ARK-Calc';
-  version: 1;
+  version: 1 | 2;
   exportedAt: string;
   inventory: UserInventory[];
   plans: OperatorTargetPlan[];
+  roster?: UserRosterOperator[];
 }
 
 const GIST_FILENAME = 'ark_calc_user_data.json';
-const GIST_DESCRIPTION = 'ARK-Calc user data backup (Inventory & Plans)';
+const GIST_DESCRIPTION = 'ARK-Calc user data backup (Inventory & Plans & Roster)';
 
 /**
  * 1-click Export all IndexedDB data to a downloadable .json file
@@ -18,13 +19,15 @@ const GIST_DESCRIPTION = 'ARK-Calc user data backup (Inventory & Plans)';
 export async function exportDatabaseToJson(): Promise<void> {
   const inventory = await db.inventory.toArray();
   const plans = await db.plans.toArray();
+  const roster = await db.roster.toArray();
 
   const backupData: ArkCalcBackupData = {
     app: 'ARK-Calc',
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     inventory,
     plans,
+    roster,
   };
 
   const jsonStr = JSON.stringify(backupData, null, 2);
@@ -49,6 +52,7 @@ export async function parseAndImportData(rawText: string): Promise<{
   message: string;
   inventoryCount?: number;
   plansCount?: number;
+  rosterCount?: number;
 }> {
   const text = rawText.trim();
   if (!text) {
@@ -58,6 +62,7 @@ export async function parseAndImportData(rawText: string): Promise<{
   try {
     let parsedInventory: UserInventory[] = [];
     let parsedPlans: OperatorTargetPlan[] = [];
+    let parsedRoster: UserRosterOperator[] = [];
 
     // Check if CSV format (Krooster items CSV)
     if (text.includes(',') && !text.startsWith('{') && !text.startsWith('[')) {
@@ -76,12 +81,15 @@ export async function parseAndImportData(rawText: string): Promise<{
       const data = JSON.parse(text);
 
       // 1. Native ARK-Calc backup format
-      if (Array.isArray(data.inventory) || Array.isArray(data.plans)) {
+      if (Array.isArray(data.inventory) || Array.isArray(data.plans) || Array.isArray(data.roster)) {
         if (Array.isArray(data.inventory)) {
           parsedInventory = data.inventory.filter((i: any) => isCraftResource(i.itemId));
         }
         if (Array.isArray(data.plans)) {
           parsedPlans = data.plans;
+        }
+        if (Array.isArray(data.roster)) {
+          parsedRoster = data.roster;
         }
       }
       // 2. Penguin Statistics JSON: { items: [ { id: "30012", have: 15 } ] }
@@ -117,7 +125,7 @@ export async function parseAndImportData(rawText: string): Promise<{
           }
         }
 
-        // Find character troop
+        // Find character troop (ArkPRTS player's owned roster)
         const charsSource = data.troop?.chars || data.chars || data.char || data.data?.troop?.chars;
         if (charsSource) {
           const charList = Array.isArray(charsSource) ? charsSource : Object.values(charsSource);
@@ -151,29 +159,24 @@ export async function parseAndImportData(rawText: string): Promise<{
               Object.assign(modules, op.modules);
             }
 
-            parsedPlans.push({
+            // Save into owned characters Roster
+            parsedRoster.push({
               charId,
-              current: {
-                elite,
-                level,
-                skills,
-                masteries,
-                modules,
-              },
-              target: {
-                elite: op.targetElite ?? elite,
-                level: op.targetLevel ?? level,
-                skills: op.targetSkills ?? skills,
-                masteries: op.targetMasteries ?? masteries,
-                modules: op.targetModules ?? modules,
-              },
+              elite,
+              level,
+              skills,
+              masteries,
+              modules,
+              potential: op.potentialRank ?? 0,
+              favor: op.favorPoint ?? 0,
+              updatedAt: new Date().toISOString(),
             });
           }
         }
       }
     }
 
-    if (parsedInventory.length === 0 && parsedPlans.length === 0) {
+    if (parsedInventory.length === 0 && parsedPlans.length === 0 && parsedRoster.length === 0) {
       return {
         success: false,
         message: 'Не удалось распознать предметы или персонажей в переданных данных.',
@@ -181,22 +184,55 @@ export async function parseAndImportData(rawText: string): Promise<{
     }
 
     // Save to database
-    await db.transaction('rw', [db.inventory, db.plans], async () => {
+    await db.transaction('rw', [db.inventory, db.plans, db.roster], async () => {
       if (parsedInventory.length > 0) {
         await db.inventory.clear();
         await db.inventory.bulkPut(parsedInventory);
       }
+      if (parsedRoster.length > 0) {
+        await db.roster.clear();
+        await db.roster.bulkPut(parsedRoster);
+      }
       if (parsedPlans.length > 0) {
         await db.plans.clear();
         await db.plans.bulkPut(parsedPlans);
+      } else if (parsedRoster.length > 0) {
+        // Sync current levels of already existing plans with new account data
+        const existingPlans = await db.plans.toArray();
+        if (existingPlans.length > 0) {
+          const rosterMap = new Map(parsedRoster.map((r) => [r.charId, r]));
+          let updated = false;
+          for (const plan of existingPlans) {
+            const ro = rosterMap.get(plan.charId);
+            if (ro) {
+              plan.current = {
+                elite: ro.elite,
+                level: ro.level,
+                skills: ro.skills,
+                masteries: ro.masteries,
+                modules: ro.modules,
+              };
+              updated = true;
+            }
+          }
+          if (updated) {
+            await db.plans.bulkPut(existingPlans);
+          }
+        }
       }
     });
 
+    const parts = [];
+    if (parsedInventory.length > 0) parts.push(`${parsedInventory.length} предметов склада`);
+    if (parsedRoster.length > 0) parts.push(`${parsedRoster.length} оперативников в «Мой ростер»`);
+    if (parsedPlans.length > 0) parts.push(`${parsedPlans.length} планов прокачки`);
+
     return {
       success: true,
-      message: `Успешно импортировано: ${parsedInventory.length} предметов склада, ${parsedPlans.length} планов.`,
+      message: `Успешно импортировано: ${parts.join(', ')}.`,
       inventoryCount: parsedInventory.length,
       plansCount: parsedPlans.length,
+      rosterCount: parsedRoster.length,
     };
   } catch (err: any) {
     return {
@@ -239,13 +275,15 @@ export async function uploadToGitHubGist(pat: string, gistId?: string): Promise<
   try {
     const inventory = await db.inventory.toArray();
     const plans = await db.plans.toArray();
+    const roster = await db.roster.toArray();
 
     const backupData: ArkCalcBackupData = {
       app: 'ARK-Calc',
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
       inventory,
       plans,
+      roster,
     };
 
     const payload = {

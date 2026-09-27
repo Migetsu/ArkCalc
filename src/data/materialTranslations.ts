@@ -163,9 +163,12 @@ export const MATERIAL_TRANSLATIONS: Record<string, MaterialTranslation> = {
   '31114': { en: 'Energy Dynamic Unit', ru: 'Энергетический силовой блок' },
 };
 
-export function getLocalizedItemName(itemId: string, lang: 'ru' | 'en' = 'ru'): string | null {
+export function getLocalizedItemName(itemId: string, lang: 'ru' | 'en' | 'cn' = 'ru'): string | null {
   const item = MATERIAL_TRANSLATIONS[itemId];
   if (!item) return null;
+  if (lang === 'cn') {
+    return (item as any).cn || item.en;
+  }
   return lang === 'ru' ? item.ru : item.en;
 }
 
@@ -637,7 +640,7 @@ export const ARCHETYPE_NAMES: Record<string, string> = Object.fromEntries(
   Object.entries(ARCHETYPE_DETAILS).map(([k, v]) => [k, v.en])
 );
 
-export function getArchetypeName(subProfId: string, lang: 'ru' | 'en' = 'en'): string {
+export function getArchetypeName(subProfId: string, lang: 'ru' | 'en' | 'cn' = 'en'): string {
   if (!subProfId) return '';
   const detail = ARCHETYPE_DETAILS[subProfId.toLowerCase()];
   if (detail) {
@@ -651,20 +654,21 @@ export function getArchetypeTraitRu(subProfId: string): string {
   return ARCHETYPE_DETAILS[subProfId.toLowerCase()]?.traitRu || '';
 }
 
-export const PROFESSION_NAMES: Record<string, { en: string; ru: string }> = {
-  PIONEER: { en: 'Vanguard', ru: 'Авангард' },
-  WARRIOR: { en: 'Guard', ru: 'Гвардеец' },
-  TANK: { en: 'Defender', ru: 'Защитник' },
-  SNIPER: { en: 'Sniper', ru: 'Снайпер' },
-  CASTER: { en: 'Caster', ru: 'Заклинатель' },
-  MEDIC: { en: 'Medic', ru: 'Медик' },
-  SUPPORT: { en: 'Supporter', ru: 'Поддержка' },
-  SPECIAL: { en: 'Specialist', ru: 'Специалист' },
+export const PROFESSION_NAMES: Record<string, { en: string; ru: string; cn: string }> = {
+  PIONEER: { en: 'Vanguard', ru: 'Авангард', cn: '先锋' },
+  WARRIOR: { en: 'Guard', ru: 'Гвардеец', cn: '近卫' },
+  TANK: { en: 'Defender', ru: 'Защитник', cn: '重装' },
+  SNIPER: { en: 'Sniper', ru: 'Снайпер', cn: '狙击' },
+  CASTER: { en: 'Caster', ru: 'Заклинатель', cn: '术师' },
+  MEDIC: { en: 'Medic', ru: 'Медик', cn: '医疗' },
+  SUPPORT: { en: 'Supporter', ru: 'Поддержка', cn: '辅助' },
+  SPECIAL: { en: 'Specialist', ru: 'Специалист', cn: '特种' },
 };
 
-export function getProfessionName(profession: string, lang: 'ru' | 'en' = 'en'): string {
+export function getProfessionName(profession: string, lang: 'ru' | 'en' | 'cn' = 'en'): string {
   const p = PROFESSION_NAMES[profession];
   if (!p) return profession;
+  if (lang === 'cn') return p.cn;
   return lang === 'ru' ? p.ru : p.en;
 }
 
@@ -801,7 +805,7 @@ export function getArchetypeTraitEn(subProfId: string): string {
   return ARCHETYPE_TRAITS_EN[subProfId.toLowerCase()] || '';
 }
 
-export function getOperatorTag(tag: string, lang: 'ru' | 'en' = 'en'): string {
+export function getOperatorTag(tag: string, lang: 'ru' | 'en' | 'cn' = 'en'): string {
   const enTag = translateTagToEn(tag);
   const t = TAG_TRANSLATIONS[enTag] || TAG_TRANSLATIONS[tag];
   if (!t) return enTag;

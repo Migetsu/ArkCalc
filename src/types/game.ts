@@ -35,16 +35,50 @@ export interface SkillMasteryCost {
   costs: MaterialCost[];
 }
 
+export type AppLanguage = 'ru' | 'en' | 'cn';
+
+export interface SkillLevelDetail {
+  level: number; // 1 to 10 (1-7: Rank 1-7, 8: M1, 9: M2, 10: M3)
+  name: string;
+  nameCn?: string;
+  rangeId?: string;
+  description: string;
+  descriptionCn?: string;
+  skillType: string; // 'MANUAL', 'AUTO', 'PASSIVE'
+  durationType?: string;
+  duration: number; // seconds, 0 = instant, -1 = infinite / no channel
+  isInfinite?: boolean;
+  spType: string; // 'INCREASE_WITH_TIME', 'INCREASE_WHEN_ATTACK', 'INCREASE_WHEN_TAKEN_DAMAGE', 'NONE'
+  spCost: number;
+  initSp: number;
+  blackboard?: { key: string; value?: number; valueStr?: string }[];
+}
+
 export interface OperatorSkill {
   skillId: string;
   name: string;
+  nameCn?: string;
   iconId: string;
   masteries: SkillMasteryCost[];
+  levels?: SkillLevelDetail[];
+  unlockCond?: { phase: string; level: number };
+}
+
+export interface ModuleStageDetail {
+  stage: number; // 1, 2, 3
+  attributes: { key: string; value: number }[];
+  traitChange?: string;
+  talentChange?: {
+    name?: string;
+    description?: string;
+  };
+  costs: MaterialCost[];
 }
 
 export interface OperatorModule {
   id: string;
   name: string;
+  nameCn?: string;
   uniEquipIcon: string;
   typeIcon: string;
   typeName: string;
@@ -52,6 +86,9 @@ export interface OperatorModule {
   typeName2: string;
   formattedName: string;
   costs: Record<number, MaterialCost[]>; // 1, 2, 3
+  stages?: ModuleStageDetail[];
+  desc?: string;
+  descCn?: string;
 }
 
 export interface OperatorAttributes {
@@ -70,6 +107,8 @@ export interface OperatorTalentCandidate {
   unlockLevel: number;
   name: string;
   description: string;
+  nameCn?: string;
+  descriptionCn?: string;
 }
 
 export interface OperatorTalent {
@@ -93,6 +132,7 @@ export interface OperatorSkin {
 export interface OperatorSummary {
   id: string;
   name: string;
+  nameCn?: string;
   appellation: string;
   rarity: number; // 1 - 6
   profession: Profession;
@@ -105,11 +145,14 @@ export interface OperatorSummary {
   modules: OperatorModule[];
   // Wiki metadata
   description?: string;
+  descriptionCn?: string;
   itemUsage?: string;
   itemDesc?: string;
+  itemDescCn?: string;
   position?: string;
   tagList?: string[];
   talents?: OperatorTalent[];
+  talentsCn?: OperatorTalent[];
   attributes?: OperatorAttributes;
   skins?: OperatorSkin[];
 }

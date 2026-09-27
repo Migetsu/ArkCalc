@@ -25,15 +25,34 @@ export interface OperatorTargetPlan {
   };
 }
 
+// Оперативник в наличии на аккаунте игрока (импортированный из ArkPRTS / Skland)
+export interface UserRosterOperator {
+  charId: string;
+  elite: number;
+  level: number;
+  skills: number[];
+  masteries: number[];
+  modules: Record<string, number>;
+  potential?: number;
+  favor?: number;
+  updatedAt?: string;
+}
+
 export class AppDatabase extends Dexie {
   inventory!: Table<UserInventory>;
   plans!: Table<OperatorTargetPlan>;
+  roster!: Table<UserRosterOperator>;
 
   constructor() {
     super('ARKCalcDB');
     this.version(1).stores({
       inventory: 'itemId',
       plans: 'charId'
+    });
+    this.version(2).stores({
+      inventory: 'itemId',
+      plans: 'charId',
+      roster: 'charId',
     });
   }
 }

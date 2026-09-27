@@ -5,6 +5,12 @@ import { useGameDataStore } from '@/stores/gamedata';
 import { useInventoryStore } from '@/stores/inventory';
 import ItemIcon from '@/components/common/ItemIcon.vue';
 import CraftingTree from './CraftingTree.vue';
+import FarmingGuideModal from './FarmingGuideModal.vue';
+import {
+  getRecommendedStage,
+  calculatePlanSanityEstimate,
+  calculateFarmingEstimate,
+} from '@/services/penguinStatsService';
 import {
   Coins,
   Sparkles,
@@ -13,6 +19,7 @@ import {
   CheckCircle,
   TrendingDown,
   Hammer,
+  Zap,
 } from 'lucide-vue-next';
 
 const planner = usePlannerStore();
@@ -35,12 +42,28 @@ const totalDeficitItemsCount = computed(() => {
 const totalItemsReadyCount = computed(() => {
   return calc.value.directDeficit.filter((d) => d.deficit === 0).length;
 });
+
+// Plan-wide Sanity estimation via Penguin Stats
+const planSanityEstimate = computed(() => {
+  return calculatePlanSanityEstimate(calc.value.farmRequirements);
+});
+
+// Farming Guide Modal state
+const selectedFarmingItemId = ref<string | null>(null);
+const selectedFarmingNeededCount = ref<number>(0);
+const isFarmingGuideOpen = ref(false);
+
+function openFarmingGuide(itemId: string, neededCount: number = 0) {
+  selectedFarmingItemId.value = itemId;
+  selectedFarmingNeededCount.value = neededCount;
+  isFarmingGuideOpen.value = true;
+}
 </script>
 
 <template>
   <div class="space-y-6">
     <!-- Top KPI Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <!-- Total LMD Card -->
       <div class="bg-ark-card border border-ark-border rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col justify-between">
         <div class="flex items-center justify-between">
@@ -51,7 +74,7 @@ const totalItemsReadyCount = computed(() => {
             <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Всего LMD</span>
           </div>
           <span class="text-xs font-mono font-medium text-slate-400">
-            На складе: {{ (inventory.getStock('4001') || 0).toLocaleString() }}
+            Склад: {{ (inventory.getStock('4001') || 0).toLocaleString() }}
           </span>
         </div>
 
@@ -99,8 +122,8 @@ const totalItemsReadyCount = computed(() => {
           </div>
           <!-- Battle records equivalent -->
           <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-400 font-mono">
-            <span>Золотые книги (T4): <strong class="text-amber-300">{{ expStrategicRecords }} шт.</strong></span>
-            <span>Синие книги (T3): <strong class="text-sky-300">{{ expTacticalRecords }} шт.</strong></span>
+            <span>T4 книги: <strong class="text-amber-300">{{ expStrategicRecords }} шт.</strong></span>
+            <span>T3 книги: <strong class="text-sky-300">{{ expTacticalRecords }} шт.</strong></span>
           </div>
         </div>
 
@@ -117,7 +140,7 @@ const totalItemsReadyCount = computed(() => {
             <div class="w-8 h-8 rounded-lg bg-purple-950/60 border border-purple-800 flex items-center justify-center text-purple-400">
               <Layers class="w-4 h-4" />
             </div>
-            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Материалы и дефицит</span>
+            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Материалы</span>
           </div>
           <span class="text-xs font-mono text-slate-400">
             Видов: {{ calc.directDeficit.length }}
@@ -138,6 +161,37 @@ const totalItemsReadyCount = computed(() => {
         <div class="pt-2 border-t border-ark-border/60 text-xs flex justify-between items-center text-slate-400">
           <span>Оперативников в плане:</span>
           <span class="text-cyan-400 font-mono font-bold">{{ planner.planCount }}</span>
+        </div>
+      </div>
+
+      <!-- Sanity Estimate Card (Penguin Stats) -->
+      <div class="bg-ark-card border border-ark-border rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-amber-950/60 border border-amber-800 flex items-center justify-center text-amber-400">
+              <Zap class="w-4 h-4" />
+            </div>
+            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Оценка Sanity</span>
+          </div>
+          <span class="text-[10px] font-mono text-cyan-400 font-bold bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-800">
+            Penguin Stats
+          </span>
+        </div>
+
+        <div class="my-3">
+          <div class="text-2xl font-black font-mono tracking-tight text-amber-300">
+            ~{{ planSanityEstimate.totalSanity.toLocaleString() }}
+            <span class="text-sm font-bold text-amber-400/80">⚡</span>
+          </div>
+          <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-400 font-mono">
+            <span>Заходов: <strong class="text-slate-200">~{{ planSanityEstimate.totalRuns.toLocaleString() }}</strong></span>
+            <span>Дней: <strong class="text-slate-200">~{{ planSanityEstimate.naturalDays }} дн.</strong></span>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-ark-border/60 text-xs flex justify-between items-center text-slate-400">
+          <span>Эквивалент в камнях (OP):</span>
+          <span class="text-amber-400 font-mono font-bold">~{{ planSanityEstimate.opEquivalent }} OP</span>
         </div>
       </div>
     </div>
@@ -162,7 +216,10 @@ const totalItemsReadyCount = computed(() => {
           @click="activeTab = 'farm'"
         >
           <Layers class="w-4 h-4" />
-          План фарма (с учетом крафта)
+          <span>План фарма (базовые карты)</span>
+          <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-400 text-slate-950 font-black uppercase">
+            Топ
+          </span>
         </button>
 
         <button
@@ -184,6 +241,24 @@ const totalItemsReadyCount = computed(() => {
 
     <!-- TAB 1: DIRECT DEFICIT LIST -->
     <div v-if="activeTab === 'direct'" class="space-y-4">
+      <!-- Helpful banner explaining craft vs direct deficit -->
+      <div class="p-3 bg-slate-900/90 rounded-xl border border-ark-border text-xs text-slate-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+          <Wrench class="w-4 h-4 text-cyan-400 flex-shrink-0" />
+          <span>
+            <b>Прямой дефицит:</b> Высокие тиры (T4, T5, Dual Chip) создаются в Мастерской.
+            Перейдите в <b>«План фарма»</b>, чтобы увидеть точный список базовых ресурсов и лучших стадий!
+          </span>
+        </div>
+        <button
+          type="button"
+          class="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex-shrink-0 transition-colors shadow-sm self-start sm:self-auto"
+          @click="activeTab = 'farm'"
+        >
+          Открыть План фарма &rarr;
+        </button>
+      </div>
+
       <div v-if="calc.directDeficit.length === 0" class="p-12 text-center bg-ark-card rounded-2xl border border-ark-border text-slate-400">
         <CheckCircle class="w-12 h-12 mx-auto text-emerald-400 mb-2" />
         <h4 class="font-bold text-slate-200 text-base">Планы не настроены или все ресурсы собраны!</h4>
@@ -194,58 +269,85 @@ const totalItemsReadyCount = computed(() => {
         <div
           v-for="item in calc.directDeficit"
           :key="item.itemId"
-          class="bg-ark-card border rounded-xl p-3 flex items-center gap-3 transition-all shadow-sm"
+          class="bg-ark-card border rounded-xl p-3 flex flex-col justify-between gap-2.5 transition-all shadow-sm"
           :class="[
             item.deficit > 0
               ? 'border-red-500/50 bg-red-950/15 shadow-red-950/20'
               : 'border-ark-border hover:border-slate-600',
           ]"
         >
-          <ItemIcon
-            :item-id="item.itemId"
-            size="lg"
-            :deficit="item.deficit > 0 ? item.deficit : undefined"
-          />
+          <div class="flex items-center gap-3">
+            <ItemIcon
+              :item-id="item.itemId"
+              size="lg"
+              :deficit="item.deficit > 0 ? item.deficit : undefined"
+            />
 
-          <div class="flex-1 min-w-0">
-            <h4 class="font-bold text-xs text-slate-200 truncate" :title="gameData.getItem(item.itemId)?.name || item.itemId">
-              {{ gameData.getItem(item.itemId)?.name || item.itemId }}
-            </h4>
+            <div class="flex-1 min-w-0">
+              <h4 class="font-bold text-xs text-slate-200 truncate" :title="gameData.getItem(item.itemId)?.name || item.itemId">
+                {{ gameData.getItem(item.itemId)?.name || item.itemId }}
+              </h4>
 
-            <div class="mt-1 space-y-0.5 text-[11px] font-mono">
-              <div class="flex items-center justify-between text-slate-400">
-                <span>Нужно:</span>
-                <span class="font-semibold text-slate-200">{{ item.needed }}</span>
-              </div>
-              <div class="flex items-center justify-between text-slate-400">
-                <span>Склад:</span>
-                <span class="font-semibold text-slate-300">{{ item.stock }}</span>
-              </div>
-              <div
-                class="flex items-center justify-between pt-0.5 border-t border-ark-border/60"
-                :class="item.deficit > 0 ? 'text-red-400 font-bold' : 'text-emerald-400 font-semibold'"
-              >
-                <span>Дефицит:</span>
-                <span>{{ item.deficit > 0 ? `-${item.deficit}` : '0' }}</span>
+              <div class="mt-1 space-y-0.5 text-[11px] font-mono">
+                <div class="flex items-center justify-between text-slate-400">
+                  <span>Нужно:</span>
+                  <span class="font-semibold text-slate-200">{{ item.needed }}</span>
+                </div>
+                <div class="flex items-center justify-between text-slate-400">
+                  <span>Склад:</span>
+                  <span class="font-semibold text-slate-300">{{ item.stock }}</span>
+                </div>
+                <div
+                  class="flex items-center justify-between pt-0.5 border-t border-ark-border/60"
+                  :class="item.deficit > 0 ? 'text-red-400 font-bold' : 'text-emerald-400 font-semibold'"
+                >
+                  <span>Дефицит:</span>
+                  <span>{{ item.deficit > 0 ? `-${item.deficit}` : '0' }}</span>
+                </div>
               </div>
             </div>
+          </div>
 
-            <!-- Craftable badge -->
-            <div v-if="item.craftable" class="mt-1 text-[10px] text-cyan-400 flex items-center gap-1 font-sans">
-              <Wrench class="w-3 h-3" /> Можно скрафтить
-            </div>
+          <!-- Bottom badges: Craftable & Penguin Stats Stage -->
+          <div class="space-y-1.5 pt-1 border-t border-slate-800/80">
+            <!-- If craftable: Interactive button to view recipe & ingredients farming -->
+            <button
+              v-if="item.craftable"
+              type="button"
+              class="text-[10px] font-mono text-cyan-300 hover:text-cyan-200 bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-800/50 rounded px-2 py-1 flex items-center justify-between transition-colors w-full"
+              @click.stop="openFarmingGuide(item.itemId, item.deficit)"
+            >
+              <span class="flex items-center gap-1 font-sans">
+                <Hammer class="w-3 h-3 text-cyan-400" /> Крафт в Мастерской
+              </span>
+              <span class="text-cyan-400 text-[10px] font-sans">Рецепт и фарм &rarr;</span>
+            </button>
+
+            <!-- Direct Farm stage if farmable -->
+            <button
+              v-if="item.deficit > 0 && getRecommendedStage(item.itemId) && !getRecommendedStage(item.itemId)?.isCraft"
+              type="button"
+              class="text-[10px] font-mono font-semibold text-cyan-300 hover:text-cyan-200 bg-cyan-950/60 hover:bg-cyan-900/60 border border-cyan-800/60 rounded px-2 py-1 flex items-center justify-between transition-colors w-full"
+              @click.stop="openFarmingGuide(item.itemId, item.deficit)"
+            >
+              <span class="flex items-center gap-1">
+                <Zap class="w-3 h-3 text-amber-400" />
+                Фарм: {{ getRecommendedStage(item.itemId)?.stageCode }}
+              </span>
+              <span class="text-slate-400 text-[9px]">~{{ getRecommendedStage(item.itemId)?.sanityPerItem }} ⚡/шт</span>
+            </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- TAB 2: FARM REQUIREMENTS (RESOLVED WITH CRAFTING) -->
+    <!-- TAB 2: FARM REQUIREMENTS (RESOLVED WITH CRAFTING & STAGE RECOMMENDATIONS) -->
     <div v-else-if="activeTab === 'farm'" class="space-y-4">
       <div class="p-4 bg-slate-900/80 rounded-xl border border-ark-border text-xs text-slate-300 flex items-start gap-3">
         <Wrench class="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
         <div>
-          <strong class="text-cyan-300">План фарма базовых компонентов:</strong>
-          Калькулятор разложил сложные T4/T5 материалы на составляющие рецептов мастерской с учетом ваших складских запасов. Ниже показаны предметы, которые необходимо непосредственно получить на этапах.
+          <strong class="text-cyan-300">План фарма базовых компонентов и лучшие карты:</strong>
+          Калькулятор разложил сложные материалы на составляющие и подобрал лучшие карты на основе данных <b>Penguin Statistics</b> с расчетом требуемых заходов и затрат Sanity.
         </div>
       </div>
 
@@ -258,24 +360,50 @@ const totalItemsReadyCount = computed(() => {
         <div
           v-for="farm in calc.farmRequirements"
           :key="farm.itemId"
-          class="bg-ark-card border border-red-500/40 bg-red-950/10 rounded-xl p-3 flex items-center gap-3 shadow-sm"
+          class="bg-ark-card border border-red-500/40 bg-red-950/10 rounded-xl p-3 flex flex-col justify-between shadow-sm space-y-3"
         >
-          <ItemIcon
-            :item-id="farm.itemId"
-            size="lg"
-            :count="farm.count"
-          />
+          <div class="flex items-start gap-3">
+            <ItemIcon
+              :item-id="farm.itemId"
+              size="lg"
+              :count="farm.count"
+            />
 
-          <div class="flex-1 min-w-0">
-            <h4 class="font-bold text-xs text-slate-200 truncate" :title="gameData.getItem(farm.itemId)?.name || farm.itemId">
-              {{ gameData.getItem(farm.itemId)?.name || farm.itemId }}
-            </h4>
-            <div class="mt-1 text-xs font-mono">
-              <span class="text-slate-400">Фармить: </span>
-              <strong class="text-red-400 text-sm font-bold">{{ farm.count }} шт.</strong>
+            <div class="flex-1 min-w-0">
+              <h4 class="font-bold text-xs text-slate-200 truncate" :title="gameData.getItem(farm.itemId)?.name || farm.itemId">
+                {{ gameData.getItem(farm.itemId)?.name || farm.itemId }}
+              </h4>
+              <div class="mt-1 text-xs font-mono">
+                <span class="text-slate-400">Фармить: </span>
+                <strong class="text-red-400 text-sm font-bold">{{ farm.count }} шт.</strong>
+              </div>
+              <div class="text-[10px] text-slate-500 font-mono">
+                Склад: {{ inventory.getStock(farm.itemId) }}
+              </div>
             </div>
-            <div class="text-[10px] text-slate-500 font-mono">
-              Склад: {{ inventory.getStock(farm.itemId) }}
+          </div>
+
+          <!-- Recommended stage badge from Penguin Stats -->
+          <div v-if="getRecommendedStage(farm.itemId)" class="pt-2 border-t border-slate-800/80 space-y-1.5">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-[11px] text-slate-400">Лучшая карта:</span>
+              <button
+                type="button"
+                class="font-mono font-bold text-cyan-300 hover:text-cyan-200 bg-cyan-950/70 border border-cyan-800/80 px-2 py-0.5 rounded text-xs flex items-center gap-1 transition-colors"
+                @click="openFarmingGuide(farm.itemId, farm.count)"
+                title="Нажмите для подробной статистики всех карт"
+              >
+                <span>{{ getRecommendedStage(farm.itemId)?.stageCode }}</span>
+                <span class="text-[10px] text-slate-400">({{ getRecommendedStage(farm.itemId)?.apCost }}⚡)</span>
+              </button>
+            </div>
+
+            <div class="flex items-center justify-between text-[11px] font-mono text-slate-400">
+              <span>Оценка:</span>
+              <span class="text-amber-300 font-medium">
+                ~{{ calculateFarmingEstimate(farm.itemId, farm.count)?.runs }} заходов &bull;
+                ~{{ calculateFarmingEstimate(farm.itemId, farm.count)?.totalSanity }} ⚡
+              </span>
             </div>
           </div>
         </div>
@@ -286,5 +414,13 @@ const totalItemsReadyCount = computed(() => {
     <div v-else-if="activeTab === 'craftingTree'">
       <CraftingTree />
     </div>
+
+    <!-- Detailed Farming Guide Modal -->
+    <FarmingGuideModal
+      :is-open="isFarmingGuideOpen"
+      :item-id="selectedFarmingItemId"
+      :needed-count="selectedFarmingNeededCount"
+      @close="isFarmingGuideOpen = false"
+    />
   </div>
 </template>

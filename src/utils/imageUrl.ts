@@ -54,10 +54,19 @@ export function getChibiPosterUrl(operatorName: string, skinIndex = 0): string {
 }
 
 export function getSkillIconUrl(iconIdOrSkillId: string): string {
+  if (!iconIdOrSkillId) return '';
   const cleanId = iconIdOrSkillId.startsWith('skill_icon_')
     ? iconIdOrSkillId
     : `skill_icon_${iconIdOrSkillId}`;
   return `${CDN_ARK}/skill/${cleanId}.png`;
+}
+
+export function getSkillIconFallbackUrl(iconIdOrSkillId: string): string {
+  if (!iconIdOrSkillId) return '';
+  const cleanId = iconIdOrSkillId.startsWith('skill_icon_')
+    ? iconIdOrSkillId
+    : `skill_icon_${iconIdOrSkillId}`;
+  return `https://fastly.jsdelivr.net/gh/Aceship/Arknight-Images@main/skills/${encodeURIComponent(cleanId)}.png`;
 }
 
 export function getItemIconUrl(iconIdOrItemId: string): string {

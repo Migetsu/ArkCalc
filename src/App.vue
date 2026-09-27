@@ -3,13 +3,16 @@ import { ref, onMounted } from 'vue';
 import { useGameDataStore } from '@/stores/gamedata';
 import { useInventoryStore } from '@/stores/inventory';
 import { usePlannerStore } from '@/stores/planner';
+import { useRosterStore } from '@/stores/roster';
 import OperatorSelector from '@/components/operator/OperatorSelector.vue';
+import RosterView from '@/components/roster/RosterView.vue';
 import WikiView from '@/components/wiki/WikiView.vue';
 import InventoryGrid from '@/components/inventory/InventoryGrid.vue';
 import ResourceSummary from '@/components/calculator/ResourceSummary.vue';
 import SettingsModal from '@/components/common/SettingsModal.vue';
 import {
   Users,
+  UserCheck,
   BookOpen,
   Package,
   Calculator,
@@ -22,8 +25,9 @@ import {
 const gameData = useGameDataStore();
 const inventory = useInventoryStore();
 const planner = usePlannerStore();
+const roster = useRosterStore();
 
-type TabType = 'operators' | 'wiki' | 'inventory' | 'calculator';
+type TabType = 'operators' | 'roster' | 'inventory' | 'calculator' | 'wiki';
 const currentTab = ref<TabType>('operators');
 const isSettingsOpen = ref<boolean>(false);
 
@@ -32,6 +36,7 @@ onMounted(async () => {
   await Promise.all([
     inventory.loadInventory(),
     planner.loadPlans(),
+    roster.loadRoster(),
     gameData.loadGameData(),
   ]);
 });
@@ -44,12 +49,8 @@ onMounted(async () => {
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         <!-- Logo -->
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-cyan-500/20 shadow-md">
-            <svg class="w-5 h-5 text-slate-950 stroke-current stroke-2 fill-none" viewBox="0 0 24 24">
-              <polygon points="12,2 22,20 2,20" />
-              <line x1="12" y1="8" x2="12" y2="14" />
-              <circle cx="12" cy="17" r="1" fill="currentColor" />
-            </svg>
+          <div class="w-9 h-9 rounded-xl overflow-hidden shadow-cyan-500/20 shadow-md border border-cyan-500/30 flex-shrink-0">
+            <img src="/favicon.svg" alt="ARK-Calc" class="w-full h-full object-cover" />
           </div>
           <div>
             <div class="flex items-center gap-2">
@@ -89,19 +90,25 @@ onMounted(async () => {
             </span>
           </button>
 
-          <!-- Wiki Tab -->
+          <!-- Roster Tab (Owned Account Operators from ArkPRTS) -->
           <button
             type="button"
             class="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all relative"
             :class="[
-              currentTab === 'wiki'
+              currentTab === 'roster'
                 ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 shadow-sm'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60',
             ]"
-            @click="currentTab = 'wiki'"
+            @click="currentTab = 'roster'"
           >
-            <BookOpen class="w-4 h-4" />
-            <span class="hidden md:inline">Вики</span>
+            <UserCheck class="w-4 h-4 text-emerald-400" />
+            <span class="hidden md:inline">Мой ростер</span>
+            <span
+              v-if="roster.rosterCount > 0"
+              class="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-800"
+            >
+              {{ roster.rosterCount }}
+            </span>
           </button>
 
           <!-- Inventory Tab -->
@@ -144,6 +151,21 @@ onMounted(async () => {
             >
               {{ planner.calculationResult.directDeficit.filter(d => d.deficit > 0).length }}
             </span>
+          </button>
+
+          <!-- Wiki Tab -->
+          <button
+            type="button"
+            class="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all relative"
+            :class="[
+              currentTab === 'wiki'
+                ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60',
+            ]"
+            @click="currentTab = 'wiki'"
+          >
+            <BookOpen class="w-4 h-4" />
+            <span class="hidden md:inline">Вики</span>
           </button>
         </nav>
 
@@ -204,9 +226,10 @@ onMounted(async () => {
       <!-- Active View -->
       <div v-else class="h-full">
         <OperatorSelector v-show="currentTab === 'operators'" />
-        <WikiView v-show="currentTab === 'wiki'" />
+        <RosterView v-show="currentTab === 'roster'" @open-settings="isSettingsOpen = true" />
         <InventoryGrid v-show="currentTab === 'inventory'" />
         <ResourceSummary v-show="currentTab === 'calculator'" />
+        <WikiView v-show="currentTab === 'wiki'" />
       </div>
     </main>
 
