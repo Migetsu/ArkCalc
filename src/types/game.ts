@@ -13,8 +13,20 @@ export interface MaterialCost {
   count: number;
 }
 
+export interface RangeGrid {
+  row: number;
+  col: number;
+}
+
+export interface RangeInfo {
+  id: string;
+  direction: number;
+  grids: RangeGrid[];
+}
+
 export interface OperatorPhase {
   maxLevel: number;
+  rangeId?: string;
   evolveCost: MaterialCost[] | null;
 }
 
@@ -42,6 +54,42 @@ export interface OperatorModule {
   costs: Record<number, MaterialCost[]>; // 1, 2, 3
 }
 
+export interface OperatorAttributes {
+  hp: number;
+  atk: number;
+  def: number;
+  res: number;
+  cost: number;
+  blockCnt: number;
+  attackTime: number;
+  respawnTime: number;
+}
+
+export interface OperatorTalentCandidate {
+  unlockPhase: number;
+  unlockLevel: number;
+  name: string;
+  description: string;
+}
+
+export interface OperatorTalent {
+  candidates: OperatorTalentCandidate[];
+}
+
+export interface OperatorSkin {
+  skinId: string;
+  charId: string;
+  portraitId: string;
+  avatarId: string;
+  isBuySkin: boolean;
+  skinName: string;
+  skinGroupName: string;
+  content?: string;
+  dialog?: string;
+  drawerList?: string[];
+  sortId?: number;
+}
+
 export interface OperatorSummary {
   id: string;
   name: string;
@@ -55,6 +103,15 @@ export interface OperatorSummary {
   allSkillLvlup: { lvlUpCost: MaterialCost[] }[];
   skills: OperatorSkill[];
   modules: OperatorModule[];
+  // Wiki metadata
+  description?: string;
+  itemUsage?: string;
+  itemDesc?: string;
+  position?: string;
+  tagList?: string[];
+  talents?: OperatorTalent[];
+  attributes?: OperatorAttributes;
+  skins?: OperatorSkin[];
 }
 
 export interface ItemSummary {

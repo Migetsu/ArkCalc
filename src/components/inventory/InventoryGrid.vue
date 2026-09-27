@@ -6,7 +6,7 @@ import { usePlannerStore } from '@/stores/planner';
 import type { ItemSummary } from '@/types/game';
 import ItemIcon from '@/components/common/ItemIcon.vue';
 import QuantityInput from '@/components/common/QuantityInput.vue';
-import { Search, Filter, AlertCircle, CheckCircle2, RotateCcw, X } from 'lucide-vue-next';
+import { Search, Filter, AlertCircle, CheckCircle2, Trash2, X } from 'lucide-vue-next';
 import { getLocalizedItemName, isCraftResource } from '@/data/materialTranslations';
 
 const gameData = useGameDataStore();
@@ -200,12 +200,12 @@ function handleClearStock() {
           </button>
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-red-950/40 text-slate-400 hover:text-red-300 border border-slate-700 hover:border-red-900/40 transition-colors"
+            class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-red-950/30 hover:bg-red-900/50 text-red-300 border border-red-800/60 transition-colors shadow-sm"
             title="Очистить все предметы на складе"
             @click="handleClearStock"
           >
-            <RotateCcw class="w-3.5 h-3.5" />
-            Сброс
+            <Trash2 class="w-3.5 h-3.5" />
+            Очистить склад
           </button>
         </div>
       </div>

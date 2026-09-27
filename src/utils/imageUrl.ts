@@ -6,9 +6,51 @@ export function getAvatarUrl(charId: string): string {
 }
 
 export function getCharacterPortraitUrl(charId: string, elite = 2): string {
+  const suffix = elite === 2 ? '_2b' : '_1b';
+  return `https://fastly.jsdelivr.net/gh/yuanyan3060/Arknights-Bot-Resource@main/skin/${charId}${suffix}.png`;
+}
+
+export function getCharacterPortraitFallbackUrl(charId: string, elite = 2): string {
   const suffix = elite === 2 ? '_2' : '_1';
-  // Portraits are also available from Yuanyan CDN under "character" folder
-  return `${CDN_ARK}/character/${charId}${suffix}.png`;
+  return `https://fastly.jsdelivr.net/gh/Aceship/Arknight-Images@main/characters/${charId}${suffix}.png`;
+}
+
+export function getCharacterPortraitSecondaryFallbackUrl(charId: string, elite = 2): string {
+  const suffix = elite === 2 ? '_2' : '_1';
+  return `https://fastly.jsdelivr.net/gh/yuanyan3060/Arknights-Bot-Resource@main/portrait/${charId}${suffix}.png`;
+}
+
+export function getSkinIllustrationUrl(portraitId: string): string {
+  if (!portraitId) return '';
+  return `https://fastly.jsdelivr.net/gh/yuanyan3060/Arknights-Bot-Resource@main/skin/${encodeURIComponent(portraitId)}b.png`;
+}
+
+export function getSkinIllustrationFallbackUrl(portraitId: string): string {
+  if (!portraitId) return '';
+  return `https://fastly.jsdelivr.net/gh/Aceship/Arknight-Images@main/characters/${encodeURIComponent(portraitId)}.png`;
+}
+
+export function getSkinAvatarUrl(avatarId: string): string {
+  if (!avatarId) return '';
+  return `https://fastly.jsdelivr.net/gh/yuanyan3060/Arknights-Bot-Resource@main/avatar/${encodeURIComponent(avatarId)}.png`;
+}
+
+export function getChibiWebmUrl(operatorName: string, skinIndex = 0): string {
+  if (!operatorName) return '';
+  const clean = operatorName.replace(/['"\s]/g, '_').replace(/_+/g, '_').trim();
+  if (skinIndex === 0) {
+    return `https://arknights.wiki.gg/images/${encodeURIComponent(clean)}.webm`;
+  }
+  return `https://arknights.wiki.gg/images/${encodeURIComponent(clean)}_Skin_${skinIndex}.webm`;
+}
+
+export function getChibiPosterUrl(operatorName: string, skinIndex = 0): string {
+  if (!operatorName) return '';
+  const clean = operatorName.replace(/['"\s]/g, '_').replace(/_+/g, '_').trim();
+  if (skinIndex === 0) {
+    return `https://arknights.wiki.gg/images/thumb/${encodeURIComponent(clean)}.webm/356px--${encodeURIComponent(clean)}.webm.jpg`;
+  }
+  return `https://arknights.wiki.gg/images/thumb/${encodeURIComponent(clean)}_Skin_${skinIndex}.webm/356px--${encodeURIComponent(clean)}_Skin_${skinIndex}.webm.jpg`;
 }
 
 export function getSkillIconUrl(iconIdOrSkillId: string): string {

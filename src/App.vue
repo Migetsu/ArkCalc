@@ -4,11 +4,13 @@ import { useGameDataStore } from '@/stores/gamedata';
 import { useInventoryStore } from '@/stores/inventory';
 import { usePlannerStore } from '@/stores/planner';
 import OperatorSelector from '@/components/operator/OperatorSelector.vue';
+import WikiView from '@/components/wiki/WikiView.vue';
 import InventoryGrid from '@/components/inventory/InventoryGrid.vue';
 import ResourceSummary from '@/components/calculator/ResourceSummary.vue';
 import SettingsModal from '@/components/common/SettingsModal.vue';
 import {
   Users,
+  BookOpen,
   Package,
   Calculator,
   Settings,
@@ -21,7 +23,7 @@ const gameData = useGameDataStore();
 const inventory = useInventoryStore();
 const planner = usePlannerStore();
 
-type TabType = 'operators' | 'inventory' | 'calculator';
+type TabType = 'operators' | 'wiki' | 'inventory' | 'calculator';
 const currentTab = ref<TabType>('operators');
 const isSettingsOpen = ref<boolean>(false);
 
@@ -85,6 +87,21 @@ onMounted(async () => {
             >
               {{ planner.planCount }}
             </span>
+          </button>
+
+          <!-- Wiki Tab -->
+          <button
+            type="button"
+            class="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all relative"
+            :class="[
+              currentTab === 'wiki'
+                ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60',
+            ]"
+            @click="currentTab = 'wiki'"
+          >
+            <BookOpen class="w-4 h-4" />
+            <span class="hidden md:inline">Вики</span>
           </button>
 
           <!-- Inventory Tab -->
@@ -187,6 +204,7 @@ onMounted(async () => {
       <!-- Active View -->
       <div v-else class="h-full">
         <OperatorSelector v-show="currentTab === 'operators'" />
+        <WikiView v-show="currentTab === 'wiki'" />
         <InventoryGrid v-show="currentTab === 'inventory'" />
         <ResourceSummary v-show="currentTab === 'calculator'" />
       </div>

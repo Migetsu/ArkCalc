@@ -7,17 +7,23 @@ import type {
   GameConstants,
   Profession,
   OperatorModule,
+  RangeInfo,
+  OperatorSkin,
 } from '@/types/game';
 import { getAvatarUrl } from '@/utils/imageUrl';
 import {
   getLocalizedItemName,
   isCraftResource,
   OPERATOR_CANONICAL_EN_NAMES,
+  stripArknightsTags,
+  translateTagToEn,
+  getArchetypeTraitEn,
 } from '@/data/materialTranslations';
+import { CN_OPERATOR_TRANSLATIONS } from '@/data/cnOperatorTranslations';
 
 const CACHE_DB_NAME = 'ARKCalcCacheDB';
 const CACHE_STORE_NAME = 'gamedata_cache';
-const CACHE_KEY = 'ark_cleaned_gamedata_v6';
+const CACHE_KEY = 'ark_cleaned_gamedata_v14_skins';
 
 // Open simple IndexedDB for game data cache
 function openCacheDb(): Promise<IDBDatabase> {
@@ -76,6 +82,7 @@ export const useGameDataStore = defineStore('gamedata', () => {
   const items = ref<Record<string, ItemSummary>>({});
   const recipes = ref<Record<string, WorkshopRecipe>>({}); // mapped by itemId
   const constants = ref<GameConstants | null>(null);
+  const ranges = ref<Record<string, RangeInfo>>({});
 
   function getSavedLanguage(): 'ru' | 'en' {
     try {
@@ -107,6 +114,10 @@ export const useGameDataStore = defineStore('gamedata', () => {
 
   const getOperator = (id: string): OperatorSummary | undefined => {
     return operators.value[id];
+  };
+
+  const getRange = (rangeId: string): RangeInfo | undefined => {
+    return ranges.value[rangeId];
   };
 
   const getItem = (id: string): ItemSummary | undefined => {
@@ -150,6 +161,7 @@ export const useGameDataStore = defineStore('gamedata', () => {
         items.value = cached.items;
         recipes.value = cached.recipes;
         constants.value = cached.constants;
+        ranges.value = cached.ranges || {};
         isReady.value = true;
         isLoading.value = false;
         loadingProgress.value = 100;
@@ -163,6 +175,11 @@ export const useGameDataStore = defineStore('gamedata', () => {
         'https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/zh_CN/gamedata/excel';
       const jsdelivrBase =
         'https://cdn.jsdelivr.net/gh/Kengxxiao/ArknightsGameData@master/zh_CN/gamedata/excel';
+
+      const rawEnBase =
+        'https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData_YoStar/main/en_US/gamedata/excel';
+      const jsdelivrEnBase =
+        'https://cdn.jsdelivr.net/gh/Kengxxiao/ArknightsGameData_YoStar@main/en_US/gamedata/excel';
 
       // 1. gamedata_const.json
       loadingStatus.value = 'Загрузка игровых констант...';
@@ -235,12 +252,19 @@ export const useGameDataStore = defineStore('gamedata', () => {
       // 3. uniequip_table.json
       loadingStatus.value = 'Загрузка модулей оперативников...';
       loadingProgress.value = 45;
-      const uniequipData = await fetchJsonWithFallback(
-        `${rawBase}/uniequip_table.json`,
-        `${jsdelivrBase}/uniequip_table.json`
-      );
+      const [uniequipData, enUniequipData] = await Promise.all([
+        fetchJsonWithFallback(
+          `${rawBase}/uniequip_table.json`,
+          `${jsdelivrBase}/uniequip_table.json`
+        ),
+        fetchJsonWithFallback(
+          `${rawEnBase}/uniequip_table.json`,
+          `${jsdelivrEnBase}/uniequip_table.json`
+        ).catch(() => ({})),
+      ]);
       const equipDict = uniequipData.equipDict || {};
       const charEquip = uniequipData.charEquip || {};
+      const enEquipDict = enUniequipData?.equipDict || {};
 
       // 4. item_table.json
       loadingStatus.value = 'Загрузка таблицы предметов...';
@@ -294,13 +318,97 @@ export const useGameDataStore = defineStore('gamedata', () => {
       }
       items.value = parsedItems;
 
-      // 5. character_table.json
-      loadingStatus.value = 'Загрузка данных оперативников...';
-      loadingProgress.value = 80;
-      const charData = await fetchJsonWithFallback(
-        `${rawBase}/character_table.json`,
-        `${jsdelivrBase}/character_table.json`
+      // 5. range_table.json
+      loadingStatus.value = 'Загрузка радиусов атаки...';
+      loadingProgress.value = 75;
+      const rawRanges = await fetchJsonWithFallback(
+        `${rawBase}/range_table.json`,
+        `${jsdelivrBase}/range_table.json`
       );
+      const parsedRanges: Record<string, RangeInfo> = {};
+      for (const rId in rawRanges || {}) {
+        const r = rawRanges[rId];
+        if (r && r.grids) {
+          parsedRanges[rId] = {
+            id: rId,
+            direction: r.direction || 1,
+            grids: r.grids || [],
+          };
+        }
+      }
+      ranges.value = parsedRanges;
+
+      // 6. skin_table.json
+      loadingStatus.value = 'Загрузка гардероба и скинов...';
+      loadingProgress.value = 80;
+      const [skinData, enSkinData] = await Promise.all([
+        fetchJsonWithFallback(
+          `${rawBase}/skin_table.json`,
+          `${jsdelivrBase}/skin_table.json`
+        ).catch(() => ({})),
+        fetchJsonWithFallback(
+          `${rawEnBase}/skin_table.json`,
+          `${jsdelivrEnBase}/skin_table.json`
+        ).catch(() => ({})),
+      ]);
+
+      const zhCharSkins = skinData?.charSkins || {};
+      const enCharSkins = enSkinData?.charSkins || {};
+
+      const operatorSkinsMap: Record<string, OperatorSkin[]> = {};
+      for (const sId in zhCharSkins) {
+        const s = zhCharSkins[sId];
+        if (!s || !s.charId || !s.portraitId) continue;
+        const enS = enCharSkins[sId];
+
+        const charId = s.charId;
+        if (!operatorSkinsMap[charId]) {
+          operatorSkinsMap[charId] = [];
+        }
+
+        const isBuy = Boolean(s.isBuySkin || sId.includes('@'));
+        const rawSkinName = enS?.displaySkin?.skinName || s.displaySkin?.skinName || '';
+        const rawGroupName = enS?.displaySkin?.skinGroupName || s.displaySkin?.skinGroupName || '';
+
+        const skinName = rawSkinName || (isBuy ? 'Special Outfit' : sId.endsWith('#2') ? 'Elite 2' : 'Default');
+        const skinGroupName = rawGroupName || (isBuy ? 'Special Collection' : 'Default Outfit');
+
+        operatorSkinsMap[charId].push({
+          skinId: s.skinId || sId,
+          charId,
+          portraitId: s.portraitId,
+          avatarId: s.avatarId || s.portraitId,
+          isBuySkin: isBuy,
+          skinName,
+          skinGroupName,
+          content: stripArknightsTags(enS?.displaySkin?.content || s.displaySkin?.content || ''),
+          dialog: stripArknightsTags(enS?.displaySkin?.dialog || s.displaySkin?.dialog || ''),
+          drawerList: s.displaySkin?.drawerList || enS?.displaySkin?.drawerList || [],
+          sortId: s.displaySkin?.sortId ?? 0,
+        });
+      }
+
+      for (const cId in operatorSkinsMap) {
+        operatorSkinsMap[cId].sort((a, b) => {
+          if (!a.isBuySkin && b.isBuySkin) return -1;
+          if (a.isBuySkin && !b.isBuySkin) return 1;
+          return (a.sortId ?? 0) - (b.sortId ?? 0);
+        });
+      }
+
+      // 7. character_table.json
+      loadingStatus.value = 'Загрузка данных оперативников...';
+      loadingProgress.value = 85;
+      const [charData, enCharData] = await Promise.all([
+        fetchJsonWithFallback(
+          `${rawBase}/character_table.json`,
+          `${jsdelivrBase}/character_table.json`
+        ),
+        fetchJsonWithFallback(
+          `${rawEnBase}/character_table.json`,
+          `${jsdelivrEnBase}/character_table.json`
+        ).catch(() => ({})),
+      ]);
 
       const parsedOperators: Record<string, OperatorSummary> = {};
 
@@ -324,6 +432,7 @@ export const useGameDataStore = defineStore('gamedata', () => {
         // Clean phases
         const phases = char.phases.map((p: any) => ({
           maxLevel: p.maxLevel,
+          rangeId: p.rangeId || undefined,
           evolveCost: p.evolveCost
             ? p.evolveCost.map((ec: any) => ({ id: ec.id, count: ec.count }))
             : null,
@@ -349,7 +458,7 @@ export const useGameDataStore = defineStore('gamedata', () => {
           };
         });
 
-        // Clean modules
+        // Clean modules with English overlay
         const modules: OperatorModule[] = [];
         const moduleIds: string[] = charEquip[charId] || [];
         for (const mId of moduleIds) {
@@ -369,15 +478,18 @@ export const useGameDataStore = defineStore('gamedata', () => {
             }
           }
 
+          const enEq = enEquipDict[mId];
+          const modName = enEq?.uniEquipName || eq.uniEquipName || mId;
+
           const typeName1 = eq.typeName1 || 'ADVANCED';
           const typeName2 = eq.typeName2 || '';
           const formattedName = typeName2
-            ? `Модуль ${typeName2} (${typeName1})`
-            : `Модуль (${typeName1})`;
+            ? `Module ${typeName2} (${typeName1})`
+            : `Module (${typeName1})`;
 
           modules.push({
             id: mId,
-            name: eq.uniEquipName || mId,
+            name: modName,
             uniEquipIcon: eq.uniEquipIcon || mId,
             typeIcon: eq.typeIcon || 'original',
             typeName: typeName1,
@@ -388,9 +500,55 @@ export const useGameDataStore = defineStore('gamedata', () => {
           });
         }
 
+        const enChar = enCharData?.[charId];
+        const curated = CN_OPERATOR_TRANSLATIONS[charId];
         const canonicalEn = OPERATOR_CANONICAL_EN_NAMES[charId];
         const rawApp = (char.appellation || '').replace(/^["']|["']$/g, '').trim();
-        const opName = canonicalEn || rawApp || char.name;
+        const opName = canonicalEn || enChar?.name || rawApp || char.name;
+
+        // Parse combat stats from max phase
+        const lastKeyFrame = (char.phases?.[char.phases.length - 1]?.attributesKeyFrames || [])[1] || (char.phases?.[0]?.attributesKeyFrames || [])[0];
+        const attrData = lastKeyFrame?.data || {};
+
+        const attributes = {
+          hp: attrData.maxHp || 0,
+          atk: attrData.atk || 0,
+          def: attrData.def || 0,
+          res: attrData.magicResistance || 0,
+          cost: attrData.cost || 0,
+          blockCnt: attrData.blockCnt || 1,
+          attackTime: char.phases?.[0]?.attributesKeyFrames?.[0]?.data?.baseAttackTime || 1.0,
+          respawnTime: char.phases?.[0]?.attributesKeyFrames?.[0]?.data?.respawnTime || 70,
+        };
+
+        // Parse talents - prefer enChar talents, fallback to curated CN dictionary, then char.talents
+        const rawTalents = (enChar && enChar.talents && enChar.talents.length > 0) ? enChar.talents : (char.talents || []);
+        const talents = rawTalents.map((t: any, tIdx: number) => {
+          const curatedTalent = curated?.talents?.[tIdx];
+          return {
+            candidates: (t.candidates || []).map((c: any) => ({
+              unlockPhase: c.unlockCondition?.phase === 'PHASE_2' ? 2 : c.unlockCondition?.phase === 'PHASE_1' ? 1 : 0,
+              unlockLevel: c.unlockCondition?.level || 1,
+              name: curatedTalent?.name || c.name || '',
+              description: curatedTalent?.description || stripArknightsTags(c.description || ''),
+            })),
+          };
+        });
+
+        // Trait (description): curated -> enChar description -> archetype description -> CN description
+        const traitDescription =
+          curated?.trait ||
+          stripArknightsTags(enChar?.description || '') ||
+          getArchetypeTraitEn(char.subProfessionId) ||
+          stripArknightsTags(char.description || '');
+
+        // Lore quote / itemDesc: curated -> enChar itemDesc -> CN itemDesc
+        const itemDesc = curated?.quote || stripArknightsTags(enChar?.itemDesc || char.itemDesc || '');
+
+        // Tag list: translate CN tags to English
+        const rawTagList: string[] = char.tagList || [];
+        const tagList = rawTagList.map((t: string) => translateTagToEn(t));
+
         parsedOperators[charId] = {
           id: charId,
           name: opName,
@@ -404,6 +562,14 @@ export const useGameDataStore = defineStore('gamedata', () => {
           allSkillLvlup,
           skills,
           modules,
+          description: traitDescription,
+          itemUsage: stripArknightsTags(enChar?.itemUsage || char.itemUsage || ''),
+          itemDesc,
+          position: char.position || 'MELEE',
+          tagList,
+          talents,
+          attributes,
+          skins: operatorSkinsMap[charId] || [],
         };
       }
 
@@ -417,6 +583,7 @@ export const useGameDataStore = defineStore('gamedata', () => {
         items: parsedItems,
         recipes: parsedRecipes,
         constants: parsedConstants,
+        ranges: parsedRanges,
         savedAt: Date.now(),
       });
 
@@ -443,8 +610,10 @@ export const useGameDataStore = defineStore('gamedata', () => {
     items,
     recipes,
     constants,
+    ranges,
     operatorList,
     getOperator,
+    getRange,
     getItem,
     getRecipe,
     loadGameData,

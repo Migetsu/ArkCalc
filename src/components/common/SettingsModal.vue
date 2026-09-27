@@ -3,8 +3,8 @@ import { ref } from 'vue';
 import { useInventoryStore } from '@/stores/inventory';
 import { usePlannerStore } from '@/stores/planner';
 import { useGameDataStore } from '@/stores/gamedata';
-import { exportDatabaseToJson, importDatabaseFromJson } from '@/services/syncService';
-import { X, Download, Upload, CheckCircle, AlertCircle, RefreshCw, Globe } from 'lucide-vue-next';
+import { exportDatabaseToJson, importDatabaseFromJson, parseAndImportData } from '@/services/syncService';
+import { X, Download, Upload, CheckCircle, AlertCircle, RefreshCw, Globe, Trash2 } from 'lucide-vue-next';
 
 defineProps<{
   isOpen: boolean;
@@ -23,6 +23,8 @@ const isOperating = ref(false);
 const isRefreshing = ref(false);
 
 const fileInputRef = ref<HTMLInputElement | null>(null);
+const showPasteBox = ref(false);
+const pasteInputText = ref('');
 
 async function handleExportJson() {
   try {
@@ -57,6 +59,42 @@ async function handleFileSelected(e: Event) {
   } finally {
     isOperating.value = false;
     target.value = '';
+  }
+}
+
+async function handleImportFromPaste() {
+  if (!pasteInputText.value.trim()) return;
+  isOperating.value = true;
+  statusMessage.value = null;
+  try {
+    const res = await parseAndImportData(pasteInputText.value);
+    if (res.success) {
+      await inventory.loadInventory();
+      await planner.loadPlans();
+      statusMessage.value = { type: 'success', text: res.message };
+      pasteInputText.value = '';
+      showPasteBox.value = false;
+    } else {
+      statusMessage.value = { type: 'error', text: res.message };
+    }
+  } catch (err: any) {
+    statusMessage.value = { type: 'error', text: `Ошибка импорта: ${err.message || err}` };
+  } finally {
+    isOperating.value = false;
+  }
+}
+
+async function handleClearWarehouse() {
+  if (confirm('Вы уверены, что хотите стереть все ресурсы со склада?')) {
+    await inventory.clearAll();
+    statusMessage.value = { type: 'info', text: 'Данные склада успешно очищены.' };
+  }
+}
+
+async function handleClearAllPlans() {
+  if (confirm('Вы уверены, что хотите удалить все добавленные планы оперативников?')) {
+    await planner.clearAllPlans();
+    statusMessage.value = { type: 'info', text: 'Все планы оперативников удалены.' };
   }
 }
 
@@ -175,6 +213,77 @@ async function handleRefreshGameData() {
               Восстановить из файла .json
             </button>
             <input ref="fileInputRef" type="file" accept=".json" class="hidden" @change="handleFileSelected" />
+          </div>
+
+          <!-- Direct Paste from ArkPRTS -->
+          <div class="pt-3 border-t border-slate-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-300">Или вставьте скопированный текст (ArkPRTS / Penguin Stats / JSON)</span>
+              <button
+                v-if="showPasteBox"
+                type="button"
+                class="text-[11px] text-slate-400 hover:text-white"
+                @click="showPasteBox = false"
+              >
+                Скрыть
+              </button>
+            </div>
+
+            <div v-if="!showPasteBox">
+              <button
+                type="button"
+                class="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-cyan-400 text-xs font-medium border border-slate-700 transition-colors"
+                @click="showPasteBox = true"
+              >
+                Вставить скопированные данные вручную
+              </button>
+            </div>
+
+            <div v-else class="space-y-2">
+              <textarea
+                v-model="pasteInputText"
+                rows="4"
+                placeholder="Вставьте сюда скопированный результат Export full raw data из ArkPRTS или JSON..."
+                class="w-full bg-slate-900 border border-ark-border rounded-xl p-3 font-mono text-[11px] text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+              ></textarea>
+              <button
+                type="button"
+                class="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow transition-all"
+                :disabled="!pasteInputText.trim() || isOperating"
+                @click="handleImportFromPaste"
+              >
+                Импортировать вставленный текст
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger Zone Section -->
+        <div class="p-4 bg-red-950/20 rounded-xl border border-red-900/40 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-red-300 text-sm flex items-center gap-2">
+              <Trash2 class="w-4 h-4 text-red-400" />
+              Управление данными и сброс
+            </h4>
+          </div>
+          <p class="text-slate-400">Здесь можно быстро стереть данные склада после тестирования или очистить все планы оперативников.</p>
+          <div class="flex flex-wrap items-center gap-3 pt-1">
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-red-950/50 hover:bg-red-900/60 text-red-200 border border-red-800/80 text-xs font-semibold transition-colors"
+              @click="handleClearWarehouse"
+            >
+              <Trash2 class="w-3.5 h-3.5 text-red-400" />
+              Очистить склад (Стереть все ресурсы)
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-red-950/40 text-slate-400 hover:text-red-300 border border-slate-800 text-xs font-semibold transition-colors"
+              @click="handleClearAllPlans"
+            >
+              <Trash2 class="w-3.5 h-3.5" />
+              Сбросить все планы
+            </button>
           </div>
         </div>
       </div>

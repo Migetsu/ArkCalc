@@ -1,4 +1,5 @@
 import { db, type UserInventory, type OperatorTargetPlan } from '@/services/db';
+import { isCraftResource } from '@/data/materialTranslations';
 
 export interface ArkCalcBackupData {
   app: 'ARK-Calc';
@@ -41,76 +42,179 @@ export async function exportDatabaseToJson(): Promise<void> {
 }
 
 /**
- * 1-click Import IndexedDB data from a .json file
+ * 1-click Import IndexedDB data from a .json file or raw text
  */
+export async function parseAndImportData(rawText: string): Promise<{
+  success: boolean;
+  message: string;
+  inventoryCount?: number;
+  plansCount?: number;
+}> {
+  const text = rawText.trim();
+  if (!text) {
+    return { success: false, message: 'Данные для импорта пусты.' };
+  }
+
+  try {
+    let parsedInventory: UserInventory[] = [];
+    let parsedPlans: OperatorTargetPlan[] = [];
+
+    // Check if CSV format (Krooster items CSV)
+    if (text.includes(',') && !text.startsWith('{') && !text.startsWith('[')) {
+      const lines = text.split('\n');
+      for (const line of lines) {
+        const parts = line.split(',').map((s) => s.trim().replace(/^["']|["']$/g, ''));
+        if (parts.length >= 2) {
+          const id = parts[0];
+          const count = parseInt(parts[1], 10);
+          if (id && !isNaN(count) && count > 0 && isCraftResource(id)) {
+            parsedInventory.push({ itemId: id, amount: count });
+          }
+        }
+      }
+    } else {
+      const data = JSON.parse(text);
+
+      // 1. Native ARK-Calc backup format
+      if (Array.isArray(data.inventory) || Array.isArray(data.plans)) {
+        if (Array.isArray(data.inventory)) {
+          parsedInventory = data.inventory.filter((i: any) => isCraftResource(i.itemId));
+        }
+        if (Array.isArray(data.plans)) {
+          parsedPlans = data.plans;
+        }
+      }
+      // 2. Penguin Statistics JSON: { items: [ { id: "30012", have: 15 } ] }
+      else if (data.items && Array.isArray(data.items)) {
+        for (const itm of data.items) {
+          const id = String(itm.id || itm.itemId || '');
+          const count = Number(itm.have ?? itm.count ?? itm.amount ?? 0);
+          if (id && count > 0 && isCraftResource(id)) {
+            parsedInventory.push({ itemId: id, amount: count });
+          }
+        }
+      }
+      // 3. ArkPRTS Full Raw Data (from Game packet or Skland)
+      else {
+        // Find inventory object
+        const invSource = data.inventory || data.items || data.data?.inventory || data.data?.warehouse;
+        if (invSource) {
+          if (Array.isArray(invSource)) {
+            for (const itm of invSource) {
+              const id = String(itm.id || itm.itemId || '');
+              const count = Number(itm.count ?? itm.amount ?? itm.have ?? 0);
+              if (id && count > 0 && isCraftResource(id)) {
+                parsedInventory.push({ itemId: id, amount: count });
+              }
+            }
+          } else if (typeof invSource === 'object') {
+            for (const [id, count] of Object.entries(invSource)) {
+              const num = Number(count);
+              if (id && num > 0 && isCraftResource(id)) {
+                parsedInventory.push({ itemId: id, amount: num });
+              }
+            }
+          }
+        }
+
+        // Find character troop
+        const charsSource = data.troop?.chars || data.chars || data.char || data.data?.troop?.chars;
+        if (charsSource) {
+          const charList = Array.isArray(charsSource) ? charsSource : Object.values(charsSource);
+          for (const op of charList as any[]) {
+            const charId = op.charId || op.operatorId || op.id;
+            if (!charId) continue;
+
+            const elite = op.evolvePhase ?? op.elite ?? 0;
+            const level = op.level ?? 1;
+
+            // Skills & masteries
+            let skills = [7];
+            let masteries: number[] = [];
+            if (Array.isArray(op.skills)) {
+              masteries = op.skills.map((s: any) => (typeof s === 'object' ? s.specializeLevel || 0 : 0));
+              if (op.skills.length > 0 && typeof op.skills[0] === 'object') {
+                skills = [op.skills[0].level || 7];
+              }
+            } else if (Array.isArray(op.masteries)) {
+              masteries = op.masteries;
+            }
+
+            // Modules
+            const modules: Record<string, number> = {};
+            if (op.equip && typeof op.equip === 'object') {
+              for (const [eqId, eqVal] of Object.entries(op.equip)) {
+                const lvl = typeof eqVal === 'object' ? (eqVal as any).level || 0 : Number(eqVal) || 0;
+                if (lvl > 0) modules[eqId] = lvl;
+              }
+            } else if (op.modules && typeof op.modules === 'object') {
+              Object.assign(modules, op.modules);
+            }
+
+            parsedPlans.push({
+              charId,
+              current: {
+                elite,
+                level,
+                skills,
+                masteries,
+                modules,
+              },
+              target: {
+                elite: op.targetElite ?? elite,
+                level: op.targetLevel ?? level,
+                skills: op.targetSkills ?? skills,
+                masteries: op.targetMasteries ?? masteries,
+                modules: op.targetModules ?? modules,
+              },
+            });
+          }
+        }
+      }
+    }
+
+    if (parsedInventory.length === 0 && parsedPlans.length === 0) {
+      return {
+        success: false,
+        message: 'Не удалось распознать предметы или персонажей в переданных данных.',
+      };
+    }
+
+    // Save to database
+    await db.transaction('rw', [db.inventory, db.plans], async () => {
+      if (parsedInventory.length > 0) {
+        await db.inventory.clear();
+        await db.inventory.bulkPut(parsedInventory);
+      }
+      if (parsedPlans.length > 0) {
+        await db.plans.clear();
+        await db.plans.bulkPut(parsedPlans);
+      }
+    });
+
+    return {
+      success: true,
+      message: `Успешно импортировано: ${parsedInventory.length} предметов склада, ${parsedPlans.length} планов.`,
+      inventoryCount: parsedInventory.length,
+      plansCount: parsedPlans.length,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      message: `Ошибка разбора данных: ${err.message || err}`,
+    };
+  }
+}
+
 export async function importDatabaseFromJson(file: File): Promise<{
   success: boolean;
   message: string;
   inventoryCount?: number;
   plansCount?: number;
 }> {
-try {
-  const text = await file.text();
-  const data = JSON.parse(text) as Partial<ArkCalcBackupData>;
-
-  // Support ArkPRTS raw export format
-  if (!data.inventory && !data.plans) {
-    const raw = data as any;
-    if (raw.char && raw.items) {
-      const transformed: ArkCalcBackupData = {
-        app: 'ARK-Calc',
-        version: 1,
-        exportedAt: new Date().toISOString(),
-        inventory: raw.items.map((itm: any) => ({ itemId: itm.itemId, count: itm.count })),
-        plans: raw.char.map((op: any) => ({
-          charId: op.charId || op.operatorId || op.id,
-          current: {
-            elite: op.elite ?? 0,
-            level: op.level ?? 1,
-            skills: (op.skills ?? []).map((s: any) => s.level ?? 1),
-            masteries: op.masteries ?? [],
-            modules: op.modules ?? {},
-          },
-          target: {
-            elite: op.targetElite ?? op.elite ?? 0,
-            level: op.targetLevel ?? op.level ?? 1,
-            skills: (op.targetSkills ?? []).map((s: any) => s.level ?? 1),
-            masteries: op.targetMasteries ?? [],
-            modules: op.targetModules ?? {},
-          },
-        })),
-      };
-      data.inventory = transformed.inventory;
-      data.plans = transformed.plans;
-    } else {
-      return {
-        success: false,
-        message: 'Файл не содержит корректных данных ARK-Calc.',
-      };
-    }
-  }
-
-    await db.transaction('rw', [db.inventory, db.plans], async () => {
-      if (Array.isArray(data.inventory)) {
-        await db.inventory.clear();
-        if (data.inventory.length > 0) {
-          await db.inventory.bulkPut(data.inventory);
-        }
-      }
-      if (Array.isArray(data.plans)) {
-        await db.plans.clear();
-        if (data.plans.length > 0) {
-          await db.plans.bulkPut(data.plans);
-        }
-      }
-    });
-
-    return {
-      success: true,
-      message: 'База данных успешно восстановлена!',
-      inventoryCount: data.inventory?.length || 0,
-      plansCount: data.plans?.length || 0,
-    };
+  try {
+    const text = await file.text();
+    return await parseAndImportData(text);
   } catch (err: any) {
     return {
       success: false,

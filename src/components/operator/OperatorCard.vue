@@ -4,7 +4,7 @@ import type { OperatorSummary } from '@/types/game';
 import { usePlannerStore } from '@/stores/planner';
 import { useGameDataStore } from '@/stores/gamedata';
 import { getAvatarUrl, PLACEHOLDER_AVATAR } from '@/utils/imageUrl';
-import { Edit3, Trash2, Plus } from 'lucide-vue-next';
+import { Edit3, Trash2, Plus, BookOpen } from 'lucide-vue-next';
 
 const props = defineProps<{
   operator: OperatorSummary;
@@ -12,6 +12,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'edit', operator: OperatorSummary): void;
+  (e: 'dossier', operator: OperatorSummary): void;
 }>();
 
 const planner = usePlannerStore();
@@ -68,20 +69,31 @@ function getModuleInfo(modId: string) {
     <!-- Top Bar with Class and Rarity -->
     <div class="p-3 pb-2 flex items-start gap-3">
       <!-- Avatar -->
-      <div class="relative w-14 h-14 flex-shrink-0 rounded-lg overflow-hidden border border-ark-border bg-slate-900 shadow">
+      <div
+        class="relative w-14 h-14 flex-shrink-0 rounded-lg overflow-hidden border border-ark-border bg-slate-900 shadow cursor-pointer group/avatar"
+        title="Нажмите, чтобы открыть досье оперативника"
+        @click="emit('dossier', operator)"
+      >
         <img
           :src="getAvatarUrl(operator.id)"
           :alt="operator.name"
           loading="lazy"
-          class="w-full h-full object-cover group-hover:scale-105 transition-transform"
+          class="w-full h-full object-cover group-hover/avatar:scale-110 transition-transform"
           @error="($event.target as HTMLImageElement).src = PLACEHOLDER_AVATAR"
         />
+        <div class="absolute inset-0 bg-cyan-950/40 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center transition-opacity">
+          <BookOpen class="w-4 h-4 text-cyan-300 drop-shadow" />
+        </div>
       </div>
 
       <!-- Info -->
       <div class="flex-1 min-w-0">
         <div class="flex items-center justify-between gap-1">
-          <h4 class="font-bold text-sm text-slate-100 truncate" :title="operator.name">
+          <h4
+            class="font-bold text-sm text-slate-100 truncate cursor-pointer hover:text-cyan-300 transition-colors"
+            :title="operator.name"
+            @click="emit('dossier', operator)"
+          >
             {{ operator.name }}
           </h4>
           <span class="text-xs font-mono font-bold tracking-tighter" :class="rarityColor">
@@ -142,7 +154,16 @@ function getModuleInfo(modId: string) {
     </div>
 
     <!-- Actions Footer -->
-    <div class="px-3 py-2 bg-slate-900/50 border-t border-ark-border/60 flex items-center justify-between gap-2 mt-auto">
+    <div class="px-3 py-2 bg-slate-900/50 border-t border-ark-border/60 flex items-center justify-between gap-1.5 mt-auto">
+      <button
+        type="button"
+        class="p-1.5 text-slate-400 hover:text-cyan-300 hover:bg-cyan-950/40 rounded-md border border-transparent hover:border-cyan-800/60 transition-colors"
+        title="Посмотреть характеристики и досье"
+        @click="emit('dossier', operator)"
+      >
+        <BookOpen class="w-3.5 h-3.5" />
+      </button>
+
       <template v-if="hasPlan">
         <button
           type="button"
@@ -154,7 +175,7 @@ function getModuleInfo(modId: string) {
         </button>
         <button
           type="button"
-          class="p-1 text-slate-400 hover:text-red-400 hover:bg-red-950/30 rounded border border-transparent hover:border-red-900/40 transition-colors"
+          class="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-950/30 rounded-md border border-transparent hover:border-red-900/40 transition-colors"
           title="Удалить из плана"
           @click="handleRemove"
         >
@@ -165,7 +186,7 @@ function getModuleInfo(modId: string) {
       <template v-else>
         <button
           type="button"
-          class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 transition-colors"
+          class="flex-1 inline-flex items-center justify-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 transition-colors"
           @click="handleEdit"
         >
           <Plus class="w-3.5 h-3.5 text-cyan-400" />

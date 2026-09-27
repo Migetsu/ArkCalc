@@ -7,6 +7,7 @@ import { usePlannerStore } from '@/stores/planner';
 import type { OperatorSummary, Profession } from '@/types/game';
 import OperatorCard from './OperatorCard.vue';
 import PlanEditorModal from './PlanEditorModal.vue';
+import OperatorDossierModal from './OperatorDossierModal.vue';
 import { Search, Filter, UserCheck, X } from 'lucide-vue-next';
 import {
   normalizeSearchString,
@@ -24,6 +25,19 @@ const selectedPlanFilter = ref<'all' | 'planned' | 'unplanned'>('all');
 
 const selectedOperatorForEdit = ref<OperatorSummary | null>(null);
 const isModalOpen = ref(false);
+
+const selectedOperatorForDossier = ref<OperatorSummary | null>(null);
+const isDossierOpen = ref(false);
+
+function openDossier(op: OperatorSummary) {
+  selectedOperatorForDossier.value = op;
+  isDossierOpen.value = true;
+}
+
+function closeDossier() {
+  isDossierOpen.value = false;
+  selectedOperatorForDossier.value = null;
+}
 
 const professions: { id: Profession; label: string }[] = [
   { id: 'PIONEER', label: 'Vanguard' },
@@ -321,6 +335,7 @@ function clearFilters() {
                 :key="op.id"
                 :operator="op"
                 @edit="openPlanEditor"
+                @dossier="openDossier"
               />
             </div>
           </DynamicScrollerItem>
@@ -336,6 +351,14 @@ function clearFilters() {
       :operator="selectedOperatorForEdit"
       :is-open="isModalOpen"
       @close="closeModal"
+    />
+
+    <!-- Operator Dossier Modal (Option A) -->
+    <OperatorDossierModal
+      :operator="selectedOperatorForDossier"
+      :is-open="isDossierOpen"
+      @close="closeDossier"
+      @open-plan="openPlanEditor"
     />
   </div>
 </template>
