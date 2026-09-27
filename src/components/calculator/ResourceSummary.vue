@@ -43,9 +43,49 @@ const totalItemsReadyCount = computed(() => {
   return calc.value.directDeficit.filter((d) => d.deficit === 0).length;
 });
 
-// Plan-wide Sanity estimation via Penguin Stats
+// Plan-wide Sanity estimation via Penguin Stats (Materials, LMD, EXP)
 const planSanityEstimate = computed(() => {
-  return calculatePlanSanityEstimate(calc.value.farmRequirements);
+  const farmList = calc.value.farmRequirements.length > 0
+    ? calc.value.farmRequirements
+    : calc.value.directDeficit
+        .filter((d) => d.deficit > 0)
+        .map((d) => ({ itemId: d.itemId, count: d.deficit }));
+
+  const matEstimate = calculatePlanSanityEstimate(farmList);
+
+  // LMD Deficit Sanity (CE-6 gives ~10,000 LMD per 36 Sanity -> 0.0036 Sanity per 1 LMD)
+  const lmdStock = inventory.getStock('4001') || 0;
+  const lmdDeficit = Math.max(0, calc.value.totalLmd - lmdStock);
+  const lmdSanity = Math.round(lmdDeficit * 0.0036);
+  const lmdRuns = Math.ceil(lmdDeficit / 10000);
+
+  // EXP Deficit Sanity (LS-6 gives ~10,000 EXP per 36 Sanity -> 0.0036 Sanity per 1 EXP)
+  const expStock =
+    (inventory.getStock('2004') || 0) * 2000 +
+    (inventory.getStock('2003') || 0) * 1000 +
+    (inventory.getStock('2002') || 0) * 400 +
+    (inventory.getStock('2001') || 0) * 200;
+  const expDeficit = Math.max(0, calc.value.totalExp - expStock);
+  const expSanity = Math.round(expDeficit * 0.0036);
+  const expRuns = Math.ceil(expDeficit / 10000);
+
+  const totalSanity = matEstimate.totalSanity + lmdSanity + expSanity;
+  const totalRuns = matEstimate.totalRuns + lmdRuns + expRuns;
+  const naturalDays = Math.round((totalSanity / 240) * 10) / 10;
+  const opEquivalent = Math.ceil(totalSanity / 135);
+
+  return {
+    ...matEstimate,
+    materialsSanity: matEstimate.totalSanity,
+    lmdSanity,
+    expSanity,
+    lmdDeficit,
+    expDeficit,
+    totalSanity,
+    totalRuns,
+    naturalDays,
+    opEquivalent,
+  };
 });
 
 // Farming Guide Modal state
@@ -184,13 +224,14 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
             <span class="text-sm font-bold text-amber-400/80">⚡</span>
           </div>
           <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-400 font-mono">
-            <span>Заходов: <strong class="text-slate-200">~{{ planSanityEstimate.totalRuns.toLocaleString() }}</strong></span>
-            <span>Дней: <strong class="text-slate-200">~{{ planSanityEstimate.naturalDays }} дн.</strong></span>
+            <span>Ресурсы: <strong class="text-purple-300">~{{ planSanityEstimate.materialsSanity.toLocaleString() }}⚡</strong></span>
+            <span v-if="planSanityEstimate.lmdSanity > 0">LMD: <strong class="text-cyan-300">~{{ planSanityEstimate.lmdSanity.toLocaleString() }}⚡</strong></span>
+            <span v-if="planSanityEstimate.expSanity > 0">EXP: <strong class="text-amber-300">~{{ planSanityEstimate.expSanity.toLocaleString() }}⚡</strong></span>
           </div>
         </div>
 
         <div class="pt-2 border-t border-ark-border/60 text-xs flex justify-between items-center text-slate-400">
-          <span>Эквивалент в камнях (OP):</span>
+          <span>~{{ planSanityEstimate.totalRuns.toLocaleString() }} зах. &bull; ~{{ planSanityEstimate.naturalDays }} дн.</span>
           <span class="text-amber-400 font-mono font-bold">~{{ planSanityEstimate.opEquivalent }} OP</span>
         </div>
       </div>

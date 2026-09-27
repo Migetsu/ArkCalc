@@ -53,25 +53,22 @@ export const usePlannerStore = defineStore('planner', () => {
       lsPlans = lsData;
     }
 
-    // Merge both sources (union) so NO plan is ever lost if one storage lagged
-    const mergedPlans: Record<string, OperatorTargetPlan> = {
-      ...lsPlans,
-      ...dexiePlans,
-    };
-
-    plans.value = mergedPlans;
-    isLoaded.value = true;
-
-    // Keep both storages fully synchronized with the union
-    const planEntries = Object.values(mergedPlans);
-    if (planEntries.length > 0) {
-      savePlansToLocalStorage(mergedPlans);
+    // Dexie is primary source of truth; if empty (first run or reset), fallback to localStorage
+    let effectivePlans: Record<string, OperatorTargetPlan> = {};
+    if (Object.keys(dexiePlans).length > 0) {
+      effectivePlans = dexiePlans;
+      savePlansToLocalStorage(dexiePlans);
+    } else if (Object.keys(lsPlans).length > 0) {
+      effectivePlans = lsPlans;
       try {
-        await db.plans.bulkPut(planEntries);
+        await db.plans.bulkPut(Object.values(lsPlans));
       } catch (e) {
-        console.warn('Could not sync merged plans to Dexie:', e);
+        console.warn('Could not sync localStorage plans to Dexie:', e);
       }
     }
+
+    plans.value = effectivePlans;
+    isLoaded.value = true;
   }
 
   async function savePlan(plan: OperatorTargetPlan) {

@@ -224,6 +224,18 @@ export function calculateAllPlans(
       return;
     }
 
+    // In Arknights, players directly farm T3 materials from main story stages.
+    // Only decompose T3 materials into T2/T1 if the player actually has ingredients in stock to craft them.
+    const itemRarity = items[itemId]?.rarity || 1;
+    const isDualChip = itemId.startsWith('32') && itemRarity >= 4;
+    if (itemRarity <= 3 && !isDualChip) {
+      const hasIngredientsInStock = recipe.costs.some((c) => (virtualStock[c.id] || 0) > 0);
+      if (!hasIngredientsInStock) {
+        farmMap[itemId] = (farmMap[itemId] || 0) + neededAmount;
+        return;
+      }
+    }
+
     const nextVisiting = new Set(visitingPath);
     nextVisiting.add(itemId);
 

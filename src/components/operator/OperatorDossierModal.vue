@@ -20,6 +20,10 @@ import {
   translateText,
 } from '@/services/translationService';
 import {
+  cleanArknightsTalentNameRu,
+  cleanArknightsTalentTextRu,
+} from '@/data/arknightsGlossary';
+import {
   getAvatarUrl,
   getCharacterPortraitUrl,
   getCharacterPortraitFallbackUrl,
@@ -350,7 +354,8 @@ async function resolveDynamicTranslations() {
   dynamicTrait.value = op.description || '';
   dynamicModules.value = op.modules || [];
 
-  const needsTalents = (op.talents || []).some((t) =>
+  const hasLocalRuTalents = lang === 'ru';
+  const needsTalents = hasLocalRuTalents || (op.talents || []).some((t) =>
     (t.candidates || []).some(
       (c: any) => needsTranslation(c.name, lang) || needsTranslation(c.description, lang)
     )
@@ -920,14 +925,14 @@ watch(
                   <template v-if="talent.candidates && talent.candidates.length > 0">
                     <div class="flex items-center justify-between gap-2">
                       <span class="text-xs font-bold text-slate-200">
-                        {{ talent.candidates[talent.candidates.length - 1].name || `Talent ${tIdx + 1}` }}
+                        {{ (gameData.itemLanguage === 'ru' ? cleanArknightsTalentNameRu(talent.candidates[talent.candidates.length - 1].name) : talent.candidates[talent.candidates.length - 1].name) || `Talent ${tIdx + 1}` }}
                       </span>
                       <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-800">
                         {{ gameData.itemLanguage === 'ru' ? `E${talent.candidates[talent.candidates.length - 1].unlockPhase} Открытие` : `Unlock E${talent.candidates[talent.candidates.length - 1].unlockPhase}` }}
                       </span>
                     </div>
                     <p class="text-xs text-slate-400 leading-relaxed">
-                      {{ talent.candidates[talent.candidates.length - 1].description }}
+                      {{ gameData.itemLanguage === 'ru' ? cleanArknightsTalentTextRu(talent.candidates[talent.candidates.length - 1].description) : talent.candidates[talent.candidates.length - 1].description }}
                     </p>
                   </template>
                 </div>

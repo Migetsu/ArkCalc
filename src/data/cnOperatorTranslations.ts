@@ -1,3 +1,5 @@
+import { CN_OPERATORS_LOCALIZATION } from './translations/cnOperatorsComplete';
+
 export interface CNOperatorTranslation {
   talents?: {
     name?: string;
@@ -8,13 +10,13 @@ export interface CNOperatorTranslation {
 }
 
 export const CN_OPERATOR_TRANSLATIONS: Record<string, CNOperatorTranslation> = {
-  // Astgenne the Lightchaser (Angelina Alter)
-  char_1047_halo2: {
+  // Angelina the Mellow Wish
+  char_1015_aglna2: {
     talents: [
       {
         name: 'Floating Above the Earth',
         description:
-          "Astgenne's attacks deal additional Arts damage equal to 30% (+5%) of ATK, increased to 45% (+10%) against lighter enemies (weight ≤ 3); While airborne, causes enemies within attack range to become Weightless.",
+          "Attacks deal additional Arts damage equal to 30% (+5%) of ATK, increased to 45% (+10%) against lighter enemies (weight ≤ 3); While airborne, causes enemies within attack range to become Weightless.",
       },
       {
         name: 'Dance in the Heavens',
@@ -24,6 +26,24 @@ export const CN_OPERATOR_TRANSLATIONS: Record<string, CNOperatorTranslation> = {
     ],
     quote: 'When you need her, she will surely ride the wind back to your side.',
     trait: 'Controls a floating Drone to attack enemies; Drone damage increases the longer it attacks the same target.',
+  },
+
+  // Astgenne the Lightchaser
+  char_1047_halo2: {
+    talents: [
+      {
+        name: 'Data Modeling',
+        description:
+          'Attacks gain +3% ATK for each bounce, stacking up to 5 times.',
+      },
+      {
+        name: 'Energy Analysis',
+        description:
+          'When attacking an enemy for the first time, restores 1 SP.',
+      },
+    ],
+    quote: 'Starlight is the ancient data left by time.',
+    trait: 'Chain Caster: Attacks bounce between enemies, dealing Arts damage.',
   },
 
   // Ulpianus
@@ -191,3 +211,18 @@ export const CN_OPERATOR_TRANSLATIONS: Record<string, CNOperatorTranslation> = {
     quote: 'Snowflakes carry the quiet warmth of a frozen homeland.',
   },
 };
+
+// Auto-populate all CN operators with English localization
+for (const [id, comp] of Object.entries(CN_OPERATORS_LOCALIZATION)) {
+  if (!CN_OPERATOR_TRANSLATIONS[id]) {
+    CN_OPERATOR_TRANSLATIONS[id] = {
+      quote: comp.quoteEn,
+      trait: comp.traitEn,
+      talents: comp.talents.map((t) => ({
+        name: t.nameEn,
+        description: t.descriptionEn,
+      })),
+    };
+  }
+}
+

@@ -134,6 +134,12 @@ export const ARKNIGHTS_TERM_GLOSSARY: Record<string, string> = {
   'operators': 'оперативники',
   'abyssal hunters': 'Абиссальные охотники',
   'abyssal hunter': 'Абиссальный охотник',
+  // Status & Mechanics
+  'weightlessness': 'Невесомость',
+  'airborne': 'в состоянии Левитации',
+  'in the air': 'в воздухе',
+  'when deployed': 'пока находится на поле боя',
+  'when present': 'пока находится на поле боя',
 };
 
 // ==================== 3. POST-TRANSLATION CORRECTIONS ====================
@@ -142,6 +148,44 @@ export const ARKNIGHTS_TERM_GLOSSARY: Record<string, string> = {
  * Regex patterns to fix common bad automated translations produced by Google Translate
  */
 const POST_TRANSLATION_RULES: [RegExp, string][] = [
+  // Bad "Wish / Hope" literal talent translations (安洁莉娜·愿景 / 愿... 的攻击)
+  [/\bжелаю,\s*чтобы\s*(?:атаки|атака)?\b/gi, 'Атаки'],
+  [/\bжелание,\s*чтобы\s*(?:атаки|атака)?\b/gi, 'Атаки'],
+  [/\bпусть\s+атаки\b/gi, 'Атаки'],
+
+  // Bad "When deployed / present" (当在场时 / 当其在场时 / When deployed / When present)
+  [/\bкогда\s+(?:он|она|оно)\s+присутствует\b/gi, 'Пока находится на поле боя'],
+  [/\bкогда\s+присутствует\b/gi, 'Пока находится на поле боя'],
+  [/\bпри\s+присутствии\b/gi, 'Пока находится на поле боя'],
+  [/\bпри\s+развертывании\s+на\s+поле\b/gi, 'Пока находится на поле боя'],
+
+  // Airborne / Flying / Levitate translations
+  [/\bв\s+состоянии\s+взлета\b/gi, 'в состоянии Левитации'],
+  [/\bв\s+состоянии\s+полета\b/gi, 'в состоянии Левитации'],
+  [/\bлетающие\s+союзные\s+операторы\b/gi, 'союзники в состоянии Левитации'],
+  [/\bлетающие\s+союзники\b/gi, 'союзники в состоянии Левитации'],
+  [/\bпарящие\s+союзники\b/gi, 'союзники в состоянии Левитации'],
+  [/\bпарящие\s+в\s+воздухе\b/gi, 'в состоянии Левитации'],
+
+  // Weightless translations
+  [/\bвраги\s+будут\s+невесомыми\b/gi, 'враги получают статус Невесомости (вес снижается на 1)'],
+  [/\bвраги\s+становятся\s+невесомыми\b/gi, 'враги получают статус Невесомости (вес снижается на 1)'],
+  [/\bсчитаются\s+невесомыми\b/gi, 'получают статус Невесомости (вес снижается на 1)'],
+  [/\bстановится\s+невесомым\b/gi, 'получает статус Невесомости (вес снижается на 1)'],
+  [/\bбудут\s+невесомыми\b/gi, 'получают статус Невесомости (вес снижается на 1)'],
+
+  // Bad talent name verbs (lowercase infinitive -> capitalized noun phrase)
+  [/^танцевать\s+в\s+небе(?:сах)?/gi, 'Танец в небесах'],
+  [/^танец\s+в\s+небе$/gi, 'Танец в небесах'],
+  [/^плавать\s+над\s+землей/gi, 'Парящая над землёй'],
+  [/^парить\s+над\s+землей/gi, 'Парящая над землёй'],
+
+  // Operator terminology corrections
+  [/\bсоюзные\s+операторы\b/gi, 'союзные оперативники'],
+  [/\bсоюзных\s+операторов\b/gi, 'союзных оперативников'],
+  [/\bсоюзным\s+операторам\b/gi, 'союзным оперативникам'],
+  [/\bвражеские\s+цели\b/gi, 'враги'],
+
   // Bad "Arts Damage" translations
   [/\bурон[а-я]* от искусств[а-я]*/gi, 'магический урон'],
   [/\bповреждени[а-я]* от искусств[а-я]*/gi, 'магический урон'],
@@ -176,6 +220,51 @@ const POST_TRANSLATION_RULES: [RegExp, string][] = [
   [/\s{2,}/g, ' '],
   [/\s+([.,!?;:])/g, '$1'],
 ];
+
+/**
+ * Capitalizes the first letter of a string
+ */
+export function capitalizeText(str: string): string {
+  if (!str) return '';
+  const trimmed = str.trim();
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+
+/**
+ * Normalizes talent names in Russian:
+ * Capitalizes first letter, replaces known bad verb translations with canonical titles.
+ */
+export function cleanArknightsTalentNameRu(name: string): string {
+  if (!name) return '';
+  let result = name.trim();
+
+  // Known replacements
+  if (/^(?:танцевать\s+в\s+небе|танец\s+в\s+небе)/i.test(result)) {
+    return 'Танец в небесах';
+  }
+  if (/^(?:плавать\s+над\s+землей|парить\s+над\s+землей|floating\s+above\s+the\s+earth)/i.test(result)) {
+    return 'Парящая над землёй';
+  }
+  if (/^dance\s+in\s+the\s+heavens/i.test(result)) {
+    return 'Танец в небесах';
+  }
+
+  // Strip trailing period if machine translation added it
+  result = result.replace(/\.+$/, '');
+
+  return capitalizeText(result);
+}
+
+/**
+ * Applies Arknights glossary and fixes known bad machine translations on Russian talent descriptions.
+ */
+export function cleanArknightsTalentTextRu(text: string): string {
+  if (!text) return '';
+  let result = applyArknightsGlossary(text);
+
+  // Capitalize sentence start
+  return capitalizeText(result);
+}
 
 /**
  * Applies Arknights glossary and fixes known bad machine translations on Russian text.

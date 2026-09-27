@@ -173,6 +173,7 @@ export function getLocalizedItemName(itemId: string, lang: 'ru' | 'en' | 'cn' = 
 }
 
 export const OPERATOR_CANONICAL_EN_NAMES: Record<string, string> = {
+  char_1015_aglna2: 'Angelina the Mellow Wish',
   char_197_poca: 'Rosa',
   char_4055_bgsnow: 'Pozëmka',
   char_4226_veen: 'Vii',

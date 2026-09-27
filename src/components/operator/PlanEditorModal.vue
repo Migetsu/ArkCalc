@@ -49,9 +49,10 @@ const localPlan = ref<OperatorTargetPlan>({
 });
 
 watch(
-  () => props.operator,
-  (op) => {
-    if (!op) return;
+  () => [props.operator?.id, props.isOpen],
+  ([_opId, isOpen]) => {
+    if (!isOpen || !props.operator) return;
+    const op = props.operator;
     const existing = planner.plans[op.id];
     const maxEl = Math.max(0, op.phases.length - 1);
     const initialSkillCount = op.skills.length || 1;

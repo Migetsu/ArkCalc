@@ -24,10 +24,11 @@ import {
   getArchetypeTraitEn,
 } from '@/data/materialTranslations';
 import { CN_OPERATOR_TRANSLATIONS } from '@/data/cnOperatorTranslations';
+import { CN_TALENT_NAMES_MAP } from '@/data/translations/cnOperatorsComplete';
 
 const CACHE_DB_NAME = 'ARKCalcCacheDB';
 const CACHE_STORE_NAME = 'gamedata_cache';
-const CACHE_KEY = 'ark_cleaned_gamedata_v20_lang_cn';
+const CACHE_KEY = 'ark_cleaned_gamedata_v21_cn_ops';
 
 // Open simple IndexedDB for game data cache
 function openCacheDb(): Promise<IDBDatabase> {
@@ -697,12 +698,23 @@ export const useGameDataStore = defineStore('gamedata', () => {
           return {
             candidates: (t.candidates || []).map((c: any, cIdx: number) => {
               const cnCand = cnCandidates[cIdx] || cnCandidates[0] || {};
+              const rawName = c.name || '';
+              const mappedNameEn =
+                curatedTalent?.name ||
+                CN_TALENT_NAMES_MAP[rawName]?.en ||
+                CN_TALENT_NAMES_MAP[cnCand.name]?.en ||
+                c.name ||
+                '';
+              const mappedDescEn =
+                curatedTalent?.description ||
+                stripArknightsTags(c.description || '');
+
               return {
                 unlockPhase: c.unlockCondition?.phase === 'PHASE_2' ? 2 : c.unlockCondition?.phase === 'PHASE_1' ? 1 : 0,
                 unlockLevel: c.unlockCondition?.level || 1,
-                name: curatedTalent?.name || c.name || '',
+                name: mappedNameEn,
                 nameCn: cnCand.name || c.name || '',
-                description: curatedTalent?.description || stripArknightsTags(c.description || ''),
+                description: mappedDescEn,
                 descriptionCn: stripArknightsTags(cnCand.description || c.description || ''),
               };
             }),

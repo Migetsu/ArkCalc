@@ -3,6 +3,8 @@ import {
   maskTextForTranslation,
   unmaskTextAfterTranslation,
   applyArknightsGlossary,
+  cleanArknightsTalentNameRu,
+  cleanArknightsTalentTextRu,
 } from '@/data/arknightsGlossary';
 import {
   getStaticTextTranslation,
@@ -14,10 +16,17 @@ import {
   getSkinLocalizationRu,
   getModuleLocalizationRu,
   RU_SKIN_BRANDS,
+  OPERATOR_ID_ALIASES,
 } from '@/data/translations/ruDatabase';
+import {
+  RU_TALENT_NAMES,
+  translateTalentNameRu,
+  translateTalentDescriptionRu,
+  CURATED_OPERATOR_TALENTS_RU,
+} from '@/data/translations/ruTalentsDatabase';
 import type { AppLanguage } from '@/types/game';
 
-const STORAGE_CACHE_KEY = 'ark_trans_cache_v6_offline';
+const STORAGE_CACHE_KEY = 'ark_trans_cache_v8_offline';
 
 // In-memory cache
 const memoryCache: Record<string, string> = {};
@@ -151,6 +160,11 @@ export async function translateText(
     const staticRu = getStaticTextTranslation(trimmed);
     if (staticRu) return staticRu;
 
+    // Check talent names dictionary
+    if (RU_TALENT_NAMES[trimmed]) {
+      return RU_TALENT_NAMES[trimmed];
+    }
+
     // Check memory cache
     const cacheKey = `ru:${trimmed}`;
     if (memoryCache[cacheKey]) return memoryCache[cacheKey];
@@ -180,6 +194,14 @@ export async function translateText(
       memoryCache[cacheKey] = finalResult;
       saveCacheToStorage();
       return finalResult;
+    }
+
+    // If network unavailable, try deterministic Arknights engine first
+    const offlineEngineRu = translateTalentDescriptionRu(trimmed);
+    if (offlineEngineRu && offlineEngineRu !== trimmed) {
+      memoryCache[cacheKey] = offlineEngineRu;
+      saveCacheToStorage();
+      return offlineEngineRu;
     }
 
     // If network unavailable, apply glossary directly on available text
@@ -279,43 +301,92 @@ export async function getTranslatedTalents(
     }));
   }
 
-  const opDb = targetLang === 'ru' ? getOperatorLocalizationRu(charId) : undefined;
-  const staticOp = targetLang === 'ru' ? STATIC_OPERATOR_DATA_RU[charId] : undefined;
-  const curated = CN_OPERATOR_TRANSLATIONS[charId];
+  if (targetLang === 'ru') {
+    const canonicalId = OPERATOR_ID_ALIASES[charId] || charId;
+    const opDb = getOperatorLocalizationRu(charId) || getOperatorLocalizationRu(canonicalId);
+    const staticOp = STATIC_OPERATOR_DATA_RU[charId] || STATIC_OPERATOR_DATA_RU[canonicalId];
+    const curatedList = CURATED_OPERATOR_TALENTS_RU[charId] || CURATED_OPERATOR_TALENTS_RU[canonicalId];
+    const cnCurated = CN_OPERATOR_TRANSLATIONS[charId] || CN_OPERATOR_TRANSLATIONS[canonicalId];
+
+    return talents.map((talent, idx) => {
+      const dbTalent = opDb?.talents?.[idx];
+      const staticTalent = staticOp?.talents?.[idx];
+      const curatedTalent = curatedList?.[idx];
+      const cnTalent = cnCurated?.talents?.[idx];
+
+      const candidates = (talent.candidates || []).map((cand: any) => {
+        const rawName = cand.name || cand.nameCn || '';
+        const rawDesc = cand.description || cand.descriptionCn || '';
+
+        // 1. Resolve Talent Name (100% offline coverage via RU_TALENT_NAMES)
+        let name =
+          dbTalent?.name ||
+          curatedTalent?.name ||
+          staticTalent?.name ||
+          cnTalent?.name ||
+          translateTalentNameRu(rawName);
+        name = cleanArknightsTalentNameRu(name);
+
+        // 2. Resolve Talent Description (Offline-first via curated or engine)
+        let description = '';
+        if (
+          dbTalent?.description &&
+          (!cand.description || cand.unlockPhase === 2 || (talent.candidates || []).length === 1)
+        ) {
+          description = dbTalent.description;
+        } else if (
+          curatedTalent?.description &&
+          (!cand.description || cand.unlockPhase === 2 || (talent.candidates || []).length === 1)
+        ) {
+          description = curatedTalent.description;
+        } else if (
+          staticTalent?.description &&
+          (!cand.description || cand.unlockPhase === 2 || (talent.candidates || []).length === 1)
+        ) {
+          description = staticTalent.description;
+        } else if (
+          cnTalent?.description &&
+          (!cand.description || cand.unlockPhase === 2 || (talent.candidates || []).length === 1)
+        ) {
+          description = cnTalent.description;
+        } else {
+          description = translateTalentDescriptionRu(rawDesc);
+        }
+        description = cleanArknightsTalentTextRu(description);
+
+        return {
+          ...cand,
+          name,
+          description,
+        };
+      });
+
+      return {
+        ...talent,
+        candidates,
+      };
+    });
+  }
+
+  // Target: EN
+  const canonicalId = OPERATOR_ID_ALIASES[charId] || charId;
+  const curated = CN_OPERATOR_TRANSLATIONS[charId] || CN_OPERATOR_TRANSLATIONS[canonicalId];
 
   return Promise.all(
     talents.map(async (talent, idx) => {
-      const dbTalent = opDb?.talents?.[idx];
-      const staticTalent = staticOp?.talents?.[idx];
       const curatedTalent = curated?.talents?.[idx];
 
       const candidates = await Promise.all(
         (talent.candidates || []).map(async (cand: any) => {
-          let name = cand.name || '';
-          let description = cand.description || '';
+          let name = curatedTalent?.name || cand.name || cand.nameCn || '';
+          let description = curatedTalent?.description || cand.description || cand.descriptionCn || '';
 
-          if (dbTalent?.name) {
-            name = dbTalent.name;
-          } else if (staticTalent?.name) {
-            name = staticTalent.name;
-          } else if (curatedTalent?.name) {
-            name = curatedTalent.name;
+          if (needsTranslation(name, 'en')) {
+            name = await translateText(name, 'en');
           }
 
-          if (dbTalent?.description) {
-            description = dbTalent.description;
-          } else if (staticTalent?.description) {
-            description = staticTalent.description;
-          } else if (curatedTalent?.description) {
-            description = curatedTalent.description;
-          }
-
-          if (needsTranslation(name, targetLang)) {
-            name = await translateText(name, targetLang);
-          }
-
-          if (needsTranslation(description, targetLang)) {
-            description = await translateText(description, targetLang);
+          if (needsTranslation(description, 'en')) {
+            description = await translateText(description, 'en');
           }
 
           return {
@@ -475,6 +546,10 @@ export async function getTranslatedModules(
               }
               if (tDesc && needsTranslation(tDesc, targetLang)) {
                 tDesc = await translateText(tDesc, targetLang);
+              }
+              if (targetLang === 'ru') {
+                if (tName) tName = cleanArknightsTalentNameRu(tName);
+                if (tDesc) tDesc = cleanArknightsTalentTextRu(tDesc);
               }
               talentChange = {
                 ...talentChange,
