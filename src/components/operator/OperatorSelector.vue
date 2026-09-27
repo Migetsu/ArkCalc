@@ -8,7 +8,11 @@ import type { OperatorSummary, Profession } from '@/types/game';
 import OperatorCard from './OperatorCard.vue';
 import PlanEditorModal from './PlanEditorModal.vue';
 import { Search, Filter, UserCheck, X } from 'lucide-vue-next';
-import { normalizeSearchString, POPULAR_OPERATOR_RU_ALIASES } from '@/data/materialTranslations';
+import {
+  normalizeSearchString,
+  transliterateRuToEn,
+  POPULAR_OPERATOR_RU_ALIASES,
+} from '@/data/materialTranslations';
 
 const gameData = useGameDataStore();
 const planner = usePlannerStore();
@@ -35,19 +39,26 @@ const professions: { id: Profession; label: string }[] = [
 const filteredOperators = computed(() => {
   let list = gameData.operatorList;
 
-  // Search filter
-  const q = normalizeSearchString(searchQuery.value);
-  if (q) {
+  // Search filter (English & Russian transliteration/aliases)
+  const rawQ = searchQuery.value.trim();
+  if (rawQ) {
+    const qNorm = normalizeSearchString(rawQ);
+    const qTranslit = normalizeSearchString(transliterateRuToEn(rawQ));
+
     list = list.filter((op) => {
       const nameNorm = normalizeSearchString(op.name);
       const appNorm = normalizeSearchString(op.appellation);
-      const idNorm = op.id.toLowerCase();
       const ruAliases = POPULAR_OPERATOR_RU_ALIASES[op.id] || [];
+
       return (
-        nameNorm.includes(q) ||
-        appNorm.includes(q) ||
-        idNorm.includes(q) ||
-        ruAliases.some((alias) => alias.includes(q))
+        nameNorm.includes(qNorm) ||
+        nameNorm.includes(qTranslit) ||
+        appNorm.includes(qNorm) ||
+        appNorm.includes(qTranslit) ||
+        ruAliases.some((alias) => {
+          const aNorm = normalizeSearchString(alias);
+          return aNorm.includes(qNorm) || aNorm.includes(qTranslit);
+        })
       );
     });
   }
@@ -155,7 +166,7 @@ function clearFilters() {
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Поиск оперативника по имени или коду..."
+            placeholder="Поиск оперативника по имени..."
             class="w-full bg-slate-900 border border-ark-border rounded-xl pl-10 pr-9 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/60 focus:border-cyan-500"
           />
           <button

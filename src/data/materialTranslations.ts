@@ -169,24 +169,53 @@ export function getLocalizedItemName(itemId: string, lang: 'ru' | 'en' = 'ru'): 
   return lang === 'ru' ? item.ru : item.en;
 }
 
+export const OPERATOR_CANONICAL_EN_NAMES: Record<string, string> = {
+  char_197_poca: 'Rosa',
+  char_4055_bgsnow: 'Pozëmka',
+  char_4226_veen: 'Vii',
+  char_196_sunbr: 'Gummy',
+  char_115_headbr: 'Zima',
+  char_195_glassb: 'Istina',
+  char_194_leto: 'Leto',
+  char_4208_wintim: 'Snegurochka',
+  char_4224_turdus: 'Ukusik',
+  char_4207_branch: 'Vetochki',
+  char_4223_botany: 'Botani',
+  char_4000_jnight: 'Justice Knight',
+  char_616_pithst: 'Pith',
+  char_617_sharp2: 'Sharp',
+  char_1052_kalts2: "Kal'tsit the Esperanta",
+};
+
 export const POPULAR_OPERATOR_RU_ALIASES: Record<string, string[]> = {
-  char_1035_wisdel: ['вишадель', 'вишдель', 'виш'],
+  char_197_poca: ['роса', 'пока', 'роза'],
+  char_4055_bgsnow: ['поземка', 'позёмка', 'позема', 'поземыч'],
+  char_4226_veen: ['вий'],
+  char_196_sunbr: ['гумми', 'гум'],
+  char_115_headbr: ['зима'],
+  char_195_glassb: ['истина'],
+  char_194_leto: ['лето'],
+  char_4208_wintim: ['снегурочка'],
+  char_4224_turdus: ['укусик'],
+  char_4207_branch: ['веточки'],
+  char_4223_botany: ['ботани'],
+  char_1035_wisdel: ['вишадель', 'вишдель', 'виш', 'вися'],
   char_4133_logos: ['логос'],
   char_4145_ulpia: ['ульпиан', 'ульпиус'],
   char_2025_shu: ['шу'],
   char_003_kalts: ['кальцит', 'калцит'],
-  char_1028_texas2: ['тексас', 'техас'],
+  char_1028_texas2: ['тексас', 'техас', 'омертоза'],
   char_1033_swire2: ['свайр', 'свайер'],
-  char_377_gdglow: ['голденглоу', 'гг'],
+  char_377_gdglow: ['голденглоу', 'гг', 'розовая собака'],
   char_2012_typhon: ['тифон'],
   char_172_svrash: ['сильвераш', 'серебро'],
   char_1034_jesca2: ['джессика'],
   char_180_amnn: ['амия', 'эмия'],
   char_2023_ling: ['линг'],
-  char_1023_mlynar: ['млынар'],
+  char_1023_mlynar: ['млынар', 'дядя'],
   char_4009_irene: ['айрин', 'ирен'],
   char_293_thorns: ['торнс', 'тернс'],
-  char_350_surtr: ['суртр'],
+  char_350_surtr: ['суртр', 'сурт'],
   char_1026_gvial2: ['гавиаль', 'гавиал'],
   char_2014_nian: ['ниан'],
   char_2015_dusk: ['даск'],
@@ -195,10 +224,29 @@ export const POPULAR_OPERATOR_RU_ALIASES: Record<string, string[]> = {
   char_4146_nymph: ['нимфа'],
 };
 
+export function transliterateRuToEn(text: string): string {
+  if (!text) return '';
+  const map: Record<string, string> = {
+    а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z',
+    и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r',
+    с: 's', т: 't', у: 'u', ф: 'f', х: 'kh', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'shch',
+    ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya',
+  };
+  return text
+    .toLowerCase()
+    .split('')
+    .map((c) => (map[c] !== undefined ? map[c] : c))
+    .join('');
+}
+
 export function normalizeSearchString(str: string): string {
+  if (!str) return '';
   return str
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // remove diacritics: š -> s
+    .replace(/[\u0300-\u036f]/g, '') // remove diacritics: š -> s, ë -> e
+    .replace(/ł/g, 'l')
+    .replace(/Ł/g, 'L')
+    .replace(/['"’`]/g, '') // remove apostrophes: Kal'tsit -> Kaltsit, Wiš'adel -> Wisadel
     .toLowerCase()
     .trim();
 }

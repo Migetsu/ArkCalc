@@ -188,17 +188,17 @@ function applyPresetReset() {
 
 async function handleSave() {
   if (!props.operator) return;
-  // Emit close immediately so the UI responds right away, then persist in background
+  const planData: OperatorTargetPlan = JSON.parse(JSON.stringify(localPlan.value));
+  planData.charId = props.operator.id;
+  await planner.savePlan(planData);
   emit('close');
-  await planner.savePlan(localPlan.value);
 }
 
 async function handleDelete() {
   if (!props.operator) return;
-  // Same: close first, then remove from store
   const id = props.operator.id;
-  emit('close');
   await planner.removePlan(id);
+  emit('close');
 }
 </script>
 

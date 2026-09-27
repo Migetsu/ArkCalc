@@ -34,54 +34,65 @@ export const usePlannerStore = defineStore('planner', () => {
   const inventory = useInventoryStore();
 
   async function loadPlans() {
+    const dexiePlans: Record<string, OperatorTargetPlan> = {};
+    let lsPlans: Record<string, OperatorTargetPlan> = {};
+
     try {
-      // Try Dexie IndexedDB first
       const records = await db.plans.toArray();
-      if (records.length > 0) {
-        const planMap: Record<string, OperatorTargetPlan> = {};
-        for (const p of records) {
-          planMap[p.charId] = p;
+      for (const p of records) {
+        if (p && p.charId) {
+          dexiePlans[p.charId] = p;
         }
-        plans.value = planMap;
-        isLoaded.value = true;
-        // Keep localStorage in sync as backup
-        savePlansToLocalStorage(planMap);
-        return;
       }
     } catch (err) {
       console.error('Failed to load plans from Dexie:', err);
     }
 
-    // Fallback: restore from localStorage if Dexie was empty or failed
     const lsData = loadPlansFromLocalStorage();
-    if (lsData && Object.keys(lsData).length > 0) {
-      plans.value = lsData;
-      isLoaded.value = true;
-      // Re-populate Dexie
-      try {
-        await db.plans.bulkPut(Object.values(lsData));
-      } catch (e) {
-        console.warn('Could not sync localStorage plans back to Dexie:', e);
-      }
-      return;
+    if (lsData && typeof lsData === 'object') {
+      lsPlans = lsData;
     }
 
+    // Merge both sources (union) so NO plan is ever lost if one storage lagged
+    const mergedPlans: Record<string, OperatorTargetPlan> = {
+      ...lsPlans,
+      ...dexiePlans,
+    };
+
+    plans.value = mergedPlans;
     isLoaded.value = true;
+
+    // Keep both storages fully synchronized with the union
+    const planEntries = Object.values(mergedPlans);
+    if (planEntries.length > 0) {
+      savePlansToLocalStorage(mergedPlans);
+      try {
+        await db.plans.bulkPut(planEntries);
+      } catch (e) {
+        console.warn('Could not sync merged plans to Dexie:', e);
+      }
+    }
   }
 
   async function savePlan(plan: OperatorTargetPlan) {
-    plans.value[plan.charId] = JSON.parse(JSON.stringify(plan));
+    const cleanPlan: OperatorTargetPlan = JSON.parse(JSON.stringify(plan));
+    plans.value = {
+      ...plans.value,
+      [cleanPlan.charId]: cleanPlan,
+    };
     savePlansToLocalStorage(plans.value);
     try {
-      await db.plans.put(plan);
+      await db.plans.put(cleanPlan);
     } catch (e) {
-      console.warn('Dexie save failed, plan is still in localStorage:', e);
+      console.error('Dexie save failed, plan is preserved in localStorage:', e);
     }
   }
 
   async function removePlan(charId: string) {
-    delete plans.value[charId];
-    savePlansToLocalStorage(plans.value);
+    const updated = { ...plans.value };
+    delete updated[charId];
+    plans.value = updated;
+    savePlansToLocalStorage(updated);
     try {
       await db.plans.delete(charId);
     } catch (e) {
@@ -91,7 +102,7 @@ export const usePlannerStore = defineStore('planner', () => {
 
   async function clearAllPlans() {
     plans.value = {};
-    localStorage.removeItem(LS_KEY);
+    savePlansToLocalStorage({});
     try {
       await db.plans.clear();
     } catch (e) {

@@ -9,11 +9,15 @@ import type {
   OperatorModule,
 } from '@/types/game';
 import { getAvatarUrl } from '@/utils/imageUrl';
-import { getLocalizedItemName, isCraftResource } from '@/data/materialTranslations';
+import {
+  getLocalizedItemName,
+  isCraftResource,
+  OPERATOR_CANONICAL_EN_NAMES,
+} from '@/data/materialTranslations';
 
 const CACHE_DB_NAME = 'ARKCalcCacheDB';
 const CACHE_STORE_NAME = 'gamedata_cache';
-const CACHE_KEY = 'ark_cleaned_gamedata_v5';
+const CACHE_KEY = 'ark_cleaned_gamedata_v6';
 
 // Open simple IndexedDB for game data cache
 function openCacheDb(): Promise<IDBDatabase> {
@@ -384,11 +388,13 @@ export const useGameDataStore = defineStore('gamedata', () => {
           });
         }
 
-        const opName = char.appellation || char.name;
+        const canonicalEn = OPERATOR_CANONICAL_EN_NAMES[charId];
+        const rawApp = (char.appellation || '').replace(/^["']|["']$/g, '').trim();
+        const opName = canonicalEn || rawApp || char.name;
         parsedOperators[charId] = {
           id: charId,
           name: opName,
-          appellation: char.appellation || '',
+          appellation: canonicalEn || rawApp,
           rarity: rNum,
           profession: char.profession as Profession,
           subProfessionId: char.subProfessionId || '',
