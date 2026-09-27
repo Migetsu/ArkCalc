@@ -23,7 +23,7 @@ import { CN_OPERATOR_TRANSLATIONS } from '@/data/cnOperatorTranslations';
 
 const CACHE_DB_NAME = 'ARKCalcCacheDB';
 const CACHE_STORE_NAME = 'gamedata_cache';
-const CACHE_KEY = 'ark_cleaned_gamedata_v14_skins';
+const CACHE_KEY = 'ark_cleaned_gamedata_v15_playable';
 
 // Open simple IndexedDB for game data cache
 function openCacheDb(): Promise<IDBDatabase> {
@@ -415,10 +415,11 @@ export const useGameDataStore = defineStore('gamedata', () => {
       for (const charId in charData) {
         const char = charData[charId];
 
-        // Skip non-operator summon tokens / traps / enemies
+        // Skip non-operator summon tokens / traps / enemies / temporary event characters (IS, Trials, etc.)
         if (
           charId.startsWith('trap_') ||
           charId.startsWith('token_') ||
+          char.isNotObtainable ||
           !char.name ||
           !char.phases ||
           char.phases.length === 0

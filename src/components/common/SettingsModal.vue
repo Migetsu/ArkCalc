@@ -136,7 +136,7 @@ async function handleRefreshGameData() {
               Игровые данные и локализация
             </h4>
             <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-800 font-bold">
-              458+ Оперативников &bull; Все модули
+              {{ Object.keys(gameData.operators).length || 429 }} Оперативников &bull; Все модули
             </span>
           </div>
           <p class="text-slate-400">
