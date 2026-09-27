@@ -204,8 +204,18 @@ export function calculateAllPlans(
   const craftingStepsMap: Record<string, CraftingStep> = {};
   const farmMap: Record<string, number> = {};
 
-  function decomposeItem(itemId: string, neededAmount: number) {
+  function decomposeItem(
+    itemId: string,
+    neededAmount: number,
+    visitingPath: Set<string> = new Set()
+  ) {
     if (neededAmount <= 0) return;
+
+    // Cycle detection guard: prevent infinite recursion
+    if (visitingPath.has(itemId) || visitingPath.size > 20) {
+      farmMap[itemId] = (farmMap[itemId] || 0) + neededAmount;
+      return;
+    }
 
     const recipe = recipes[itemId];
     if (!recipe) {
@@ -213,6 +223,9 @@ export function calculateAllPlans(
       farmMap[itemId] = (farmMap[itemId] || 0) + neededAmount;
       return;
     }
+
+    const nextVisiting = new Set(visitingPath);
+    nextVisiting.add(itemId);
 
     // Number of crafts needed (accounting for yield count if > 1)
     const yieldCount = recipe.count || 1;
@@ -270,7 +283,7 @@ export function calculateAllPlans(
       existingIng.missingToCraftOrFarm += missingToDecompose;
 
       if (missingToDecompose > 0) {
-        decomposeItem(subItemId, missingToDecompose);
+        decomposeItem(subItemId, missingToDecompose, nextVisiting);
       }
     }
   }

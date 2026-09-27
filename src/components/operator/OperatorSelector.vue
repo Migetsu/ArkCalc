@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { RecycleScroller } from 'vue-virtual-scroller';
+import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import { useGameDataStore } from '@/stores/gamedata';
 import { usePlannerStore } from '@/stores/planner';
@@ -8,6 +8,7 @@ import type { OperatorSummary, Profession } from '@/types/game';
 import OperatorCard from './OperatorCard.vue';
 import PlanEditorModal from './PlanEditorModal.vue';
 import { Search, Filter, UserCheck, X } from 'lucide-vue-next';
+import { normalizeSearchString, POPULAR_OPERATOR_RU_ALIASES } from '@/data/materialTranslations';
 
 const gameData = useGameDataStore();
 const planner = usePlannerStore();
@@ -35,14 +36,20 @@ const filteredOperators = computed(() => {
   let list = gameData.operatorList;
 
   // Search filter
-  const q = searchQuery.value.trim().toLowerCase();
+  const q = normalizeSearchString(searchQuery.value);
   if (q) {
-    list = list.filter(
-      (op) =>
-        op.name.toLowerCase().includes(q) ||
-        (op.appellation && op.appellation.toLowerCase().includes(q)) ||
-        op.id.toLowerCase().includes(q)
-    );
+    list = list.filter((op) => {
+      const nameNorm = normalizeSearchString(op.name);
+      const appNorm = normalizeSearchString(op.appellation);
+      const idNorm = op.id.toLowerCase();
+      const ruAliases = POPULAR_OPERATOR_RU_ALIASES[op.id] || [];
+      return (
+        nameNorm.includes(q) ||
+        appNorm.includes(q) ||
+        idNorm.includes(q) ||
+        ruAliases.some((alias) => alias.includes(q))
+      );
+    });
   }
 
   // Rarity filter
@@ -108,9 +115,10 @@ const chunkedRows = computed<RowItem[]>(() => {
   const rows: RowItem[] = [];
 
   for (let i = 0; i < list.length; i += cols) {
+    const chunk = list.slice(i, i + cols);
     rows.push({
-      id: `row-${i}`,
-      items: list.slice(i, i + cols),
+      id: `row-${chunk[0]?.id || i}-${cols}`,
+      items: chunk,
     });
   }
 
@@ -278,27 +286,38 @@ function clearFilters() {
         </button>
       </div>
 
-      <RecycleScroller
+      <DynamicScroller
         v-else
-        class="h-[calc(100vh-320px)] min-h-[480px] overflow-y-auto pr-1"
+        class="h-[calc(100vh-310px)] min-h-[500px] overflow-y-auto pr-1"
         :items="chunkedRows"
-        :item-size="125"
+        :min-item-size="140"
         key-field="id"
       >
-        <template #default="{ item: row }">
-          <div
-            class="grid gap-3 mb-3"
-            :style="{ gridTemplateColumns: `repeat(${columnsCount}, minmax(0, 1fr))` }"
+        <template #default="{ item: row, index, active }">
+          <DynamicScrollerItem
+            :item="row"
+            :active="active"
+            :size-dependencies="[row.items, planner.plans]"
+            :data-index="index"
+            class="pb-3"
           >
-            <OperatorCard
-              v-for="op in row.items"
-              :key="op.id"
-              :operator="op"
-              @edit="openPlanEditor"
-            />
-          </div>
+            <div
+              class="grid gap-3"
+              :style="{ gridTemplateColumns: `repeat(${columnsCount}, minmax(0, 1fr))` }"
+            >
+              <OperatorCard
+                v-for="op in row.items"
+                :key="op.id"
+                :operator="op"
+                @edit="openPlanEditor"
+              />
+            </div>
+          </DynamicScrollerItem>
         </template>
-      </RecycleScroller>
+        <template #after>
+          <div class="h-8"></div>
+        </template>
+      </DynamicScroller>
     </div>
 
     <!-- Plan Editor Modal -->

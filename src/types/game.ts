@@ -33,8 +33,12 @@ export interface OperatorSkill {
 export interface OperatorModule {
   id: string;
   name: string;
+  uniEquipIcon: string;
   typeIcon: string;
   typeName: string;
+  typeName1: string;
+  typeName2: string;
+  formattedName: string;
   costs: Record<number, MaterialCost[]>; // 1, 2, 3
 }
 

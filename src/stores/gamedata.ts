@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import type {
   OperatorSummary,
   ItemSummary,
@@ -9,10 +9,11 @@ import type {
   OperatorModule,
 } from '@/types/game';
 import { getAvatarUrl } from '@/utils/imageUrl';
+import { getLocalizedItemName, isCraftResource } from '@/data/materialTranslations';
 
 const CACHE_DB_NAME = 'ARKCalcCacheDB';
 const CACHE_STORE_NAME = 'gamedata_cache';
-const CACHE_KEY = 'ark_cleaned_gamedata_v2';
+const CACHE_KEY = 'ark_cleaned_gamedata_v5';
 
 // Open simple IndexedDB for game data cache
 function openCacheDb(): Promise<IDBDatabase> {
@@ -72,12 +73,26 @@ export const useGameDataStore = defineStore('gamedata', () => {
   const recipes = ref<Record<string, WorkshopRecipe>>({}); // mapped by itemId
   const constants = ref<GameConstants | null>(null);
 
-  const serverRegion = ref<'en_US' | 'zh_CN'>('en_US');
+  function getSavedLanguage(): 'ru' | 'en' {
+    try {
+      const saved = localStorage.getItem('ark_item_language');
+      if (saved === 'ru' || saved === 'en') return saved;
+    } catch {
+      // ignore
+    }
+    return 'en';
+  }
 
-  // Auto-reload when region changes
-  watch(serverRegion, () => {
-    isReady.value = false;
-  });
+  const itemLanguage = ref<'ru' | 'en'>(getSavedLanguage());
+
+  function setItemLanguage(lang: 'ru' | 'en') {
+    itemLanguage.value = lang;
+    try {
+      localStorage.setItem('ark_item_language', lang);
+    } catch {
+      // ignore
+    }
+  }
 
   const operatorList = computed(() => {
     return Object.values(operators.value).sort((a, b) => {
@@ -91,7 +106,13 @@ export const useGameDataStore = defineStore('gamedata', () => {
   };
 
   const getItem = (id: string): ItemSummary | undefined => {
-    return items.value[id];
+    const it = items.value[id];
+    if (!it) return undefined;
+    const localized = getLocalizedItemName(id, itemLanguage.value);
+    if (localized) {
+      return { ...it, name: localized };
+    }
+    return it;
   };
 
   const getRecipe = (itemId: string): WorkshopRecipe | undefined => {
@@ -134,14 +155,10 @@ export const useGameDataStore = defineStore('gamedata', () => {
     }
 
     try {
-      const isEn = serverRegion.value === 'en_US';
-      const rawBase = isEn
-        ? 'https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData_YoStar/main/en_US/gamedata/excel'
-        : 'https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/zh_CN/gamedata/excel';
-
-      const jsdelivrBase = isEn
-        ? 'https://cdn.jsdelivr.net/gh/Kengxxiao/ArknightsGameData_YoStar@main/en_US/gamedata/excel'
-        : 'https://cdn.jsdelivr.net/gh/Kengxxiao/ArknightsGameData@master/zh_CN/gamedata/excel';
+      const rawBase =
+        'https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master/zh_CN/gamedata/excel';
+      const jsdelivrBase =
+        'https://cdn.jsdelivr.net/gh/Kengxxiao/ArknightsGameData@master/zh_CN/gamedata/excel';
 
       // 1. gamedata_const.json
       loadingStatus.value = 'Загрузка игровых констант...';
@@ -171,12 +188,37 @@ export const useGameDataStore = defineStore('gamedata', () => {
       const workshopFormulas = buildingData.workshopFormulas || {};
       for (const formulaId in workshopFormulas) {
         const f = workshopFormulas[formulaId];
+        // Formulas 39-54 are chip conversions (3:2 cyclic transmutations), which cause infinite loops
+        const isChipConversion =
+          f.itemId &&
+          f.itemId.startsWith('32') &&
+          f.costs?.some((c: any) => c.id && c.id.startsWith('32'));
+        if (isChipConversion) continue;
+
         if (f.itemId && f.costs && f.costs.length > 0) {
           parsedRecipes[f.itemId] = {
             formulaId: f.formulaId || formulaId,
             itemId: f.itemId,
             count: f.count || 1,
             goldCost: f.goldCost || 0,
+            costs: (f.costs || []).map((c: any) => ({
+              id: c.id,
+              count: c.count,
+            })),
+          };
+        }
+      }
+
+      // Add dual chips (3213 - 3283) from manufactFormulas
+      const manufactFormulas = buildingData.manufactFormulas || {};
+      for (const formulaId in manufactFormulas) {
+        const f = manufactFormulas[formulaId];
+        if (f.itemId && f.itemId.startsWith('32') && f.costs && f.costs.length > 0) {
+          parsedRecipes[f.itemId] = {
+            formulaId: `m_${formulaId}`,
+            itemId: f.itemId,
+            count: f.count || 1,
+            goldCost: 0,
             costs: (f.costs || []).map((c: any) => ({
               id: c.id,
               count: c.count,
@@ -216,14 +258,16 @@ export const useGameDataStore = defineStore('gamedata', () => {
       };
 
       for (const itemId in rawItems) {
+        if (!isCraftResource(itemId)) continue;
         const item = rawItems[itemId];
         const rStr = String(item.rarity || 'TIER_1');
         const rNum = rarityMap[rStr] || (typeof item.rarity === 'number' ? item.rarity + 1 : 1);
 
         // Keep relevant materials, exp, tokens, etc.
+        const localized = getLocalizedItemName(itemId, itemLanguage.value);
         parsedItems[itemId] = {
           itemId: item.itemId || itemId,
-          name: item.name || itemId,
+          name: localized || item.name || itemId,
           rarity: rNum,
           iconId: item.iconId || itemId,
           classifyType: item.classifyType || 'NONE',
@@ -233,9 +277,10 @@ export const useGameDataStore = defineStore('gamedata', () => {
       }
       // Ensure LMD item exists
       if (!parsedItems['4001']) {
+        const lmdName = getLocalizedItemName('4001', itemLanguage.value) || 'LMD';
         parsedItems['4001'] = {
           itemId: '4001',
-          name: 'LMD',
+          name: lmdName,
           rarity: 4,
           iconId: 'GOLD',
           classifyType: 'NORMAL',
@@ -320,18 +365,29 @@ export const useGameDataStore = defineStore('gamedata', () => {
             }
           }
 
+          const typeName1 = eq.typeName1 || 'ADVANCED';
+          const typeName2 = eq.typeName2 || '';
+          const formattedName = typeName2
+            ? `Модуль ${typeName2} (${typeName1})`
+            : `Модуль (${typeName1})`;
+
           modules.push({
             id: mId,
             name: eq.uniEquipName || mId,
+            uniEquipIcon: eq.uniEquipIcon || mId,
             typeIcon: eq.typeIcon || 'original',
-            typeName: eq.typeName1 || 'ADVANCED',
+            typeName: typeName1,
+            typeName1,
+            typeName2,
+            formattedName,
             costs: itemCosts,
           });
         }
 
+        const opName = char.appellation || char.name;
         parsedOperators[charId] = {
           id: charId,
-          name: char.name,
+          name: opName,
           appellation: char.appellation || '',
           rarity: rNum,
           profession: char.profession as Profession,
@@ -375,7 +431,8 @@ export const useGameDataStore = defineStore('gamedata', () => {
     loadingStatus,
     error,
     isReady,
-    serverRegion,
+    itemLanguage,
+    setItemLanguage,
     operators,
     items,
     recipes,

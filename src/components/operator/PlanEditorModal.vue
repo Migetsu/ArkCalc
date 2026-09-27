@@ -6,7 +6,14 @@ import { useGameDataStore } from '@/stores/gamedata';
 import { calculateOperatorPlanCosts } from '@/services/calculatorEngine';
 import type { OperatorTargetPlan } from '@/services/db';
 import ItemIcon from '@/components/common/ItemIcon.vue';
-import { getAvatarUrl, getSkillIconUrl, getEquipIconUrl, PLACEHOLDER_AVATAR } from '@/utils/imageUrl';
+import {
+  getAvatarUrl,
+  getSkillIconUrl,
+  getEquipIconUrl,
+  getEquipTypeIconUrl,
+  PLACEHOLDER_AVATAR,
+  PLACEHOLDER_EQUIP_ICON,
+} from '@/utils/imageUrl';
 import { X, Sparkles, Check, Trash2, ArrowRight } from 'lucide-vue-next';
 
 const props = defineProps<{
@@ -492,20 +499,59 @@ async function handleDelete() {
             <div
               v-for="mod in operator.modules"
               :key="mod.id"
-              class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-2.5 rounded-lg bg-slate-900/60 border border-slate-800"
+              class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700/80 transition-colors"
             >
-              <div class="flex items-center gap-2.5 min-w-0">
-                <div class="w-9 h-9 rounded bg-slate-800 border border-slate-700 p-0.5 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                  <img
-                    :src="getEquipIconUrl(mod.typeIcon)"
-                    :alt="mod.name"
-                    class="w-full h-full object-contain"
-                  />
+              <div class="flex items-center gap-3 min-w-0">
+                <!-- Module Icon with Type Badge Overlay -->
+                <div class="relative flex-shrink-0">
+                  <div class="w-12 h-12 rounded-xl bg-slate-950/80 border border-slate-700/80 p-1 overflow-hidden flex items-center justify-center shadow-inner">
+                    <img
+                      :src="getEquipIconUrl(mod.uniEquipIcon || mod.id)"
+                      :alt="mod.name"
+                      class="w-full h-full object-contain"
+                      loading="lazy"
+                      @error="(e: Event) => {
+                        const target = e.target as HTMLImageElement;
+                        if (!target.dataset.triedFallback && mod.typeIcon) {
+                          target.dataset.triedFallback = 'true';
+                          target.src = getEquipTypeIconUrl(mod.typeIcon);
+                        } else {
+                          target.src = PLACEHOLDER_EQUIP_ICON;
+                        }
+                      }"
+                    />
+                  </div>
+                  <!-- Module Type Badge (X/Y/D) on Icon -->
+                  <span
+                    v-if="mod.typeName2"
+                    class="absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-md text-[10px] font-black font-mono shadow-md border leading-tight uppercase"
+                    :class="[
+                      mod.typeName2.toUpperCase() === 'X'
+                        ? 'bg-sky-500 text-slate-950 border-sky-300'
+                        : mod.typeName2.toUpperCase() === 'Y'
+                        ? 'bg-amber-400 text-slate-950 border-amber-200'
+                        : mod.typeName2.toUpperCase() === 'D'
+                        ? 'bg-rose-500 text-white border-rose-300'
+                        : 'bg-indigo-500 text-white border-indigo-300'
+                    ]"
+                  >
+                    {{ mod.typeName2 }}
+                  </span>
                 </div>
-                <div class="truncate">
-                  <span class="text-xs font-bold text-slate-200">{{ mod.name }}</span>
-                  <span class="ml-1.5 text-[10px] font-mono px-1 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-800/50">
-                    {{ mod.typeName }}
+
+                <div class="min-w-0">
+                  <!-- Readable Title: "Модуль X (WDM)" -->
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-xs sm:text-sm font-bold text-slate-100">
+                      {{ (gameData.itemLanguage === 'ru' ? 'Модуль ' : 'Module ') + (mod.typeName2 || '') + (mod.typeName1 ? ` (${mod.typeName1})` : '') }}
+                    </span>
+                    <span class="text-[10px] font-mono px-1 py-0.5 rounded bg-slate-800 text-amber-300 border border-slate-700">
+                      {{ mod.typeName1 }}
+                    </span>
+                  </div>
+                  <!-- Subtitle: Original equipment name -->
+                  <span class="text-[11px] text-slate-400 block truncate mt-0.5" :title="mod.name">
+                    {{ mod.name }}
                   </span>
                 </div>
               </div>

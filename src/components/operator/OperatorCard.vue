@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import type { OperatorSummary } from '@/types/game';
 import { usePlannerStore } from '@/stores/planner';
+import { useGameDataStore } from '@/stores/gamedata';
 import { getAvatarUrl, PLACEHOLDER_AVATAR } from '@/utils/imageUrl';
 import { Edit3, Trash2, Plus } from 'lucide-vue-next';
 
@@ -14,6 +15,7 @@ const emit = defineEmits<{
 }>();
 
 const planner = usePlannerStore();
+const gameData = useGameDataStore();
 const plan = computed(() => planner.plans[props.operator.id]);
 const hasPlan = computed(() => !!plan.value);
 
@@ -41,11 +43,26 @@ function handleEdit() {
 function handleRemove() {
   planner.removePlan(props.operator.id);
 }
+
+function getModuleInfo(modId: string) {
+  const mod = props.operator.modules?.find((m) => m.id === modId);
+  const prefix = gameData.itemLanguage === 'ru' ? 'Модуль' : 'Module';
+  const typePart = mod?.typeName2 || '';
+  const archPart = mod?.typeName1 ? ` (${mod.typeName1})` : '';
+  const lvlPrefix = gameData.itemLanguage === 'ru' ? 'Ур.' : 'Lvl';
+  return {
+    type: mod?.typeName2 || 'Mod',
+    archetype: mod?.typeName1 || '',
+    name: mod?.name || '',
+    lvlPrefix,
+    fullName: `${prefix} ${typePart}${archPart}`,
+  };
+}
 </script>
 
 <template>
   <div
-    class="relative flex flex-col justify-between bg-ark-card/90 hover:bg-ark-card border rounded-xl overflow-hidden transition-all duration-200 shadow-md group"
+    class="relative flex flex-col justify-between h-full bg-ark-card/90 hover:bg-ark-card border rounded-xl overflow-hidden transition-all duration-200 shadow-md group"
     :class="[hasPlan ? 'border-cyan-500/50 ring-1 ring-cyan-500/20' : 'border-ark-border hover:border-slate-600']"
   >
     <!-- Top Bar with Class and Rarity -->
@@ -59,9 +76,6 @@ function handleRemove() {
           class="w-full h-full object-cover group-hover:scale-105 transition-transform"
           @error="($event.target as HTMLImageElement).src = PLACEHOLDER_AVATAR"
         />
-        <div class="absolute bottom-0 inset-x-0 bg-slate-950/80 text-[10px] text-center font-mono text-slate-300 py-0.5">
-          {{ operator.profession }}
-        </div>
       </div>
 
       <!-- Info -->
@@ -75,8 +89,8 @@ function handleRemove() {
           </span>
         </div>
 
-        <p class="text-xs text-slate-400 font-mono truncate">
-          {{ operator.appellation || operator.id }}
+        <p class="text-[11px] text-slate-400 font-mono truncate">
+          {{ operator.profession }}
         </p>
 
         <!-- Plan Status Badge -->
@@ -103,9 +117,20 @@ function handleRemove() {
               v-for="(lvl, modId) in plan.target.modules"
               :key="modId"
               v-show="lvl > 0"
-              class="text-[10px] font-mono px-1 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-700/60 font-semibold"
+              :title="`${getModuleInfo(String(modId)).fullName}${getModuleInfo(String(modId)).name ? ` (${getModuleInfo(String(modId)).name})` : ''}: ${getModuleInfo(String(modId)).lvlPrefix} ${lvl}`"
+              class="text-[10px] font-mono px-1.5 py-0.5 rounded font-bold border inline-flex items-center gap-1 shadow-sm"
+              :class="[
+                getModuleInfo(String(modId)).type.toUpperCase() === 'X'
+                  ? 'bg-sky-950/90 text-sky-300 border-sky-600/70'
+                  : getModuleInfo(String(modId)).type.toUpperCase() === 'Y'
+                  ? 'bg-amber-950/90 text-amber-300 border-amber-600/70'
+                  : getModuleInfo(String(modId)).type.toUpperCase() === 'D'
+                  ? 'bg-rose-950/90 text-rose-300 border-rose-600/70'
+                  : 'bg-indigo-950/90 text-indigo-300 border-indigo-600/70'
+              ]"
             >
-              Mod: L{{ lvl }}
+              <span>{{ getModuleInfo(String(modId)).type }}:</span>
+              <span>L{{ lvl }}</span>
             </span>
           </template>
         </div>
@@ -117,7 +142,7 @@ function handleRemove() {
     </div>
 
     <!-- Actions Footer -->
-    <div class="px-3 py-2 bg-slate-900/50 border-t border-ark-border/60 flex items-center justify-between gap-2">
+    <div class="px-3 py-2 bg-slate-900/50 border-t border-ark-border/60 flex items-center justify-between gap-2 mt-auto">
       <template v-if="hasPlan">
         <button
           type="button"

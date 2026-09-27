@@ -7,6 +7,7 @@ import type { ItemSummary } from '@/types/game';
 import ItemIcon from '@/components/common/ItemIcon.vue';
 import QuantityInput from '@/components/common/QuantityInput.vue';
 import { Search, Filter, AlertCircle, CheckCircle2, RotateCcw, X } from 'lucide-vue-next';
+import { getLocalizedItemName, isCraftResource } from '@/data/materialTranslations';
 
 const gameData = useGameDataStore();
 const inventory = useInventoryStore();
@@ -70,10 +71,18 @@ const relevantItemList = computed(() => {
   const rawNeeded = planner.calculationResult.rawMaterials;
   const stockedIds = Object.keys(inventory.stock || {});
   const neededIds = Object.keys(rawNeeded);
-  const ids = new Set([...stockedIds, ...neededIds]);
-  return Array.from(ids)
-    .map((id) => gameData.items[id])
-    .filter((item) => !!item);
+
+  if (onlyNeeded.value || onlyDeficit.value) {
+    const ids = new Set([...stockedIds, ...neededIds]);
+    return Array.from(ids)
+      .filter((id) => isCraftResource(id))
+      .map((id) => gameData.getItem(id))
+      .filter((item): item is ItemSummary => !!item);
+  }
+
+  // When browsing all categories, show only pure upgrade/craft materials (no operator potentials)
+  const allItems = Object.values(gameData.items).map((it) => gameData.getItem(it.itemId) || it);
+  return allItems.filter((item) => isCraftResource(item.itemId));
 });
 
 const filteredItems = computed(() => {
@@ -115,12 +124,16 @@ const filteredItems = computed(() => {
     });
   }
 
-  // Search filter
+  // Search filter: matches current localized name, RU, EN, or item ID
   const q = searchQuery.value.trim().toLowerCase();
   if (q) {
-    list = list.filter(
-      (i) => i.name.toLowerCase().includes(q) || i.itemId.toLowerCase().includes(q)
-    );
+    list = list.filter((i) => {
+      const name = i.name.toLowerCase();
+      const id = i.itemId.toLowerCase();
+      const ru = getLocalizedItemName(i.itemId, 'ru')?.toLowerCase() || '';
+      const en = getLocalizedItemName(i.itemId, 'en')?.toLowerCase() || '';
+      return name.includes(q) || id.includes(q) || ru.includes(q) || en.includes(q);
+    });
   }
 
   // Sort by rarity descending, then sortId, then name

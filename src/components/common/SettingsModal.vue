@@ -73,9 +73,6 @@ async function handleRefreshGameData() {
   }
 }
 
-function setRegion(region: 'en_US' | 'zh_CN') {
-  gameData.serverRegion = region;
-}
 </script>
 
 <template>
@@ -103,37 +100,43 @@ function setRegion(region: 'en_US' | 'zh_CN') {
       <!-- Body -->
       <div class="p-5 space-y-6 overflow-y-auto flex-1 text-xs">
 
-        <!-- Region & Game Data Section -->
-        <div class="p-4 bg-ark-card rounded-xl border border-ark-border space-y-3">
+        <!-- Game Data & Language Section -->
+        <div class="p-4 bg-ark-card rounded-xl border border-ark-border space-y-4">
           <div class="flex items-center justify-between">
             <h4 class="font-bold text-slate-200 text-sm flex items-center gap-2">
-              <Globe class="w-4 h-4 text-amber-400" />
-              Регион сервера и игровые данные
+              <Globe class="w-4 h-4 text-cyan-400" />
+              Игровые данные и локализация
             </h4>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-800 font-bold">
+              458+ Оперативников &bull; Все модули
+            </span>
           </div>
           <p class="text-slate-400">
-            Выберите регион для загрузки игровых данных. <strong class="text-amber-300">CN</strong> содержит более актуальные данные по операторам и модулям. EN использует официальный глобальный репозиторий.
+            Подключена полная база данных Arknights со всеми актуальными оперативниками, альтернативными модулями (X/Y/D) и крафтами. Имена персонажей отображаются на английском.
           </p>
 
-          <!-- Region selector -->
-          <div class="flex items-center gap-2">
-            <span class="text-slate-400 font-medium">Регион:</span>
-            <div class="inline-flex bg-slate-900 p-1 rounded-lg border border-ark-border">
+          <!-- Language selector for material names -->
+          <div class="flex items-center justify-between flex-wrap gap-3 p-3 rounded-lg bg-slate-900/80 border border-ark-border">
+            <div>
+              <span class="text-xs font-bold text-slate-200 block">Язык названий материалов</span>
+              <span class="text-[11px] text-slate-400 block">Отображение ресурсов на складе, в калькуляторе и планах</span>
+            </div>
+            <div class="inline-flex bg-slate-950 p-1 rounded-lg border border-ark-border">
               <button
                 type="button"
-                class="px-3 py-1.5 rounded text-xs font-bold transition-all"
-                :class="gameData.serverRegion === 'en_US' ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-slate-200'"
-                @click="setRegion('en_US')"
+                class="px-3 py-1.5 rounded-md text-xs font-bold transition-all"
+                :class="gameData.itemLanguage === 'ru' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+                @click="gameData.setItemLanguage('ru')"
               >
-                EN (Global)
+                Русский (RU)
               </button>
               <button
                 type="button"
-                class="px-3 py-1.5 rounded text-xs font-bold transition-all"
-                :class="gameData.serverRegion === 'zh_CN' ? 'bg-amber-600 text-white' : 'text-slate-400 hover:text-slate-200'"
-                @click="setRegion('zh_CN')"
+                class="px-3 py-1.5 rounded-md text-xs font-bold transition-all"
+                :class="gameData.itemLanguage === 'en' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+                @click="gameData.setItemLanguage('en')"
               >
-                CN (Более полные данные)
+                English (EN)
               </button>
             </div>
           </div>
@@ -148,7 +151,7 @@ function setRegion(region: 'en_US' | 'zh_CN') {
               <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': isRefreshing }" />
               {{ isRefreshing ? 'Обновление...' : 'Принудительно обновить игровые данные' }}
             </button>
-            <p class="text-slate-500 mt-1.5">Сбросит кэш и загрузит свежие данные с GitHub. Полезно если не хватает модулей или устаревшие иконки.</p>
+            <p class="text-slate-500 mt-1.5">Сбросит кэш и загрузит самые свежие данные с GitHub.</p>
           </div>
         </div>
 
