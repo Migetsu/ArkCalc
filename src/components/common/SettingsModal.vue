@@ -3,8 +3,8 @@ import { ref } from 'vue';
 import { useInventoryStore } from '@/stores/inventory';
 import { usePlannerStore } from '@/stores/planner';
 import { useGameDataStore } from '@/stores/gamedata';
-import { exportDatabaseToJson, importDatabaseFromJson, parseAndImportData } from '@/services/syncService';
-import { X, Download, Upload, CheckCircle, AlertCircle, RefreshCw, Globe, Trash2 } from 'lucide-vue-next';
+import { exportDatabaseToJson, parseAndImportData } from '@/services/syncService';
+import { X, Download, CheckCircle, AlertCircle, RefreshCw, Globe, Trash2, Clipboard } from 'lucide-vue-next';
 
 defineProps<{
   isOpen: boolean;
@@ -22,8 +22,6 @@ const statusMessage = ref<{ type: 'success' | 'error' | 'info'; text: string } |
 const isOperating = ref(false);
 const isRefreshing = ref(false);
 
-const fileInputRef = ref<HTMLInputElement | null>(null);
-const showPasteBox = ref(false);
 const pasteInputText = ref('');
 
 async function handleExportJson() {
@@ -35,30 +33,23 @@ async function handleExportJson() {
   }
 }
 
-function triggerImportClick() {
-  fileInputRef.value?.click();
-}
-
-async function handleFileSelected(e: Event) {
-  const target = e.target as HTMLInputElement;
-  const file = target.files?.[0];
-  if (!file) return;
-  isOperating.value = true;
-  statusMessage.value = null;
+async function handlePasteFromClipboard() {
   try {
-    const res = await importDatabaseFromJson(file);
-    if (res.success) {
-      await inventory.loadInventory();
-      await planner.loadPlans();
-      statusMessage.value = { type: 'success', text: `Импорт завершен: ${res.inventoryCount} предметов, ${res.plansCount} планов.` };
+    const text = await navigator.clipboard.readText();
+    if (text && text.trim()) {
+      pasteInputText.value = text.trim();
+      await handleImportFromPaste();
     } else {
-      statusMessage.value = { type: 'error', text: res.message };
+      statusMessage.value = {
+        type: 'info',
+        text: 'Буфер обмена пуст. Скопируйте Full Raw Data из ArkPRTS и нажмите кнопку снова.',
+      };
     }
-  } catch (err: any) {
-    statusMessage.value = { type: 'error', text: `Ошибка импорта: ${err.message || err}` };
-  } finally {
-    isOperating.value = false;
-    target.value = '';
+  } catch {
+    statusMessage.value = {
+      type: 'info',
+      text: 'Вставьте скопированный текст из ArkPRTS в текстовое поле вручную (Ctrl+V) и нажмите «Импортировать».',
+    };
   }
 }
 
@@ -73,7 +64,6 @@ async function handleImportFromPaste() {
       await planner.loadPlans();
       statusMessage.value = { type: 'success', text: res.message };
       pasteInputText.value = '';
-      showPasteBox.value = false;
     } else {
       statusMessage.value = { type: 'error', text: res.message };
     }
@@ -193,68 +183,79 @@ async function handleRefreshGameData() {
           </div>
         </div>
 
-        <!-- JSON Backup Section -->
+        <!-- ArkPRTS Clipboard Import Section -->
         <div class="p-4 bg-ark-card rounded-xl border border-ark-border space-y-3">
           <div class="flex items-center justify-between">
             <h4 class="font-bold text-slate-200 text-sm flex items-center gap-2">
-              <Download class="w-4 h-4 text-cyan-400" />
-              Резервное копирование (Файл JSON)
+              <Clipboard class="w-4 h-4 text-cyan-400" />
+              Импорт склада из ArkPRTS
             </h4>
-            <span class="text-[10px] text-slate-400 font-mono">1-клик экспорт/импорт</span>
+            <span class="text-[10px] text-cyan-400 font-mono font-bold bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-800">
+              Full Raw Data
+            </span>
           </div>
-          <p class="text-slate-400">Сохраните файл со всеми оперативниками в планах и количеством ресурсов на складе, чтобы легко перенести на другое устройство или сохранить копию. Поддерживается импорт полного дампа ArkPRTS.</p>
-          <div class="flex flex-wrap items-center gap-3 pt-1">
-            <button type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-600/20 text-cyan-300 hover:bg-cyan-600/30 border border-cyan-500/40 font-semibold transition-colors" :disabled="isOperating" @click="handleExportJson">
-              <Download class="w-4 h-4" />
-              Скачать ark_calc_backup.json
-            </button>
-            <button type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold transition-colors" :disabled="isOperating" @click="triggerImportClick">
-              <Upload class="w-4 h-4 text-slate-400" />
-              Восстановить из файла .json
-            </button>
-            <input ref="fileInputRef" type="file" accept=".json" class="hidden" @change="handleFileSelected" />
-          </div>
+          <p class="text-slate-400 leading-relaxed">
+            Скопируйте данные в перехватчике <span class="text-slate-200 font-medium">ArkPRTS</span> (кнопка <i>Copy full raw data</i>) и нажмите кнопку быстрой вставки из буфера или вставьте текст в поле ниже вручную:
+          </p>
 
-          <!-- Direct Paste from ArkPRTS -->
-          <div class="pt-3 border-t border-slate-800 space-y-2">
+          <div class="space-y-2.5 pt-1">
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+                :disabled="isOperating"
+                @click="handlePasteFromClipboard"
+              >
+                <Clipboard class="w-4 h-4" />
+                Вставить из буфера обмена
+              </button>
+              <button
+                v-if="pasteInputText.trim()"
+                type="button"
+                class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-colors"
+                @click="pasteInputText = ''"
+              >
+                Очистить поле
+              </button>
+            </div>
+
+            <textarea
+              v-model="pasteInputText"
+              rows="4"
+              placeholder="Или вставьте сюда скопированный JSON текст из ArkPRTS вручную (Ctrl+V)..."
+              class="w-full bg-slate-900 border border-ark-border rounded-xl p-3 font-mono text-[11px] text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+            ></textarea>
+
             <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold text-slate-300">Или вставьте скопированный текст (ArkPRTS / Penguin Stats / JSON)</span>
-              <button
-                v-if="showPasteBox"
-                type="button"
-                class="text-[11px] text-slate-400 hover:text-white"
-                @click="showPasteBox = false"
-              >
-                Скрыть
-              </button>
-            </div>
-
-            <div v-if="!showPasteBox">
               <button
                 type="button"
-                class="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-cyan-400 text-xs font-medium border border-slate-700 transition-colors"
-                @click="showPasteBox = true"
-              >
-                Вставить скопированные данные вручную
-              </button>
-            </div>
-
-            <div v-else class="space-y-2">
-              <textarea
-                v-model="pasteInputText"
-                rows="4"
-                placeholder="Вставьте сюда скопированный результат Export full raw data из ArkPRTS или JSON..."
-                class="w-full bg-slate-900 border border-ark-border rounded-xl p-3 font-mono text-[11px] text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-              ></textarea>
-              <button
-                type="button"
-                class="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow transition-all"
+                class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 font-bold text-xs transition-all"
                 :disabled="!pasteInputText.trim() || isOperating"
                 @click="handleImportFromPaste"
               >
-                Импортировать вставленный текст
+                Импортировать введённый текст
               </button>
+              <span v-if="pasteInputText.trim()" class="text-[10px] text-slate-500 font-mono">
+                Длина: {{ pasteInputText.length }} символов
+              </span>
             </div>
+          </div>
+
+          <!-- Backup Export -->
+          <div class="pt-3 border-t border-slate-800 flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <span class="text-xs font-semibold text-slate-300 block">Резервная копия планов и склада</span>
+              <span class="text-[11px] text-slate-500 block">Сохранить файл ark_calc_backup.json на диск</span>
+            </div>
+            <button
+              type="button"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 font-medium text-xs transition-colors"
+              :disabled="isOperating"
+              @click="handleExportJson"
+            >
+              <Download class="w-3.5 h-3.5 text-cyan-400" />
+              Скачать бэкап (.json)
+            </button>
           </div>
         </div>
 
