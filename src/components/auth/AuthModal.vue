@@ -4,8 +4,6 @@ import { useAuthStore } from '@/stores/auth';
 import {
   X,
   Cloud,
-  CloudUpload,
-  CloudDownload,
   Mail,
   Lock,
   LogOut,
@@ -116,20 +114,34 @@ function formatSyncTime(isoString: string | null): string {
       <!-- Authenticated Profile View -->
       <div v-if="auth.isAuthenticated" class="p-5 space-y-4">
         <!-- User info box -->
-        <div class="bg-slate-900/90 border border-ark-border rounded-xl p-3.5 space-y-2.5">
+        <div class="bg-slate-900/90 border border-ark-border rounded-xl p-4 space-y-3">
           <div class="flex items-center justify-between">
-            <span class="text-xs text-slate-400 font-medium">Аккаунт Arknights:</span>
-            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center gap-1">
-              <ShieldCheck class="w-3 h-3" />
-              Подключен
+            <span class="text-xs text-slate-400 font-medium">Статус аккаунта:</span>
+            <span
+              v-if="auth.isSyncing"
+              class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800 flex items-center gap-1.5"
+            >
+              <RefreshCw class="w-3 h-3 animate-spin text-cyan-400" />
+              Синхронизация...
+            </span>
+            <span
+              v-else
+              class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center gap-1.5"
+            >
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              Автосинхронизация активна
             </span>
           </div>
-          <div class="flex items-center gap-2 text-slate-200 font-mono text-sm font-semibold truncate">
-            <User class="w-4 h-4 text-cyan-400 flex-shrink-0" />
+
+          <div class="flex items-center gap-2.5 text-slate-200 font-mono text-sm font-semibold truncate pt-1">
+            <div class="w-7 h-7 rounded-lg bg-cyan-950/70 border border-cyan-700/60 flex items-center justify-center text-cyan-400 flex-shrink-0">
+              <User class="w-4 h-4" />
+            </div>
             <span class="truncate">{{ auth.userEmail }}</span>
           </div>
-          <div class="text-[11px] text-slate-400 font-mono flex items-center justify-between pt-1.5 border-t border-slate-800/80">
-            <span>Последняя синхронизация:</span>
+
+          <div class="text-[11px] text-slate-400 font-mono flex items-center justify-between pt-2 border-t border-slate-800/80">
+            <span>Последнее автосохранение:</span>
             <strong class="text-slate-200">{{ formatSyncTime(auth.lastSyncTime) }}</strong>
           </div>
         </div>
@@ -150,50 +162,37 @@ function formatSyncTime(isoString: string | null): string {
           <span>{{ auth.syncError }}</span>
         </div>
 
-        <!-- Info explanation -->
-        <div class="p-3 bg-slate-900/50 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1.5 leading-relaxed">
-          <div class="font-semibold text-slate-300 flex items-center gap-1.5">
-            <Cloud class="w-3.5 h-3.5 text-cyan-400" />
-            Как работает синхронизация:
+        <!-- Automated Sync Features Card -->
+        <div class="p-3.5 bg-slate-900/60 rounded-xl border border-slate-800 text-[11px] text-slate-300 space-y-2">
+          <div class="font-bold text-slate-200 flex items-center gap-1.5 text-xs">
+            <ShieldCheck class="w-4 h-4 text-emerald-400" />
+            Полностью автоматический режим:
           </div>
-          <p>
-            &bull; При входе на любом новом устройстве (смартфон, другой ПК) ваши склад, ростер и планы загружаются <strong>автоматически</strong>.
-          </p>
-          <p>
-            &bull; При импорте из ArkPRTS данные сразу отправляются в облако.
-          </p>
+          <div class="space-y-1.5 text-slate-400 pl-1 leading-relaxed">
+            <div class="flex items-start gap-2">
+              <span class="text-cyan-400 font-bold">&bull;</span>
+              <span><strong>Мгновенное сохранение:</strong> любые изменения склада, планов и ростера сразу фоном отправляются в облако.</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-cyan-400 font-bold">&bull;</span>
+              <span><strong>Кроссплатформенность:</strong> откройте сайт на смартфоне или планшете — актуальные данные подтянутся автоматически без нажатия кнопок.</span>
+            </div>
+          </div>
         </div>
 
-        <!-- Action buttons -->
-        <div class="space-y-2 pt-1">
+        <!-- Subtle emergency sync button -->
+        <div class="pt-1 flex items-center justify-between text-xs">
           <button
             type="button"
             :disabled="auth.isSyncing"
-            class="w-full py-2.5 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-cyan-950/50 active:scale-[0.99] disabled:opacity-50"
-            @click="auth.syncToCloud"
-          >
-            <RefreshCw v-if="auth.isSyncing" class="w-4 h-4 animate-spin" />
-            <CloudUpload v-else class="w-4 h-4" />
-            <span>Синхронизировать сейчас (Отправить в облако)</span>
-          </button>
-
-          <button
-            type="button"
-            :disabled="auth.isSyncing"
-            class="w-full py-2 px-3 rounded-xl bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 text-slate-400 hover:text-slate-200 font-medium text-[11px] flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
-            title="Принудительно скачать данные из облака и заменить ими локальные на этом устройстве"
+            class="text-slate-400 hover:text-cyan-300 font-mono text-[11px] flex items-center gap-1.5 transition-colors disabled:opacity-50"
+            title="Принудительно запросить актуальные данные из облака"
             @click="auth.pullFromCloud"
           >
-            <CloudDownload class="w-3.5 h-3.5 text-cyan-500/80" />
-            <span>Принудительно загрузить из облака на это устройство</span>
+            <RefreshCw class="w-3.5 h-3.5" :class="{ 'animate-spin': auth.isSyncing }" />
+            <span>Проверить обновления сейчас</span>
           </button>
-        </div>
 
-        <!-- Sign Out -->
-        <div class="pt-2 border-t border-slate-800 flex justify-between items-center">
-          <p class="text-[10px] text-slate-500 font-mono">
-            База данных: Supabase Cloud
-          </p>
           <button
             type="button"
             class="text-xs text-rose-400 hover:text-rose-300 font-semibold flex items-center gap-1.5 transition-colors p-1"

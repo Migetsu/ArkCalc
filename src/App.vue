@@ -60,16 +60,16 @@ function openModalFromMenu(modal: 'settings' | 'auth') {
 }
 
 onMounted(async () => {
-  // Initialize cloud auth listener
-  auth.initAuth();
-
-  // Load local IndexedDB stores in parallel with game data
+  // Load local IndexedDB stores in parallel with game data first
   await Promise.all([
     inventory.loadInventory(),
     planner.loadPlans(),
     roster.loadRoster(),
     gameData.loadGameData(),
   ]);
+
+  // Initialize cloud auth listener and auto-pull cloud state if logged in
+  await auth.initAuth();
 });
 </script>
 
@@ -230,17 +230,18 @@ onMounted(async () => {
                 ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/60'
                 : 'bg-slate-900/90 border-slate-700/80 text-slate-300 hover:text-cyan-400 hover:border-cyan-500/40',
             ]"
-            :title="auth.isAuthenticated ? 'Синхронизировано: ' + auth.userEmail : 'Войти в облачный аккаунт'"
+            :title="auth.isAuthenticated ? (auth.isSyncing ? 'Идет синхронизация...' : 'Синхронизировано: ' + auth.userEmail) : 'Войти в облачный аккаунт'"
             @click="isAuthModalOpen = true"
           >
-            <Cloud class="w-4 h-4 text-cyan-400" />
+            <RefreshCw v-if="auth.isSyncing" class="w-4 h-4 text-cyan-400 animate-spin" />
+            <Cloud v-else class="w-4 h-4" :class="auth.isAuthenticated ? 'text-emerald-400' : 'text-cyan-400'" />
             <span class="hidden sm:inline font-mono">
-              {{ auth.isAuthenticated ? 'Облако' : 'Войти' }}
+              {{ auth.isSyncing ? 'Синхронизация...' : (auth.isAuthenticated ? 'Облако' : 'Войти') }}
             </span>
             <span
-              v-if="auth.isAuthenticated"
+              v-if="auth.isAuthenticated && !auth.isSyncing"
               class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"
-              title="Облако подключено"
+              title="Облако синхронизировано"
             ></span>
           </button>
 

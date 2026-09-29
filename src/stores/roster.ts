@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { db, type UserRosterOperator, type OperatorTargetPlan } from '@/services/db';
 import { useGameDataStore } from '@/stores/gamedata';
 import { usePlannerStore } from '@/stores/planner';
+import { useAuthStore } from '@/stores/auth';
 
 const LS_ROSTER_KEY = 'ark_roster_v1';
 
@@ -60,12 +61,14 @@ export const useRosterStore = defineStore('roster', () => {
     } catch (e) {
       console.warn('Could not save roster to Dexie:', e);
     }
+    useAuthStore().triggerAutoSync();
   }
 
   async function clearAllRoster() {
     roster.value = {};
     localStorage.removeItem(LS_ROSTER_KEY);
     await db.roster.clear();
+    useAuthStore().triggerAutoSync();
   }
 
   /**

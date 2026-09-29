@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { db, type OperatorTargetPlan } from '@/services/db';
 import { useGameDataStore } from '@/stores/gamedata';
 import { useInventoryStore } from '@/stores/inventory';
+import { useAuthStore } from '@/stores/auth';
 import { calculateAllPlans } from '@/services/calculatorEngine';
 import type { CalculationResult } from '@/types/game';
 
@@ -80,6 +81,7 @@ export const usePlannerStore = defineStore('planner', () => {
     savePlansToLocalStorage(plans.value);
     try {
       await db.plans.put(cleanPlan);
+      useAuthStore().triggerAutoSync();
     } catch (e) {
       console.error('Dexie save failed, plan is preserved in localStorage:', e);
     }
@@ -92,6 +94,7 @@ export const usePlannerStore = defineStore('planner', () => {
     savePlansToLocalStorage(updated);
     try {
       await db.plans.delete(charId);
+      useAuthStore().triggerAutoSync();
     } catch (e) {
       console.warn('Dexie delete failed:', e);
     }
@@ -102,6 +105,7 @@ export const usePlannerStore = defineStore('planner', () => {
     savePlansToLocalStorage({});
     try {
       await db.plans.clear();
+      useAuthStore().triggerAutoSync();
     } catch (e) {
       console.warn('Dexie clear failed:', e);
     }

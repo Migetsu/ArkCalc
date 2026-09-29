@@ -14,6 +14,7 @@ export const useAuthStore = defineStore('auth', () => {
   const session = ref<Session | null>(null);
   const isLoading = ref<boolean>(false);
   const isSyncing = ref<boolean>(false);
+  const isPulling = ref<boolean>(false);
   const syncError = ref<string | null>(null);
   const syncMessage = ref<string | null>(null);
   const lastSyncTime = ref<string | null>(localStorage.getItem(LAST_SYNC_KEY) || null);
@@ -26,16 +27,36 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!user.value);
   const userEmail = computed(() => user.value?.email || '');
 
-  // Initialize auth state listener
+  let autoSyncTimer: any = null;
+
+  // Trigger debounced auto-sync to cloud when local changes happen
+  function triggerAutoSync(debounceMs = 1500) {
+    if (!user.value || isPulling.value) return;
+    if (autoSyncTimer) clearTimeout(autoSyncTimer);
+    autoSyncTimer = setTimeout(async () => {
+      if (!user.value || isPulling.value) return;
+      await syncToCloud();
+    }, debounceMs);
+  }
+
+  // Initialize auth state listener and automatically pull cloud data if logged in
   async function initAuth() {
     try {
       const { data } = await supabase.auth.getSession();
       session.value = data.session;
       user.value = data.session?.user || null;
 
-      supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      // Automatically pull latest cloud data on startup if already authenticated
+      if (user.value) {
+        await pullFromCloud();
+      }
+
+      supabase.auth.onAuthStateChange(async (event, newSession) => {
         session.value = newSession;
         user.value = newSession?.user || null;
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && newSession?.user) {
+          await pullFromCloud();
+        }
       });
     } catch (e: any) {
       console.warn('Failed to initialize Supabase session:', e);
@@ -186,6 +207,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     isSyncing.value = true;
+    isPulling.value = true;
     syncError.value = null;
     syncMessage.value = 'Загрузка данных из облака...';
 
@@ -204,7 +226,7 @@ export const useAuthStore = defineStore('auth', () => {
       if (data) {
         // Populate local stores
         if (data.inventory_data && typeof data.inventory_data === 'object') {
-          await inventory.bulkSetStock(data.inventory_data);
+          await inventory.replaceAllStock(data.inventory_data);
         }
 
         if (data.plans_data && typeof data.plans_data === 'object') {
@@ -242,6 +264,9 @@ export const useAuthStore = defineStore('auth', () => {
       return { success: false, error: msg };
     } finally {
       isSyncing.value = false;
+      setTimeout(() => {
+        isPulling.value = false;
+      }, 600);
     }
   }
 
@@ -250,6 +275,7 @@ export const useAuthStore = defineStore('auth', () => {
     session,
     isLoading,
     isSyncing,
+    isPulling,
     syncError,
     syncMessage,
     lastSyncTime,
@@ -261,5 +287,6 @@ export const useAuthStore = defineStore('auth', () => {
     signOut,
     syncToCloud,
     pullFromCloud,
+    triggerAutoSync,
   };
 });

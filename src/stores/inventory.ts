@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { db, type UserInventory } from '@/services/db';
+import { useAuthStore } from '@/stores/auth';
 
 export const useInventoryStore = defineStore('inventory', () => {
   const stock = ref<Record<string, number>>({});
@@ -34,6 +35,7 @@ export const useInventoryStore = defineStore('inventory', () => {
       stock.value = nextStock;
       await db.inventory.put({ itemId, amount: validAmount });
     }
+    useAuthStore().triggerAutoSync();
   }
 
   function getStock(itemId: string): number {
@@ -65,11 +67,34 @@ export const useInventoryStore = defineStore('inventory', () => {
         await db.inventory.bulkPut(entries);
       }
     });
+    useAuthStore().triggerAutoSync();
+  }
+
+  async function replaceAllStock(items: Record<string, number>) {
+    const entries: UserInventory[] = [];
+    const newStock: Record<string, number> = {};
+
+    for (const id in items) {
+      const amt = Math.max(0, Math.floor(items[id] || 0));
+      if (amt > 0) {
+        newStock[id] = amt;
+        entries.push({ itemId: id, amount: amt });
+      }
+    }
+    stock.value = newStock;
+
+    await db.transaction('rw', db.inventory, async () => {
+      await db.inventory.clear();
+      if (entries.length > 0) {
+        await db.inventory.bulkPut(entries);
+      }
+    });
   }
 
   async function clearAll() {
     stock.value = {};
     await db.inventory.clear();
+    useAuthStore().triggerAutoSync();
   }
 
   return {
@@ -79,6 +104,7 @@ export const useInventoryStore = defineStore('inventory', () => {
     setItemStock,
     getStock,
     bulkSetStock,
+    replaceAllStock,
     clearAll,
   };
 });
