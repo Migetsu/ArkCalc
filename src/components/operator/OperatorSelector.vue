@@ -194,10 +194,10 @@ function clearFilters() {
         </div>
 
         <!-- Plan filter toggle buttons -->
-        <div class="inline-flex bg-slate-900 p-1 rounded-xl border border-ark-border text-xs font-medium">
+        <div class="inline-flex w-full sm:w-auto bg-slate-900 p-1 rounded-xl border border-ark-border text-xs font-medium">
           <button
             type="button"
-            class="px-3 py-1.5 rounded-lg transition-all"
+            class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg transition-all text-center"
             :class="[selectedPlanFilter === 'all' ? 'bg-cyan-600 text-white font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200']"
             @click="selectedPlanFilter = 'all'"
           >
@@ -205,7 +205,7 @@ function clearFilters() {
           </button>
           <button
             type="button"
-            class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5"
+            class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5"
             :class="[selectedPlanFilter === 'planned' ? 'bg-cyan-600 text-white font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200']"
             @click="selectedPlanFilter = 'planned'"
           >
@@ -214,7 +214,7 @@ function clearFilters() {
           </button>
           <button
             type="button"
-            class="px-3 py-1.5 rounded-lg transition-all"
+            class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg transition-all text-center"
             :class="[selectedPlanFilter === 'unplanned' ? 'bg-cyan-600 text-white font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200']"
             @click="selectedPlanFilter = 'unplanned'"
           >
@@ -224,7 +224,7 @@ function clearFilters() {
       </div>
 
       <!-- Class Filters Row -->
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+      <div class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 text-xs">
         <span class="text-slate-400 font-medium mr-1 text-[11px] uppercase tracking-wider flex-shrink-0">Класс:</span>
         <button
           type="button"

@@ -239,25 +239,25 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
 
     <!-- Navigation Tabs for Calculator Views -->
     <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-ark-border pb-3">
-      <div class="inline-flex bg-ark-card p-1 rounded-xl border border-ark-border text-xs font-semibold">
+      <div class="inline-flex bg-ark-card p-1 rounded-xl border border-ark-border text-xs font-semibold overflow-x-auto custom-scrollbar max-w-full">
         <button
           type="button"
-          class="px-4 py-2 rounded-lg transition-all flex items-center gap-2"
+          class="px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 flex-shrink-0"
           :class="[activeTab === 'direct' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200']"
           @click="activeTab = 'direct'"
         >
           <TrendingDown class="w-4 h-4" />
-          Прямой дефицит ({{ totalDeficitItemsCount }})
+          <span>Дефицит ({{ totalDeficitItemsCount }})</span>
         </button>
 
         <button
           type="button"
-          class="px-4 py-2 rounded-lg transition-all flex items-center gap-2"
+          class="px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 flex-shrink-0"
           :class="[activeTab === 'farm' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200']"
           @click="activeTab = 'farm'"
         >
           <Layers class="w-4 h-4" />
-          <span>План фарма (базовые карты)</span>
+          <span>План фарма карт</span>
           <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-400 text-slate-950 font-black uppercase">
             Топ
           </span>
@@ -265,12 +265,12 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
 
         <button
           type="button"
-          class="px-4 py-2 rounded-lg transition-all flex items-center gap-2"
+          class="px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 flex-shrink-0"
           :class="[activeTab === 'craftingTree' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200']"
           @click="activeTab = 'craftingTree'"
         >
           <Hammer class="w-4 h-4" />
-          Дерево крафта мастерской ({{ calc.craftingSteps.length }})
+          <span>Дерево крафта ({{ calc.craftingSteps.length }})</span>
         </button>
       </div>
 
