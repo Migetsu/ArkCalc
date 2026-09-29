@@ -283,20 +283,26 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
     <!-- TAB 1: DIRECT DEFICIT LIST -->
     <div v-if="activeTab === 'direct'" class="space-y-4">
       <!-- Helpful banner explaining craft vs direct deficit -->
-      <div class="p-3 bg-slate-900/90 rounded-xl border border-ark-border text-xs text-slate-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div class="flex items-center gap-2.5">
-          <Wrench class="w-4 h-4 text-cyan-400 flex-shrink-0" />
-          <span>
-            <b>Прямой дефицит:</b> Высокие тиры (T4, T5, Dual Chip) создаются в Мастерской.
-            Перейдите в <b>«План фарма»</b>, чтобы увидеть точный список базовых ресурсов и лучших стадий!
-          </span>
+      <div class="p-4 bg-slate-900/90 rounded-2xl border border-ark-border text-xs text-slate-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-cyan-950/80 border border-cyan-800/80 flex items-center justify-center text-cyan-400 flex-shrink-0">
+            <Wrench class="w-4 h-4" />
+          </div>
+          <div>
+            <div class="font-bold text-slate-100 text-xs">Прямой дефицит и синтез в Мастерской</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">
+              Сложные ресурсы (T4, T5, двойные фишки) крафтятся в Мастерской из базовых материалов T3.
+              Перейдите во вкладку <b>«План фарма»</b>, чтобы сразу увидеть готовый список лучших карт и число заходов!
+            </div>
+          </div>
         </div>
         <button
           type="button"
-          class="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex-shrink-0 transition-colors shadow-sm self-start sm:self-auto"
+          class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex items-center gap-1.5 flex-shrink-0 transition-all shadow-md self-start sm:self-auto"
           @click="activeTab = 'farm'"
         >
-          Открыть План фарма &rarr;
+          <span>План фарма карт</span>
+          <span>&rarr;</span>
         </button>
       </div>
 
@@ -355,27 +361,30 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
             <button
               v-if="item.craftable"
               type="button"
-              class="text-[10px] font-mono text-cyan-300 hover:text-cyan-200 bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-800/50 rounded px-2 py-1 flex items-center justify-between transition-colors w-full"
+              class="text-[10px] font-mono text-cyan-300 hover:text-cyan-200 bg-cyan-950/50 hover:bg-cyan-900/70 border border-cyan-800/60 rounded px-2.5 py-1.5 flex items-center justify-between transition-colors w-full"
               @click.stop="openFarmingGuide(item.itemId, item.deficit)"
             >
-              <span class="flex items-center gap-1 font-sans">
-                <Hammer class="w-3 h-3 text-cyan-400" /> Крафт в Мастерской
+              <span class="flex items-center gap-1.5 font-sans font-medium">
+                <Hammer class="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
+                <span>Крафт из T3 (Мастерская)</span>
               </span>
-              <span class="text-cyan-400 text-[10px] font-sans">Рецепт и фарм &rarr;</span>
+              <span class="text-amber-300 text-[10px] font-mono font-semibold">
+                {{ getRecommendedStage(item.itemId)?.sanityPerItem ? `~${getRecommendedStage(item.itemId)?.sanityPerItem} ⚡` : 'Рецепт →' }}
+              </span>
             </button>
 
-            <!-- Direct Farm stage if farmable -->
+            <!-- Direct Farm stage if farmable on map -->
             <button
               v-if="item.deficit > 0 && getRecommendedStage(item.itemId) && !getRecommendedStage(item.itemId)?.isCraft"
               type="button"
-              class="text-[10px] font-mono font-semibold text-cyan-300 hover:text-cyan-200 bg-cyan-950/60 hover:bg-cyan-900/60 border border-cyan-800/60 rounded px-2 py-1 flex items-center justify-between transition-colors w-full"
+              class="text-[10px] font-mono font-semibold text-cyan-300 hover:text-cyan-200 bg-cyan-950/70 hover:bg-cyan-900/80 border border-cyan-800/80 rounded px-2.5 py-1.5 flex items-center justify-between transition-colors w-full"
               @click.stop="openFarmingGuide(item.itemId, item.deficit)"
             >
-              <span class="flex items-center gap-1">
-                <Zap class="w-3 h-3 text-amber-400" />
-                Фарм: {{ getRecommendedStage(item.itemId)?.stageCode }}
+              <span class="flex items-center gap-1.5">
+                <Zap class="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                <span>Фарм: {{ getRecommendedStage(item.itemId)?.stageCode }}</span>
               </span>
-              <span class="text-slate-400 text-[9px]">~{{ getRecommendedStage(item.itemId)?.sanityPerItem }} ⚡/шт</span>
+              <span class="text-slate-300 text-[9px]">~{{ getRecommendedStage(item.itemId)?.sanityPerItem }} ⚡/шт</span>
             </button>
           </div>
         </div>

@@ -107,6 +107,17 @@ export const usePlannerStore = defineStore('planner', () => {
     }
   }
 
+  async function bulkImportPlans(newPlans: Record<string, OperatorTargetPlan>) {
+    plans.value = { ...newPlans };
+    savePlansToLocalStorage(newPlans);
+    try {
+      await db.plans.clear();
+      await db.plans.bulkPut(Object.values(newPlans));
+    } catch (e) {
+      console.warn('Dexie bulk import plans failed:', e);
+    }
+  }
+
   const planList = computed(() => Object.values(plans.value));
   const planCount = computed(() => Object.keys(plans.value).length);
 
@@ -147,5 +158,6 @@ export const usePlannerStore = defineStore('planner', () => {
     savePlan,
     removePlan,
     clearAllPlans,
+    bulkImportPlans,
   };
 });

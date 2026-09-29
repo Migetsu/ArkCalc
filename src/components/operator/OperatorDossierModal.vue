@@ -68,6 +68,7 @@ import {
   ChevronDown,
   ChevronUp,
   BookOpen,
+  Sparkles,
 } from 'lucide-vue-next';
 
 const gameData = useGameDataStore();

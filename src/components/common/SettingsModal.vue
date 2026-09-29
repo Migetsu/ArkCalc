@@ -4,6 +4,7 @@ import { useInventoryStore } from '@/stores/inventory';
 import { usePlannerStore } from '@/stores/planner';
 import { useRosterStore } from '@/stores/roster';
 import { useGameDataStore } from '@/stores/gamedata';
+import { useAuthStore } from '@/stores/auth';
 import { exportDatabaseToJson, parseAndImportData } from '@/services/syncService';
 import { syncPenguinStatsOnline } from '@/services/penguinStatsService';
 import { X, Download, CheckCircle, AlertCircle, RefreshCw, Globe, Trash2, Clipboard, Zap } from 'lucide-vue-next';
@@ -20,6 +21,7 @@ const inventory = useInventoryStore();
 const planner = usePlannerStore();
 const rosterStore = useRosterStore();
 const gameData = useGameDataStore();
+const auth = useAuthStore();
 
 const statusMessage = ref<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
 const isOperating = ref(false);
@@ -67,7 +69,14 @@ async function handleImportFromPaste() {
       await inventory.loadInventory();
       await rosterStore.loadRoster();
       await planner.loadPlans();
-      statusMessage.value = { type: 'success', text: res.message };
+
+      let extraMsg = '';
+      if (auth.isAuthenticated) {
+        const syncRes = await auth.syncToCloud();
+        extraMsg = syncRes.success ? ' И автоматически сохранено в облако!' : ' (Локально сохранено, ошибка синхронизации с облаком)';
+      }
+
+      statusMessage.value = { type: 'success', text: res.message + extraMsg };
       pasteInputText.value = '';
     } else {
       statusMessage.value = { type: 'error', text: res.message };
@@ -82,6 +91,9 @@ async function handleImportFromPaste() {
 async function handleClearWarehouse() {
   if (confirm('Вы уверены, что хотите стереть все ресурсы со склада?')) {
     await inventory.clearAll();
+    if (auth.isAuthenticated) {
+      await auth.syncToCloud();
+    }
     statusMessage.value = { type: 'info', text: 'Данные склада успешно очищены.' };
   }
 }
@@ -89,6 +101,9 @@ async function handleClearWarehouse() {
 async function handleClearRoster() {
   if (confirm('Вы уверены, что хотите очистить ростер импортированных оперативников?')) {
     await rosterStore.clearAllRoster();
+    if (auth.isAuthenticated) {
+      await auth.syncToCloud();
+    }
     statusMessage.value = { type: 'info', text: 'Ростер оперативников успешно очищен.' };
   }
 }

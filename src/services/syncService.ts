@@ -183,16 +183,31 @@ export async function parseAndImportData(rawText: string): Promise<{
       };
     }
 
-    // Save to database
+    // Save to database: complete fresh overwrite
     await db.transaction('rw', [db.inventory, db.plans, db.roster], async () => {
+      // Clear previous inventory completely to prevent stacking
+      await db.inventory.clear();
       if (parsedInventory.length > 0) {
-        await db.inventory.clear();
         await db.inventory.bulkPut(parsedInventory);
       }
-      if (parsedRoster.length > 0) {
-        await db.roster.clear();
-        await db.roster.bulkPut(parsedRoster);
+
+      // Clear previous roster completely to prevent stacking
+      await db.roster.clear();
+      try {
+        localStorage.removeItem('ark_roster_v1');
+      } catch {
+        // ignore
       }
+      if (parsedRoster.length > 0) {
+        await db.roster.bulkPut(parsedRoster);
+        try {
+          const map = Object.fromEntries(parsedRoster.map((r) => [r.charId, r]));
+          localStorage.setItem('ark_roster_v1', JSON.stringify(map));
+        } catch {
+          // ignore
+        }
+      }
+
       if (parsedPlans.length > 0) {
         await db.plans.clear();
         await db.plans.bulkPut(parsedPlans);

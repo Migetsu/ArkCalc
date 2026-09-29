@@ -24,6 +24,7 @@ import {
   translateTalentDescriptionRu,
   CURATED_OPERATOR_TALENTS_RU,
 } from '@/data/translations/ruTalentsDatabase';
+import { CN_TALENT_NAMES_MAP } from '@/data/translations/cnOperatorsComplete';
 import type { AppLanguage } from '@/types/game';
 
 const STORAGE_CACHE_KEY = 'ark_trans_cache_v8_offline';
@@ -211,6 +212,11 @@ export async function translateText(
   // 3. Target: English (EN)
   if (!hasChinese(trimmed)) return text;
 
+  // Check offline CN talent names map first for instant zero-latency translation
+  if (CN_TALENT_NAMES_MAP[trimmed]?.en) {
+    return CN_TALENT_NAMES_MAP[trimmed].en;
+  }
+
   const cacheKey = `en:${trimmed}`;
   if (memoryCache[cacheKey]) return memoryCache[cacheKey];
 
@@ -378,11 +384,17 @@ export async function getTranslatedTalents(
 
       const candidates = await Promise.all(
         (talent.candidates || []).map(async (cand: any) => {
-          let name = curatedTalent?.name || cand.name || cand.nameCn || '';
+          let name =
+            curatedTalent?.name ||
+            CN_TALENT_NAMES_MAP[cand.nameCn]?.en ||
+            CN_TALENT_NAMES_MAP[cand.name]?.en ||
+            cand.name ||
+            cand.nameCn ||
+            '';
           let description = curatedTalent?.description || cand.description || cand.descriptionCn || '';
 
           if (needsTranslation(name, 'en')) {
-            name = await translateText(name, 'en');
+            name = CN_TALENT_NAMES_MAP[name]?.en || (await translateText(name, 'en'));
           }
 
           if (needsTranslation(description, 'en')) {

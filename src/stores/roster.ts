@@ -122,10 +122,48 @@ export const useRosterStore = defineStore('roster', () => {
     };
   }
 
+  function buildComfortTargetForOperator(charId: string): OperatorTargetPlan['target'] {
+    const op = gameData.getOperator(charId);
+    const rarity = op?.rarity || 6;
+    let maxElite = 2;
+    if (op?.phases) {
+      maxElite = Math.max(0, op.phases.length - 1);
+    } else if (rarity <= 2) {
+      maxElite = 0;
+    } else if (rarity === 3) {
+      maxElite = 1;
+    }
+
+    const maxLvl = op?.phases?.[maxElite]?.maxLevel || 60;
+    const targetLevel = Math.min(60, maxLvl);
+    const skillsCount = op?.skills?.length || 3;
+    const targetSkills = Array(skillsCount).fill(7);
+
+    // M3 on the signature / last skill
+    const targetMasteries = Array(skillsCount).fill(0);
+    if (rarity >= 4 && skillsCount > 0) {
+      targetMasteries[skillsCount - 1] = 3;
+    }
+
+    // Stage 1 for the primary module
+    const targetModules: Record<string, number> = {};
+    if (op?.modules && op.modules.length > 0) {
+      targetModules[op.modules[0].id] = 1;
+    }
+
+    return {
+      elite: maxElite,
+      level: targetLevel,
+      skills: targetSkills,
+      masteries: targetMasteries,
+      modules: targetModules,
+    };
+  }
+
   /**
-   * Adds an operator from roster to the planner with default FULL UPGRADE target
+   * Adds an operator from roster to the planner with target preset ('full' | 'comfort')
    */
-  async function addOperatorToPlanAsFull(charId: string) {
+  async function addOperatorToPlan(charId: string, preset: 'full' | 'comfort' = 'full') {
     const ro = roster.value[charId];
     if (!ro) return;
 
@@ -140,7 +178,7 @@ export const useRosterStore = defineStore('roster', () => {
       modules: ro.modules || {},
     };
 
-    const target = buildFullTargetForOperator(charId);
+    const target = preset === 'comfort' ? buildComfortTargetForOperator(charId) : buildFullTargetForOperator(charId);
 
     const plan: OperatorTargetPlan = {
       charId,
@@ -152,13 +190,17 @@ export const useRosterStore = defineStore('roster', () => {
   }
 
   /**
-   * Batch adds all operators matching the filter to plans as full
+   * Batch adds operators matching the filter to plans with target preset
    */
-  async function addBatchToPlanAsFull(charIds: string[]) {
+  async function addBatchToPlan(charIds: string[], preset: 'full' | 'comfort' = 'full') {
     for (const charId of charIds) {
-      await addOperatorToPlanAsFull(charId);
+      await addOperatorToPlan(charId, preset);
     }
   }
+
+  // Compatibility aliases
+  const addOperatorToPlanAsFull = (charId: string) => addOperatorToPlan(charId, 'full');
+  const addBatchToPlanAsFull = (charIds: string[]) => addBatchToPlan(charIds, 'full');
 
   /**
    * Checks if an operator is already fully maxed out on account
@@ -195,6 +237,9 @@ export const useRosterStore = defineStore('roster', () => {
     saveRoster,
     clearAllRoster,
     buildFullTargetForOperator,
+    buildComfortTargetForOperator,
+    addOperatorToPlan,
+    addBatchToPlan,
     addOperatorToPlanAsFull,
     addBatchToPlanAsFull,
     isFullyMaxed,

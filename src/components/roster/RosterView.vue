@@ -155,8 +155,10 @@ const filteredRoster = computed(() => {
   });
 });
 
-async function handleAddSingleToPlanFull(charId: string) {
-  await rosterStore.addOperatorToPlanAsFull(charId);
+const batchPreset = ref<'comfort' | 'full'>('comfort');
+
+async function handleAddSingleToPlan(charId: string) {
+  await rosterStore.addOperatorToPlan(charId, batchPreset.value);
 }
 
 async function handleRemoveFromPlan(charId: string) {
@@ -183,8 +185,9 @@ async function handleAddAllUnmaxed6Star() {
     return;
   }
 
-  if (confirm(`Добавить ${unmaxed6.length} шт. 6★ оперативников в план прокачки до фулла?`)) {
-    await rosterStore.addBatchToPlanAsFull(unmaxed6);
+  const presetLabel = batchPreset.value === 'comfort' ? '«Комфорт: E2 Lv60 M3»' : '«Полный максимум: E2 Lv90 M9»';
+  if (confirm(`Добавить ${unmaxed6.length} шт. 6★ оперативников в план с целью ${presetLabel}?`)) {
+    await rosterStore.addBatchToPlan(unmaxed6, batchPreset.value);
   }
 }
 
@@ -198,8 +201,9 @@ async function handleAddFilteredToPlan() {
     return;
   }
 
-  if (confirm(`Добавить ${toAdd.length} выбранных оперативников в план прокачки до фулла?`)) {
-    await rosterStore.addBatchToPlanAsFull(toAdd);
+  const presetLabel = batchPreset.value === 'comfort' ? '«Комфорт: E2 Lv60 M3»' : '«Полный максимум: E2 Lv90 M9»';
+  if (confirm(`Добавить ${toAdd.length} выбранных оперативников в план с целью ${presetLabel}?`)) {
+    await rosterStore.addBatchToPlan(toAdd, batchPreset.value);
   }
 }
 
@@ -238,14 +242,36 @@ function getRarityBadgeBorder(rarity?: number): string {
       </div>
 
       <!-- Quick batch actions -->
-      <div v-if="stats.total > 0" class="flex flex-wrap items-center gap-2 self-stretch md:self-auto">
+      <div v-if="stats.total > 0" class="flex flex-wrap items-center gap-2.5 self-stretch md:self-auto">
+        <!-- Target Preset Switcher -->
+        <div class="inline-flex bg-slate-900 border border-ark-border rounded-xl p-0.5 text-xs font-semibold">
+          <button
+            type="button"
+            class="px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+            :class="batchPreset === 'comfort' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+            @click="batchPreset = 'comfort'"
+            title="Цель: E2 Lv60 M3 Mod1 (оптимально для большинства)"
+          >
+            <span>Комфорт (E2-60)</span>
+          </button>
+          <button
+            type="button"
+            class="px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+            :class="batchPreset === 'full' ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+            @click="batchPreset = 'full'"
+            title="Цель: E2 Lv90 M9 Mod3 (абсолютный максимум)"
+          >
+            <span>Фулл (E2-90)</span>
+          </button>
+        </div>
+
         <button
           type="button"
           class="px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
           @click="handleAddAllUnmaxed6Star"
         >
           <Sparkles class="w-4 h-4 text-amber-400" />
-          <span>Все 6★ в план (до фулла)</span>
+          <span>Все 6★ в план</span>
         </button>
 
         <button
@@ -478,11 +504,11 @@ function getRarityBadgeBorder(rarity?: number): string {
               <button
                 type="button"
                 class="flex-1 py-1.5 px-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-95"
-                title="Добавить в план прокачки сразу до максимума (E2 Max / M3 / Mod3)"
-                @click="handleAddSingleToPlanFull(item.charId)"
+                :title="batchPreset === 'comfort' ? 'Добавить в план с целью: Комфорт (E2 Lv60 M3)' : 'Добавить в план с целью: Фулл (E2 Lv90 M9)'"
+                @click="handleAddSingleToPlan(item.charId)"
               >
                 <Plus class="w-3.5 h-3.5" />
-                <span>В план (до фулла)</span>
+                <span>{{ batchPreset === 'comfort' ? 'В план (E2-60)' : 'В план (Фулл)' }}</span>
               </button>
 
               <button

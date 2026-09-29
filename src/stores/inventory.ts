@@ -24,11 +24,14 @@ export const useInventoryStore = defineStore('inventory', () => {
 
   async function setItemStock(itemId: string, amount: number) {
     const validAmount = Math.max(0, Math.floor(amount || 0));
+    const nextStock = { ...stock.value };
     if (validAmount === 0) {
-      delete stock.value[itemId];
+      delete nextStock[itemId];
+      stock.value = nextStock;
       await db.inventory.delete(itemId);
     } else {
-      stock.value[itemId] = validAmount;
+      nextStock[itemId] = validAmount;
+      stock.value = nextStock;
       await db.inventory.put({ itemId, amount: validAmount });
     }
   }
@@ -40,17 +43,19 @@ export const useInventoryStore = defineStore('inventory', () => {
   async function bulkSetStock(items: Record<string, number>) {
     const entries: UserInventory[] = [];
     const deleteIds: string[] = [];
+    const nextStock = { ...stock.value };
 
     for (const id in items) {
       const amt = Math.max(0, Math.floor(items[id] || 0));
       if (amt === 0) {
-        delete stock.value[id];
+        delete nextStock[id];
         deleteIds.push(id);
       } else {
-        stock.value[id] = amt;
+        nextStock[id] = amt;
         entries.push({ itemId: id, amount: amt });
       }
     }
+    stock.value = nextStock;
 
     await db.transaction('rw', db.inventory, async () => {
       if (deleteIds.length > 0) {

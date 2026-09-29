@@ -4,12 +4,15 @@ import { useGameDataStore } from '@/stores/gamedata';
 import { useInventoryStore } from '@/stores/inventory';
 import { usePlannerStore } from '@/stores/planner';
 import { useRosterStore } from '@/stores/roster';
+import { useAuthStore } from '@/stores/auth';
 import OperatorSelector from '@/components/operator/OperatorSelector.vue';
 import RosterView from '@/components/roster/RosterView.vue';
 import WikiView from '@/components/wiki/WikiView.vue';
+import RecruitmentView from '@/components/recruitment/RecruitmentView.vue';
 import InventoryGrid from '@/components/inventory/InventoryGrid.vue';
 import ResourceSummary from '@/components/calculator/ResourceSummary.vue';
 import SettingsModal from '@/components/common/SettingsModal.vue';
+import AuthModal from '@/components/auth/AuthModal.vue';
 import {
   Users,
   UserCheck,
@@ -20,18 +23,25 @@ import {
   Database,
   RefreshCw,
   AlertCircle,
+  Radio,
+  Cloud,
 } from 'lucide-vue-next';
 
 const gameData = useGameDataStore();
 const inventory = useInventoryStore();
 const planner = usePlannerStore();
 const roster = useRosterStore();
+const auth = useAuthStore();
 
-type TabType = 'operators' | 'roster' | 'inventory' | 'calculator' | 'wiki';
+type TabType = 'operators' | 'roster' | 'inventory' | 'calculator' | 'recruitment' | 'wiki';
 const currentTab = ref<TabType>('operators');
 const isSettingsOpen = ref<boolean>(false);
+const isAuthModalOpen = ref<boolean>(false);
 
 onMounted(async () => {
+  // Initialize cloud auth listener
+  auth.initAuth();
+
   // Load local IndexedDB stores in parallel with game data
   await Promise.all([
     inventory.loadInventory(),
@@ -153,6 +163,21 @@ onMounted(async () => {
             </span>
           </button>
 
+          <!-- Recruitment Tab -->
+          <button
+            type="button"
+            class="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all relative"
+            :class="[
+              currentTab === 'recruitment'
+                ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60',
+            ]"
+            @click="currentTab = 'recruitment'"
+          >
+            <Radio class="w-4 h-4 text-amber-400" />
+            <span class="hidden md:inline">Рекрутинг</span>
+          </button>
+
           <!-- Wiki Tab -->
           <button
             type="button"
@@ -169,8 +194,31 @@ onMounted(async () => {
           </button>
         </nav>
 
-        <!-- Right Action Button: Settings -->
+        <!-- Right Action Buttons: Cloud Sync & Settings -->
         <div class="flex items-center gap-2">
+          <!-- Cloud Sync Button -->
+          <button
+            type="button"
+            class="flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all shadow-sm"
+            :class="[
+              auth.isAuthenticated
+                ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/60'
+                : 'bg-slate-900 border-ark-border text-slate-300 hover:text-cyan-400 hover:border-cyan-500/40',
+            ]"
+            :title="auth.isAuthenticated ? 'Синхронизировано: ' + auth.userEmail : 'Войти в облачный аккаунт'"
+            @click="isAuthModalOpen = true"
+          >
+            <Cloud class="w-4 h-4 text-cyan-400" />
+            <span class="hidden sm:inline">
+              {{ auth.isAuthenticated ? 'Облако' : 'Облако' }}
+            </span>
+            <span
+              v-if="auth.isAuthenticated"
+              class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse hidden sm:inline"
+            ></span>
+          </button>
+
+          <!-- Settings Button -->
           <button
             type="button"
             class="p-2.5 rounded-xl bg-slate-900 border border-ark-border text-slate-300 hover:text-cyan-400 hover:border-cyan-500/40 transition-colors shadow-sm"
@@ -227,6 +275,7 @@ onMounted(async () => {
       <div v-else class="h-full">
         <OperatorSelector v-show="currentTab === 'operators'" />
         <RosterView v-show="currentTab === 'roster'" @open-settings="isSettingsOpen = true" />
+        <RecruitmentView v-show="currentTab === 'recruitment'" />
         <InventoryGrid v-show="currentTab === 'inventory'" />
         <ResourceSummary v-show="currentTab === 'calculator'" />
         <WikiView v-show="currentTab === 'wiki'" />
@@ -250,6 +299,12 @@ onMounted(async () => {
     <SettingsModal
       :is-open="isSettingsOpen"
       @close="isSettingsOpen = false"
+    />
+
+    <!-- Cloud Auth & Sync Modal -->
+    <AuthModal
+      :is-open="isAuthModalOpen"
+      @close="isAuthModalOpen = false"
     />
   </div>
 </template>
