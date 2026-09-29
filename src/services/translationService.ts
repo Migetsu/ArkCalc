@@ -27,7 +27,7 @@ import {
 import { CN_TALENT_NAMES_MAP } from '@/data/translations/cnOperatorsComplete';
 import type { AppLanguage } from '@/types/game';
 
-const STORAGE_CACHE_KEY = 'ark_trans_cache_v8_offline';
+const STORAGE_CACHE_KEY = 'ark_trans_cache_v9_arts_damage';
 
 // In-memory cache
 const memoryCache: Record<string, string> = {};

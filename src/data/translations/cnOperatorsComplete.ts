@@ -39,7 +39,7 @@ export const CN_OPERATORS_LOCALIZATION: Record<string, OperatorCompleteLocalizat
         descriptionEn:
           "Attacks deal additional Arts damage equal to 30% (+5%) of ATK, increased to 45% (+10%) against lighter enemies (weight ≤ 3); While airborne, causes enemies within attack range to become Weightless.",
         descriptionRu:
-          'Атаки наносят дополнительный магический урон в размере 30% (+5%) от силы атаки, увеличиваясь до 45% (+10%) против врагов с низким весом (вес ≤ 3). В состоянии Левитации враги в радиусе атаки получают статус Невесомости.',
+          'Атаки наносят дополнительный урон искусством в размере 30% (+5%) от силы атаки, увеличиваясь до 45% (+10%) против врагов с низким весом (вес ≤ 3). В состоянии Левитации враги в радиусе атаки получают статус Невесомости.',
       },
       {
         nameEn: 'Dance in the Heavens',
@@ -117,13 +117,13 @@ export const CN_OPERATORS_LOCALIZATION: Record<string, OperatorCompleteLocalizat
         nameEn: 'Form & Will Illumination',
         nameRu: 'Озарение формы и воли',
         descriptionEn: 'Attacks deal additional Arts damage and ignore 15% DEF.',
-        descriptionRu: 'Атаки наносят дополнительный магический урон и игнорируют 15% защиты цели.',
+        descriptionRu: 'Атаки наносят дополнительный урон искусством и игнорируют 15% защиты цели.',
       },
       {
         nameEn: 'Perception of Cold & Heat',
         nameRu: 'Ощущение холода и жары',
         descriptionEn: 'Gains 15% Sanctuary against Arts and Elemental damage.',
-        descriptionRu: 'Получает 15% Укрытия от магического и элементального урона.',
+        descriptionRu: 'Получает 15% Укрытия от урона искусством и элементального урона.',
       },
     ],
   },
@@ -189,7 +189,7 @@ export const CN_OPERATORS_LOCALIZATION: Record<string, OperatorCompleteLocalizat
         nameEn: 'Karmic Fire',
         nameRu: 'Кармическое пламя',
         descriptionEn: 'When blocking enemies, reflects 30% of incoming physical damage as Arts damage.',
-        descriptionRu: 'При блокировании врагов отражает 30% входящего физического урона в виде магического.',
+        descriptionRu: 'При блокировании врагов отражает 30% входящего физического урона в виде урона искусством.',
       },
       {
         nameEn: 'Stance of the Oni',
@@ -207,19 +207,19 @@ export const CN_OPERATORS_LOCALIZATION: Record<string, OperatorCompleteLocalizat
     quoteEn: 'Listen to the bells of Kjerag; their echoes cleanse all impurity.',
     quoteRu: 'Слушай колокола Кьерага; их эхо очищает от любой скверны.',
     traitEn: 'Decel Binder: Deals Arts damage and slows enemies.',
-    traitRu: 'Замедлитель: наносит магический урон и замедляет врагов.',
+    traitRu: 'Замедлитель: наносит урон искусством и замедляет врагов.',
     talents: [
       {
         nameEn: 'Boundless Snowscape',
         nameRu: 'Бескрайний снежный пейзаж',
         descriptionEn: 'Enemies in attack range take +15% Arts damage and have -15% RES.',
-        descriptionRu: 'Враги в радиусе атаки получают на 15% больше магического урона и теряют 15% сопротивления магии.',
+        descriptionRu: 'Враги в радиусе атаки получают на 15% больше урона искусством и теряют 15% сопротивления искусствам.',
       },
       {
         nameEn: 'Blessing of the Holy Mountain',
         nameRu: 'Благословение священной горы',
         descriptionEn: 'All allies gain +10 RES and +10% status resistance.',
-        descriptionRu: 'Все союзники получают +10 сопротивления магии и +10% сопротивления эффектам.',
+        descriptionRu: 'Все союзники получают +10 сопротивления искусствам и +10% сопротивления эффектам.',
       },
     ],
   },
@@ -231,7 +231,7 @@ export const CN_OPERATORS_LOCALIZATION: Record<string, OperatorCompleteLocalizat
     quoteEn: 'The imperial law strikes swifter than lightning.',
     quoteRu: 'Имперский закон разит быстрее, чем молния.',
     traitEn: 'Chain Caster: Attacks jump between enemies, dealing Arts damage.',
-    traitRu: 'Цепной маг: атаки перескакивают между врагами, нанося магический урон.',
+    traitRu: 'Цепной кастер: атаки перескакивают между врагами, нанося урон искусством.',
     talents: [
       {
         nameEn: 'Lucid Judgment',
@@ -279,7 +279,7 @@ export const CN_OPERATORS_LOCALIZATION: Record<string, OperatorCompleteLocalizat
     quoteEn: 'Starlight is the ancient data left by time.',
     quoteRu: 'Звездный свет — это древние данные, оставленные временем.',
     traitEn: 'Chain Caster: Attacks bounce between enemies, dealing Arts damage.',
-    traitRu: 'Цепной маг: атаки рикошетят между врагами, нанося магический урон.',
+    traitRu: 'Цепной кастер: атаки рикошетят между врагами, нанося урон искусством.',
     talents: [
       {
         nameEn: 'Data Modeling',
@@ -303,7 +303,7 @@ export const CN_OPERATORS_LOCALIZATION: Record<string, OperatorCompleteLocalizat
     quoteEn: 'A breath of frost brings peace to weary souls.',
     quoteRu: 'Морозное дыхание приносит покой усталым душам.',
     traitEn: 'Core Caster: Deals Arts damage.',
-    traitRu: 'Маг: наносит магический урон.',
+    traitRu: 'Кастер: наносит урон искусством.',
     talents: [
       {
         nameEn: 'Swift Quill',

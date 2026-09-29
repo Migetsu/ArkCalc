@@ -105,7 +105,7 @@ export function translateTalentDescriptionRu(rawDesc: string): string {
         const buff2 = b2 ? ` <@ba.talpu>(+${b2})</>` : '';
         const tag1 = t1 !== undefined ? `___TAG_${t1}___` : 'Левитации';
         const tag2 = t2 !== undefined ? `___TAG_${t2}___` : 'Невесомости';
-        return `Атаки наносят дополнительный магический урон в размере ${p1}${buff1} от силы атаки, увеличиваясь до ${p2}${buff2} против врагов с низким весом (вес ≤ ${w}); в состоянии ${tag1} враги в радиусе атаки получают статус ${tag2}`;
+        return `Атаки наносят дополнительный урон искусством в размере ${p1}${buff1} от силы атаки, увеличиваясь до ${p2}${buff2} против врагов с низким весом (вес ≤ ${w}); в состоянии ${tag1} враги в радиусе атаки получают статус ${tag2}`;
       },
     ],
     [
@@ -206,7 +206,7 @@ export function translateTalentDescriptionRu(rawDesc: string): string {
     // Attacks, damage, status
     [
       /Poisons the targets when attacking,\s*dealing (\d+) Arts damage to them per second,\s*lasting (\d+) seconds\s*\(damage is doubled against Ranged enemies\)/gi,
-      'При атаке отравляет цели, нанося им $1 магического урона в секунду в течение $2 сек. (урон удваивается по дальнобойным врагам)',
+      'При атаке отравляет цели, нанося им $1 урона искусством в секунду в течение $2 сек. (урон удваивается по дальнобойным врагам)',
     ],
     [
       /Attacks ignore (\d+) RES/gi,
@@ -238,7 +238,7 @@ export function translateTalentDescriptionRu(rawDesc: string): string {
     ],
     [
       /blocked enemies receive (\d+%?) ATK as Arts damage/gi,
-      'заблокированные враги получают $1 от СИЛ АТК в виде магического урона',
+      'заблокированные враги получают $1 от СИЛ АТК в виде урона искусством',
     ],
     [
       /SP recovery rate\s*([+-]?\d+(?:\.\d+)?)\/sec\s*after deployment and before 2nd skill use/gi,
@@ -316,10 +316,10 @@ export function translateTalentDescriptionRu(rawDesc: string): string {
     [/\bin the surrounding tiles\b/gi, 'на соседних клетках'],
     [/\bto this unit and a random ally\b/gi, 'этому оперативнику и случайному союзнику'],
     [/\bto a random ally\b/gi, 'случайному союзнику'],
-    [/\bdeals (\d+%?) Arts damage\b/gi, 'наносит $1 магического урона'],
+    [/\bdeals (\d+%?) Arts damage\b/gi, 'наносит $1 урона искусством'],
     [/\bdeals (\d+%?) Physical damage\b/gi, 'наносит $1 физического урона'],
     [/\bdeals (\d+%?) True damage\b/gi, 'наносит $1 чистого урона'],
-    [/\bdeals (\d+%?) ATK as Arts damage\b/gi, 'наносит магический урон в размере $1 от СИЛ АТК'],
+    [/\bdeals (\d+%?) ATK as Arts damage\b/gi, 'наносит урон искусством в размере $1 от СИЛ АТК'],
     [/\bdeals (\d+%?) ATK as Physical damage\b/gi, 'наносит физический урон в размере $1 от СИЛ АТК'],
     [/\bdeals (\d+%?) ATK as True damage\b/gi, 'наносит чистый урон в размере $1 от СИЛ АТК'],
     [/\bhas a (\d+%?) chance to\b/gi, 'с шансом $1'],
@@ -353,12 +353,12 @@ export function translateTalentDescriptionRu(rawDesc: string): string {
     [/\bASPD\b/gi, 'СКОР АТК'],
     [/\bATK\b/gi, 'СИЛ АТК'],
     [/\bDEF\b/gi, 'Защита'],
-    [/\bRES\b/gi, 'Сопротивление магии'],
+    [/\bRES\b/gi, 'Сопротивление искусствам'],
     [/\bDP Cost\b/gi, 'Стоимость DP'],
     [/\bPhysical damage\b/gi, 'физический урон'],
-    [/\bArts damage\b/gi, 'магический урон'],
+    [/\bArts damage\b/gi, 'урон искусством'],
     [/\bTrue damage\b/gi, 'чистый урон'],
-    [/\bArts\b/gi, 'Магия'],
+    [/\bArts\b/gi, 'Искусства'],
     [/\bPhysical\b/gi, 'Физический'],
     [/\bAerial enemies\b/gi, 'Воздушные враги'],
     [/\baerial enemies\b/gi, 'воздушные враги'],

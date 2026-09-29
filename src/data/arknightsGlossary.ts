@@ -3,7 +3,7 @@
  *
  * Provides:
  * 1. Tag & blackboard placeholder masking before sending to translation services (so tags like <@ba.kw> and {atk_scale:0%} are never mangled or translated).
- * 2. Canon Arknights Russian terminology glossary (Arts -> Магический урон, True -> Чистый урон, etc.).
+ * 2. Canon Arknights Russian terminology glossary (Arts -> Урон искусством, True -> Чистый урон, etc.).
  * 3. Post-processing normalization of machine translation quirks.
  */
 
@@ -60,8 +60,8 @@ export function unmaskTextAfterTranslation(translatedText: string, tokens: strin
  */
 export const ARKNIGHTS_TERM_GLOSSARY: Record<string, string> = {
   // Damage Types
-  'arts damage': 'магический урон',
-  'arts dmg': 'магический урон',
+  'arts damage': 'урон искусством',
+  'arts dmg': 'урон искусством',
   'physical damage': 'физический урон',
   'physical dmg': 'физический урон',
   'true damage': 'чистый урон',
@@ -80,7 +80,7 @@ export const ARKNIGHTS_TERM_GLOSSARY: Record<string, string> = {
   'def': 'ЗАЩ',
   'defense': 'ЗАЩ',
   'res': 'СОПР',
-  'arts resistance': 'СОПР магии',
+  'arts resistance': 'СОПР искусствам',
   'aspd': 'СКОР АТК',
   'attack speed': 'скорость атаки',
   'block count': 'блокирование',
@@ -186,11 +186,18 @@ const POST_TRANSLATION_RULES: [RegExp, string][] = [
   [/\bсоюзным\s+операторам\b/gi, 'союзным оперативникам'],
   [/\bвражеские\s+цели\b/gi, 'враги'],
 
-  // Bad "Arts Damage" translations
-  [/\bурон[а-я]* от искусств[а-я]*/gi, 'магический урон'],
-  [/\bповреждени[а-я]* от искусств[а-я]*/gi, 'магический урон'],
-  [/\bискусств[а-я]* урон[а-я]*/gi, 'магический урон'],
-  [/\bмагическ[а-я]* повреждени[а-я]*/gi, 'магический урон'],
+  // Arts Damage translations
+  [/\bМагического\s+урона\b/g, 'Урона искусством'],
+  [/\bМагическим\s+уроном\b/g, 'Уроном искусством'],
+  [/\bМагическому\s+урону\b/g, 'Урону искусством'],
+  [/\bМагический\s+урон\b/g, 'Урон искусством'],
+  [/\bмагического\s+урона\b/gi, 'урона искусством'],
+  [/\bмагическим\s+уроном\b/gi, 'уроном искусством'],
+  [/\bмагическому\s+урону\b/gi, 'урону искусством'],
+  [/\bмагическом\s+уроне\b/gi, 'уроне искусством'],
+  [/\bмагический\s+урон\b/gi, 'урон искусством'],
+  [/\bмагическ[а-я]* повреждени[а-я]*/gi, 'урон искусством'],
+  [/\bповреждени[а-я]* от искусств[а-я]*/gi, 'урон искусством'],
 
   // Bad "True Damage" translations
   [/\bистинн[а-я]* урон[а-я]*/gi, 'чистый урон'],
