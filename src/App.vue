@@ -546,7 +546,7 @@ onMounted(async () => {
               </div>
               <div>
                 <div class="font-bold text-xs text-slate-100">Настройки & Импорт</div>
-                <div class="text-[11px] text-slate-400">Вставка ArkPRTS, язык, сброс</div>
+                <div class="text-[11px] text-slate-400">Синхронизация Yostar (1 клик), язык, бэкап</div>
               </div>
             </div>
             <ChevronRight class="w-4 h-4 text-slate-500 flex-shrink-0" />

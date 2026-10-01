@@ -105,7 +105,12 @@ export async function parseAndImportData(rawText: string): Promise<{
       // 3. ArkPRTS Full Raw Data (from Game packet or Skland)
       else {
         // Find inventory object
-        const invSource = data.inventory || data.items || data.data?.inventory || data.data?.warehouse;
+        const invSource =
+          data.inventory ||
+          data.items ||
+          data.data?.inventory ||
+          data.data?.warehouse ||
+          data.user?.inventory;
         if (invSource) {
           if (Array.isArray(invSource)) {
             for (const itm of invSource) {
@@ -126,7 +131,12 @@ export async function parseAndImportData(rawText: string): Promise<{
         }
 
         // Find character troop (ArkPRTS player's owned roster)
-        const charsSource = data.troop?.chars || data.chars || data.char || data.data?.troop?.chars;
+        const charsSource =
+          data.troop?.chars ||
+          data.chars ||
+          data.char ||
+          data.data?.troop?.chars ||
+          data.user?.troop?.chars;
         if (charsSource) {
           const charList = Array.isArray(charsSource) ? charsSource : Object.values(charsSource);
           for (const op of charList as any[]) {

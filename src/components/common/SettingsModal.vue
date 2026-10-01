@@ -7,7 +7,32 @@ import { useGameDataStore } from '@/stores/gamedata';
 import { useAuthStore } from '@/stores/auth';
 import { exportDatabaseToJson, parseAndImportData } from '@/services/syncService';
 import { syncPenguinStatsOnline } from '@/services/penguinStatsService';
-import { X, Download, CheckCircle, AlertCircle, RefreshCw, Globe, Trash2, Clipboard, Zap } from 'lucide-vue-next';
+import {
+  getLinkedAccount,
+  requestVerificationCode,
+  linkAndSync,
+  syncDirect,
+  unlinkAccount,
+  type YostarLinkedAccount,
+  type ArknightsServer,
+} from '@/services/yostarSyncService';
+import {
+  X,
+  Download,
+  CheckCircle,
+  AlertCircle,
+  RefreshCw,
+  Globe,
+  Trash2,
+  Clipboard,
+  Zap,
+  Gamepad2,
+  Send,
+  Unlink,
+  ShieldCheck,
+  Mail,
+  KeyRound,
+} from 'lucide-vue-next';
 
 defineProps<{
   isOpen: boolean;
@@ -29,6 +54,115 @@ const isRefreshing = ref(false);
 const isSyncingPenguin = ref(false);
 
 const pasteInputText = ref('');
+
+// Yostar Direct Sync State
+const yostarAccount = ref<YostarLinkedAccount | null>(getLinkedAccount());
+const yostarEmail = ref('');
+const yostarCode = ref('');
+const yostarServer = ref<ArknightsServer>('en');
+const isSendingCode = ref(false);
+const isLinking = ref(false);
+const isDirectSyncing = ref(false);
+const codeCooldown = ref(0);
+let cooldownTimer: any = null;
+
+function startCooldown() {
+  codeCooldown.value = 60;
+  if (cooldownTimer) clearInterval(cooldownTimer);
+  cooldownTimer = setInterval(() => {
+    if (codeCooldown.value > 0) {
+      codeCooldown.value--;
+    } else {
+      clearInterval(cooldownTimer);
+    }
+  }, 1000);
+}
+
+async function handleSendYostarCode() {
+  if (!yostarEmail.value || !yostarEmail.value.includes('@')) {
+    statusMessage.value = { type: 'error', text: 'Пожалуйста, введите корректный адрес электронной почты Yostar.' };
+    return;
+  }
+  isSendingCode.value = true;
+  statusMessage.value = null;
+  try {
+    const res = await requestVerificationCode(yostarEmail.value, yostarServer.value);
+    if (res.success) {
+      statusMessage.value = { type: 'success', text: res.message || 'Код подтверждения отправлен на почту!' };
+      startCooldown();
+    } else {
+      statusMessage.value = { type: 'error', text: res.error || 'Ошибка отправки кода' };
+    }
+  } finally {
+    isSendingCode.value = false;
+  }
+}
+
+async function handleLinkAndSyncYostar() {
+  if (!yostarEmail.value || !yostarCode.value) {
+    statusMessage.value = { type: 'error', text: 'Заполните email и 6-значный код из письма.' };
+    return;
+  }
+  isLinking.value = true;
+  statusMessage.value = null;
+  try {
+    const res = await linkAndSync(yostarEmail.value, yostarCode.value, yostarServer.value);
+    if (res.success && res.account) {
+      yostarAccount.value = res.account;
+      yostarCode.value = '';
+      statusMessage.value = {
+        type: 'success',
+        text: `Игровой аккаунт ${res.account.nickName || res.account.email} успешно привязан и синхронизирован! Склад и ростер обновлены.`,
+      };
+    } else {
+      statusMessage.value = { type: 'error', text: res.error || 'Не удалось привязать аккаунт Yostar' };
+    }
+  } finally {
+    isLinking.value = false;
+  }
+}
+
+async function handleDirectSyncYostar() {
+  isDirectSyncing.value = true;
+  statusMessage.value = null;
+  try {
+    const res = await syncDirect();
+    if (res.success && res.account) {
+      yostarAccount.value = res.account;
+      statusMessage.value = {
+        type: 'success',
+        text: `Данные с игрового сервера успешно обновлены в 1 клик! Загружено предметов: ${res.inventoryCount || 0}, оперативников: ${res.rosterCount || 0}.`,
+      };
+    } else {
+      statusMessage.value = { type: 'error', text: res.error || 'Ошибка синхронизации с аккаунтом' };
+    }
+  } finally {
+    isDirectSyncing.value = false;
+  }
+}
+
+function handleUnlinkYostar() {
+  if (confirm('Вы действительно хотите отвязать аккаунт Yostar? Токен будет удален с этого устройства.')) {
+    unlinkAccount();
+    yostarAccount.value = null;
+    statusMessage.value = { type: 'info', text: 'Аккаунт Yostar успешно отвязан.' };
+  }
+}
+
+function formatSyncTime(isoString?: string): string {
+  if (!isoString) return 'Еще не синхронизировано';
+  try {
+    const d = new Date(isoString);
+    return d.toLocaleString('ru-RU', {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return isoString;
+  }
+}
 
 async function handleExportJson() {
   try {
@@ -247,6 +381,197 @@ async function handleSyncPenguin() {
           <p class="text-slate-500 mt-1.5">
             Обновление базы персонажей с GitHub и актуальной матрицы дропа стадий с penguin-stats.io.
           </p>
+        </div>
+
+        <!-- Yostar Direct 1-Click Sync Section -->
+        <div class="p-4 bg-ark-card rounded-xl border border-ark-border space-y-4">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h4 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+              <Gamepad2 class="w-4 h-4 text-cyan-400" />
+              Прямая синхронизация с игрой (Yostar)
+            </h4>
+            <span
+              v-if="yostarAccount"
+              class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center gap-1"
+            >
+              <ShieldCheck class="w-3 h-3" />
+              Привязан ({{ yostarAccount.server.toUpperCase() }})
+            </span>
+            <span
+              v-else
+              class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-800"
+            >
+              В 1 клик &bull; Без сторонних сайтов
+            </span>
+          </div>
+
+          <p class="text-slate-400 leading-relaxed">
+            Прямое подключение к игровому серверу Arknights. Загружает ваш актуальный склад, всех имеющихся оперативников, уровни прокачки, навыков и модулей без необходимости заходить на сторонние ресурсы или копировать JSON вручную.
+          </p>
+
+          <!-- STATE 1: Account already linked -->
+          <div v-if="yostarAccount" class="space-y-3 pt-1">
+            <!-- Account badge card -->
+            <div class="p-3.5 bg-slate-900/90 border border-ark-border rounded-xl space-y-2">
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-lg bg-cyan-950/80 border border-cyan-700/60 flex items-center justify-center text-cyan-400 font-bold font-mono text-xs">
+                    {{ yostarAccount.level ? `Lv${yostarAccount.level}` : 'DR' }}
+                  </div>
+                  <div>
+                    <div class="font-bold text-slate-100 text-xs flex items-center gap-1.5">
+                      <span>{{ yostarAccount.nickName || 'Доктор' }}</span>
+                      <span v-if="yostarAccount.nickNumber" class="text-slate-500 font-mono text-[10px]">#{{ yostarAccount.nickNumber }}</span>
+                      <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-cyan-300 border border-slate-700">
+                        {{ yostarAccount.server.toUpperCase() }}
+                      </span>
+                    </div>
+                    <div class="text-[11px] text-slate-400 font-mono">
+                      {{ yostarAccount.email }}
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  class="text-[11px] text-rose-400 hover:text-rose-300 font-medium flex items-center gap-1 transition-colors p-1"
+                  @click="handleUnlinkYostar"
+                >
+                  <Unlink class="w-3.5 h-3.5" />
+                  <span>Отвязать</span>
+                </button>
+              </div>
+
+              <div class="text-[10px] text-slate-500 font-mono flex items-center justify-between pt-2 border-t border-slate-800/80">
+                <span>Последняя синхронизация:</span>
+                <strong class="text-slate-300">{{ formatSyncTime(yostarAccount.lastSyncAt) }}</strong>
+              </div>
+            </div>
+
+            <!-- Big 1-Click Sync CTA Button -->
+            <button
+              type="button"
+              :disabled="isDirectSyncing"
+              class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-950/50 transition-all active:scale-[0.99] disabled:opacity-50"
+              @click="handleDirectSyncYostar"
+            >
+              <RefreshCw v-if="isDirectSyncing" class="w-4 h-4 animate-spin text-cyan-200" />
+              <Zap v-else class="w-4 h-4 text-cyan-200" />
+              <span>
+                {{ isDirectSyncing ? 'Скачивание данных с сервера Arknights...' : 'Синхронизировать аккаунт прямо сейчас (В 1 клик)' }}
+              </span>
+            </button>
+
+            <p class="text-[11px] text-slate-500 flex items-center gap-1.5 pt-0.5">
+              <span>💡</span>
+              <span>Перед нажатием сверните или закройте игру на телефоне, чтобы сервер не выдал сообщение о входе с другого устройства.</span>
+            </p>
+          </div>
+
+          <!-- STATE 2: Account not yet linked -->
+          <div v-else class="space-y-3 pt-1">
+            <!-- Server Selector -->
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
+                Регион сервера игры
+              </label>
+              <div class="grid grid-cols-3 gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
+                <button
+                  type="button"
+                  class="py-1.5 rounded-lg transition-all"
+                  :class="yostarServer === 'en' ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+                  @click="yostarServer = 'en'"
+                >
+                  Global (EN)
+                </button>
+                <button
+                  type="button"
+                  class="py-1.5 rounded-lg transition-all"
+                  :class="yostarServer === 'jp' ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+                  @click="yostarServer = 'jp'"
+                >
+                  Japan (JP)
+                </button>
+                <button
+                  type="button"
+                  class="py-1.5 rounded-lg transition-all"
+                  :class="yostarServer === 'kr' ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+                  @click="yostarServer = 'kr'"
+                >
+                  Korea (KR)
+                </button>
+              </div>
+            </div>
+
+            <!-- Email & Send Code Row -->
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
+                Почта аккаунта Yostar
+              </label>
+              <div class="flex items-center gap-2">
+                <div class="relative flex-1">
+                  <Mail class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <input
+                    v-model="yostarEmail"
+                    type="email"
+                    placeholder="doctor@rhodes-island.com"
+                    class="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+                <button
+                  type="button"
+                  :disabled="isSendingCode || codeCooldown > 0 || !yostarEmail.trim()"
+                  class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex items-center gap-1.5 transition-all disabled:opacity-50 flex-shrink-0"
+                  @click="handleSendYostarCode"
+                >
+                  <RefreshCw v-if="isSendingCode" class="w-3.5 h-3.5 animate-spin" />
+                  <Send v-else class="w-3.5 h-3.5" />
+                  <span>{{ codeCooldown > 0 ? `${codeCooldown} сек.` : 'Получить код' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Code & Link Row -->
+            <div class="space-y-1.5">
+              <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
+                6-значный код из письма
+              </label>
+              <div class="flex items-center gap-2">
+                <div class="relative flex-1">
+                  <KeyRound class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <input
+                    v-model="yostarCode"
+                    type="text"
+                    maxlength="6"
+                    placeholder="123456"
+                    class="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-100 placeholder-slate-500 font-mono tracking-widest focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+                <button
+                  type="button"
+                  :disabled="isLinking || !yostarCode.trim() || !yostarEmail.trim()"
+                  class="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs flex items-center gap-1.5 transition-all disabled:opacity-50 shadow-md flex-shrink-0"
+                  @click="handleLinkAndSyncYostar"
+                >
+                  <RefreshCw v-if="isLinking" class="w-3.5 h-3.5 animate-spin" />
+                  <span>{{ isLinking ? 'Подключение...' : 'Подключить и синхронизировать' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Information note -->
+            <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1 leading-relaxed">
+              <p>
+                &bull; Код подтверждения отправляется официальным шлюзом Yostar на вашу почту.
+              </p>
+              <p>
+                &bull; После первого ввода сервис сохраняет токен сессии на этом устройстве, и в дальнейшем данные будут обновляться в <strong>1 клик</strong> без писем на почту.
+              </p>
+              <p>
+                &bull; Перед нажатием сверните игру на телефоне, чтобы не выбило активную сессию.
+              </p>
+            </div>
+          </div>
         </div>
 
         <!-- ArkPRTS Clipboard Import Section -->
