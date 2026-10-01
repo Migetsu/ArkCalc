@@ -4,12 +4,79 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 // https://vitejs.dev/config/
+function vercelApiDevPlugin() {
+  return {
+    name: 'vercel-api-dev-middleware',
+    configureServer(server: any) {
+      server.middlewares.use(async (req: any, res: any, next: any) => {
+        if (!req.url?.startsWith('/api/arknights/')) {
+          return next();
+        }
+
+        const url = new URL(req.url, `http://${req.headers.host || '127.0.0.1:5173'}`);
+        const pathname = url.pathname;
+
+        try {
+          let bodyData = '';
+          req.on('data', (chunk: any) => {
+            bodyData += chunk;
+          });
+          await new Promise((resolve) => req.on('end', resolve));
+
+          let parsedBody: any = {};
+          if (bodyData) {
+            try {
+              parsedBody = JSON.parse(bodyData);
+            } catch {
+              parsedBody = {};
+            }
+          }
+          req.body = parsedBody;
+
+          const customRes = {
+            setHeader: (k: string, v: string) => res.setHeader(k, v),
+            status: (code: number) => {
+              res.statusCode = code;
+              return {
+                json: (data: any) => {
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify(data));
+                },
+                end: () => res.end(),
+              };
+            },
+          };
+
+          if (pathname === '/api/arknights/send-code') {
+            const mod = await server.ssrLoadModule('/api/arknights/send-code.ts');
+            return await mod.default(req, customRes);
+          } else if (pathname === '/api/arknights/login-and-sync') {
+            const mod = await server.ssrLoadModule('/api/arknights/login-and-sync.ts');
+            return await mod.default(req, customRes);
+          } else if (pathname === '/api/arknights/sync-with-token') {
+            const mod = await server.ssrLoadModule('/api/arknights/sync-with-token.ts');
+            return await mod.default(req, customRes);
+          }
+
+          next();
+        } catch (err: any) {
+          console.error('[API Dev Error]', err);
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ success: false, error: err?.message || 'Internal Dev Server Error' }));
+        }
+      });
+    },
+  };
+}
+
 export default defineConfig({
   server: {
     host: '127.0.0.1',
     port: 5173,
   },
   plugins: [
+    vercelApiDevPlugin(),
     vue(),
     VitePWA({
       registerType: 'autoUpdate',

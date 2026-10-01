@@ -1,5 +1,5 @@
 // api/arknights/send-code.ts
-import { sendYostarCode, type ArknightsServer } from './_yostarClient';
+import { sendYostarCode, type ArknightsServer } from './_yostarClient.ts';
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');

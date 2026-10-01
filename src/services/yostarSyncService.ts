@@ -43,6 +43,27 @@ export function saveLinkedAccount(account: YostarLinkedAccount | null): void {
   }
 }
 
+async function safeFetchJson(
+  url: string,
+  options: RequestInit
+): Promise<{ ok: boolean; status: number; data: any }> {
+  try {
+    const res = await fetch(url, options);
+    const text = await res.text();
+    let data: any = {};
+    if (text) {
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { error: text.slice(0, 300) || `Ошибка сервера (${res.status})` };
+      }
+    }
+    return { ok: res.ok, status: res.status, data };
+  } catch (e: any) {
+    return { ok: false, status: 0, data: { error: e?.message || 'Сбой сетевого запроса' } };
+  }
+}
+
 /**
  * Step 1: Request 6-digit verification code from Yostar
  */
@@ -50,22 +71,17 @@ export async function requestVerificationCode(
   email: string,
   server: ArknightsServer = 'en'
 ): Promise<{ success: boolean; message?: string; error?: string }> {
-  try {
-    const res = await fetch('/api/arknights/send-code', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, server }),
-    });
+  const { ok, data } = await safeFetchJson('/api/arknights/send-code', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, server }),
+  });
 
-    const data = await res.json();
-    if (!res.ok || !data.success) {
-      return { success: false, error: data.error || 'Не удалось отправить код подтверждения' };
-    }
-
-    return { success: true, message: data.message };
-  } catch (err: any) {
-    return { success: false, error: err?.message || 'Сбой сети при запросе кода' };
+  if (!ok || !data.success) {
+    return { success: false, error: data.error || 'Не удалось отправить код подтверждения' };
   }
+
+  return { success: true, message: data.message };
 }
 
 /**
@@ -83,16 +99,15 @@ export async function linkAndSync(
   rosterCount?: number;
 }> {
   try {
-    const res = await fetch('/api/arknights/login-and-sync', {
+    const { ok, data } = await safeFetchJson('/api/arknights/login-and-sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, code, server }),
     });
 
-    const data = await res.json();
-    if (!res.ok || !data.success) {
-      return { success: false, error: data.error || 'Ошибка входа в аккаунт Yostar' };
-    }
+  if (!ok || !data.success) {
+    return { success: false, error: data.error || 'Ошибка входа в аккаунт Yostar' };
+  }
 
     // Save linked credentials
     const now = new Date().toISOString();
@@ -155,7 +170,7 @@ export async function syncDirect(): Promise<{
   }
 
   try {
-    const res = await fetch('/api/arknights/sync-with-token', {
+    const { ok, data } = await safeFetchJson('/api/arknights/sync-with-token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -165,10 +180,9 @@ export async function syncDirect(): Promise<{
       }),
     });
 
-    const data = await res.json();
-    if (!res.ok || !data.success) {
-      return { success: false, error: data.error || 'Ошибка обновления данных аккаунта' };
-    }
+  if (!ok || !data.success) {
+    return { success: false, error: data.error || 'Ошибка обновления данных аккаунта' };
+  }
 
     // Update lastSyncAt and playerInfo
     account.lastSyncAt = new Date().toISOString();

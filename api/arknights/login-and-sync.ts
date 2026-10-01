@@ -1,5 +1,5 @@
 // api/arknights/login-and-sync.ts
-import { loginWithEmailCode, fetchArknightsGameData, type ArknightsServer } from './_yostarClient';
+import { loginWithEmailCode, fetchArknightsGameData, type ArknightsServer } from './_yostarClient.ts';
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
