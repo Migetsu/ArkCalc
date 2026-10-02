@@ -87,19 +87,12 @@ export const usePlannerStore = defineStore('planner', () => {
       }
     }
 
-    // Determine initial plan order (from Dexie plans' .order or localStorage)
+    // Determine initial plan order (from localStorage or Dexie plans' .order)
     const savedOrder = loadOrderFromLocalStorage();
     const orderedCharIds: string[] = [];
 
-    // 1. Check if plans have explicit .order property
-    const plansWithOrder = Object.values(effectivePlans)
-      .filter((p) => typeof p.order === 'number')
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-      .map((p) => p.charId);
-
-    if (plansWithOrder.length > 0) {
-      orderedCharIds.push(...plansWithOrder);
-    } else if (savedOrder.length > 0) {
+    // 1. Prefer savedOrder from localStorage if it has matching plans
+    if (savedOrder.length > 0) {
       for (const id of savedOrder) {
         if (effectivePlans[id] && !orderedCharIds.includes(id)) {
           orderedCharIds.push(id);
@@ -107,14 +100,26 @@ export const usePlannerStore = defineStore('planner', () => {
       }
     }
 
-    // 2. Append any plans that were not yet in the ordered list
+    // 2. If savedOrder didn't cover plans, check explicit .order property
+    if (orderedCharIds.length === 0) {
+      const plansWithOrder = Object.values(effectivePlans)
+        .filter((p) => typeof p.order === 'number')
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        .map((p) => p.charId);
+
+      if (plansWithOrder.length > 0) {
+        orderedCharIds.push(...plansWithOrder);
+      }
+    }
+
+    // 3. Append any plans that were not yet in the ordered list
     for (const id of Object.keys(effectivePlans)) {
       if (!orderedCharIds.includes(id)) {
         orderedCharIds.push(id);
       }
     }
 
-    // 3. Normalize .order numbers on plans
+    // 4. Normalize .order numbers on plans
     orderedCharIds.forEach((id, idx) => {
       if (effectivePlans[id]) {
         effectivePlans[id].order = idx;
@@ -125,6 +130,14 @@ export const usePlannerStore = defineStore('planner', () => {
     planOrder.value = orderedCharIds;
     saveOrderToLocalStorage(orderedCharIds);
     savePlansToLocalStorage(effectivePlans);
+
+    // Save normalized order numbers back to Dexie so Dexie records retain explicit order
+    try {
+      await db.plans.bulkPut(Object.values(effectivePlans));
+    } catch {
+      // ignore
+    }
+
     isLoaded.value = true;
   }
 
@@ -143,9 +156,16 @@ export const usePlannerStore = defineStore('planner', () => {
 
     try {
       await db.plans.bulkPut(Object.values(plans.value));
-      useAuthStore().triggerAutoSync();
     } catch (e) {
       console.warn('Failed to persist plan order to Dexie:', e);
+    }
+
+    // Immediately persist plan priority order to Supabase cloud if user is authenticated!
+    const auth = useAuthStore();
+    if (auth.isAuthenticated) {
+      auth.savePlanOrderToCloud(newOrder).catch((e) => {
+        console.warn('savePlanOrderToCloud failed:', e);
+      });
     }
   }
 
@@ -200,19 +220,27 @@ export const usePlannerStore = defineStore('planner', () => {
   }
 
   async function bulkImportPlans(
-    newPlans: Record<string, OperatorTargetPlan>,
+    newPlans: Record<string, OperatorTargetPlan> | OperatorTargetPlan[],
     explicitOrder?: string[],
   ) {
     const cleanPlans: Record<string, OperatorTargetPlan> = {};
-    for (const [id, p] of Object.entries(newPlans)) {
-      cleanPlans[id] = JSON.parse(JSON.stringify(p));
+    const planEntries = Array.isArray(newPlans) ? newPlans : Object.values(newPlans || {});
+    for (const p of planEntries) {
+      if (p && p.charId) {
+        cleanPlans[p.charId] = JSON.parse(JSON.stringify(p));
+      }
     }
     plans.value = cleanPlans;
 
     let order: string[] = [];
+
+    // 1. Explicit cloud order passed
     if (explicitOrder && Array.isArray(explicitOrder) && explicitOrder.length > 0) {
       order = explicitOrder.filter((id) => cleanPlans[id]);
-    } else {
+    }
+
+    // 2. Fallback to order from plans with valid distinct .order property
+    if (order.length === 0) {
       const sortedByProp = Object.values(cleanPlans)
         .filter((p) => typeof p.order === 'number')
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
@@ -222,6 +250,20 @@ export const usePlannerStore = defineStore('planner', () => {
       }
     }
 
+    // 3. Fallback to current in-memory planOrder if available
+    if (order.length === 0 && planOrder.value.length > 0) {
+      order = planOrder.value.filter((id) => cleanPlans[id]);
+    }
+
+    // 4. Fallback to localStorage saved order if available
+    if (order.length === 0) {
+      const localSaved = loadOrderFromLocalStorage();
+      if (localSaved.length > 0) {
+        order = localSaved.filter((id) => cleanPlans[id]);
+      }
+    }
+
+    // 5. Append any plans that were not yet in the ordered list
     for (const id of Object.keys(cleanPlans)) {
       if (!order.includes(id)) {
         order.push(id);

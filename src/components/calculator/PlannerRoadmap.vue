@@ -4,6 +4,7 @@ import { usePlannerStore } from '@/stores/planner';
 import { useGameDataStore } from '@/stores/gamedata';
 import { useInventoryStore } from '@/stores/inventory';
 import { useLocaleStore } from '@/stores/locale';
+import { useAuthStore } from '@/stores/auth';
 import type { OperatorSummary } from '@/types/game';
 import {
   simulateRoadmapQueue,
@@ -25,6 +26,7 @@ import {
   Trash2,
   Check,
   Flame,
+  Cloud,
 } from 'lucide-vue-next';
 
 const emit = defineEmits<{
@@ -35,6 +37,7 @@ const planner = usePlannerStore();
 const gameData = useGameDataStore();
 const inventory = useInventoryStore();
 const locale = useLocaleStore();
+const auth = useAuthStore();
 
 const autoDeductMaterials = ref(true);
 const completedMessage = ref<string | null>(null);
@@ -144,6 +147,14 @@ async function markStepDone(step: RoadmapOperatorStep) {
             </h3>
             <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-950 border border-cyan-800 text-cyan-300">
               {{ planner.planCount }} {{ locale.currentLang === 'ru' ? 'в очереди' : 'in queue' }}
+            </span>
+            <span
+              v-if="auth.isAuthenticated"
+              class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-700/60 text-cyan-300 flex items-center gap-1"
+              :title="locale.currentLang === 'ru' ? 'Порядок и приоритеты сохраняются в вашем облачном аккаунте' : 'Priority order is saved in your cloud account'"
+            >
+              <Cloud class="w-3 h-3 text-cyan-400" />
+              <span>{{ locale.currentLang === 'ru' ? 'Облако' : 'Cloud' }}</span>
             </span>
           </div>
           <p class="text-xs text-slate-400 mt-1">

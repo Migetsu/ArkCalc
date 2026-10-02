@@ -180,6 +180,66 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // Immediately persist plan priority order to Supabase cloud
+  async function savePlanOrderToCloud(newOrder: string[]): Promise<boolean> {
+    if (!user.value) return false;
+    try {
+      const plainOrder = Array.from(newOrder);
+
+      // Fetch existing row to merge settings and plans
+      const { data: existing } = await supabase
+        .from('user_profiles')
+        .select('settings_data, plans_data')
+        .eq('id', user.value.id)
+        .maybeSingle();
+
+      const newSettings = {
+        ...(existing?.settings_data || {}),
+        language: locale.currentLang,
+        itemLanguage: locale.currentLang,
+        planOrder: plainOrder,
+      };
+
+      // Also update .order in plans_data if plans_data exists
+      let updatedPlans = existing?.plans_data || planner.plans;
+      if (updatedPlans && typeof updatedPlans === 'object') {
+        const clean = JSON.parse(JSON.stringify(updatedPlans));
+        plainOrder.forEach((charId, idx) => {
+          if (clean[charId]) {
+            clean[charId].order = idx;
+          }
+        });
+        updatedPlans = clean;
+      }
+
+      const { error } = await supabase.from('user_profiles').upsert({
+        id: user.value.id,
+        email: user.value.email,
+        settings_data: newSettings,
+        plans_data: updatedPlans,
+        updated_at: new Date().toISOString(),
+      });
+
+      if (error) {
+        console.warn('Failed to save planOrder to Supabase:', error.message);
+        return false;
+      }
+
+      const now = new Date().toISOString();
+      lastSyncTime.value = now;
+      try {
+        localStorage.setItem(LAST_SYNC_KEY, now);
+      } catch {
+        // ignore
+      }
+
+      return true;
+    } catch (e) {
+      console.warn('Failed to save planOrder to Supabase:', e);
+      return false;
+    }
+  }
+
   // Sync current local state (IndexedDB) to Supabase cloud
   async function syncToCloud(): Promise<{ success: boolean; error?: string }> {
     if (!user.value) {
@@ -201,12 +261,12 @@ export const useAuthStore = defineStore('auth', () => {
         id: user.value.id,
         email: user.value.email,
         inventory_data: inventory.stock,
-        plans_data: planner.plans,
+        plans_data: JSON.parse(JSON.stringify(planner.plans)),
         roster_data: roster.rosterList,
         settings_data: {
           language: locale.currentLang,
           itemLanguage: locale.currentLang,
-          planOrder: planner.planOrder,
+          planOrder: Array.from(planner.planOrder),
         },
         updated_at: new Date().toISOString(),
       };
@@ -361,6 +421,7 @@ export const useAuthStore = defineStore('auth', () => {
     signIn,
     signOut,
     saveLanguagePreference,
+    savePlanOrderToCloud,
     syncToCloud,
     pullFromCloud,
     triggerAutoSync,
