@@ -8,10 +8,10 @@ import ItemIcon from '@/components/common/ItemIcon.vue';
 
 const CraftingTree = defineAsyncComponent(() => import('./CraftingTree.vue'));
 const FarmingGuideModal = defineAsyncComponent(() => import('./FarmingGuideModal.vue'));
+const FarmingPlanOptimizer = defineAsyncComponent(() => import('./FarmingPlanOptimizer.vue'));
 import {
   getRecommendedStage,
   calculatePlanSanityEstimate,
-  calculateFarmingEstimate,
 } from '@/services/penguinStatsService';
 import {
   Coins,
@@ -740,14 +740,6 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
         </div>
       </div>
 
-      <!-- Materials Section Title -->
-      <div v-if="calc.farmRequirements.length > 0" class="flex items-center justify-between pt-1">
-        <h3 class="font-bold text-xs sm:text-sm text-slate-100 uppercase tracking-wide flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
-          <span>{{ locale.currentLang === 'ru' ? 'Базовые материалы к фарму' : 'Base Materials to Farm' }} ({{ calc.farmRequirements.length }})</span>
-        </h3>
-      </div>
-
       <div v-if="calc.farmRequirements.length === 0 && lmdDeficit === 0 && expDeficit === 0" class="p-12 text-center bg-ark-card rounded-2xl border border-ark-border text-slate-400">
         <CheckCircle class="w-12 h-12 mx-auto text-emerald-400 mb-2" />
         <h4 class="font-bold text-slate-200 text-base">
@@ -765,58 +757,12 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
         </p>
       </div>
 
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-        <div
-          v-for="farm in calc.farmRequirements"
-          :key="farm.itemId"
-          class="bg-ark-card border border-red-500/40 bg-red-950/10 rounded-xl p-3 flex flex-col justify-between shadow-sm space-y-3"
-        >
-          <div class="flex items-start gap-3">
-            <ItemIcon
-              :item-id="farm.itemId"
-              size="lg"
-              :count="farm.count"
-            />
-
-            <div class="flex-1 min-w-0">
-              <h4 class="font-bold text-xs text-slate-200 truncate" :title="gameData.getItem(farm.itemId)?.name || farm.itemId">
-                {{ gameData.getItem(farm.itemId)?.name || farm.itemId }}
-              </h4>
-              <div class="mt-1 text-xs font-mono">
-                <span class="text-slate-400">{{ locale.currentLang === 'ru' ? 'Фармить:' : 'Farm:' }} </span>
-                <strong class="text-red-400 text-sm font-bold">{{ farm.count }} {{ locale.currentLang === 'ru' ? 'шт.' : 'pcs' }}</strong>
-              </div>
-              <div class="text-[10px] text-slate-500 font-mono">
-                {{ locale.currentLang === 'ru' ? 'Склад:' : 'Stock:' }} {{ inventory.getStock(farm.itemId) }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Recommended stage badge from Penguin Stats -->
-          <div v-if="getRecommendedStage(farm.itemId)" class="pt-2 border-t border-slate-800/80 space-y-1.5">
-            <div class="flex items-center justify-between text-xs">
-              <span class="text-[11px] text-slate-400">{{ locale.currentLang === 'ru' ? 'Лучшая карта:' : 'Best Stage:' }}</span>
-              <button
-                type="button"
-                class="font-mono font-bold text-cyan-300 hover:text-cyan-200 bg-cyan-950/70 border border-cyan-800/80 px-2 py-0.5 rounded text-xs flex items-center gap-1 transition-colors"
-                @click="openFarmingGuide(farm.itemId, farm.count)"
-                :title="locale.currentLang === 'ru' ? 'Нажмите для подробной статистики всех карт' : 'Click for detailed stage statistics'"
-              >
-                <span>{{ getRecommendedStage(farm.itemId)?.stageCode }}</span>
-                <span class="text-[10px] text-slate-400">({{ getRecommendedStage(farm.itemId)?.apCost }}⚡)</span>
-              </button>
-            </div>
-
-            <div class="flex items-center justify-between text-[11px] font-mono text-slate-400">
-              <span>{{ locale.currentLang === 'ru' ? 'Оценка:' : 'Est:' }}</span>
-              <span class="text-amber-300 font-medium">
-                ~{{ calculateFarmingEstimate(farm.itemId, farm.count)?.runs }} {{ locale.currentLang === 'ru' ? 'заходов' : 'runs' }} &bull;
-                ~{{ calculateFarmingEstimate(farm.itemId, farm.count)?.totalSanity }} ⚡
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- Advanced Multi-Drop Farming Optimizer -->
+      <FarmingPlanOptimizer
+        v-else
+        :requirements="calc.farmRequirements"
+        @open-guide="openFarmingGuide"
+      />
     </div>
 
     <!-- TAB 3: CRAFTING TREE -->
