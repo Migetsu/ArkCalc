@@ -93,6 +93,9 @@ const TRANSLATIONS = {
     'events.typeStoryCollection': 'Story Collection',
     'events.cnDates': 'CN Dates',
     'events.globalEstimated': 'Global Arrival',
+    'events.viewDetails': 'View Event Details, Shop & Farm',
+    'events.defaultPrompt6': 'Featured 6★ Operators on this banner:',
+    'events.defaultPrompt5': 'Featured 5★ Operators on this banner:',
 
     // Settings
     'settings.title': 'Settings & Sync',
@@ -194,6 +197,9 @@ const TRANSLATIONS = {
     'events.typeStoryCollection': 'Коллекция историй',
     'events.cnDates': 'Даты на CN',
     'events.globalEstimated': 'Ожидается на Global',
+    'events.viewDetails': 'Подробности ивента, магазин и фарм',
+    'events.defaultPrompt6': 'Ключевые 6★ Оперативники в данном баннере:',
+    'events.defaultPrompt5': 'Ключевые 5★ Оперативники в данном баннере:',
 
     // Settings
     'settings.title': 'Настройки и синхронизация',
@@ -295,6 +301,9 @@ const TRANSLATIONS = {
     'events.typeStoryCollection': '故事集',
     'events.cnDates': '国服开放时间',
     'events.globalEstimated': '国际服预计时间',
+    'events.viewDetails': '查看活动详情、商店与掉落',
+    'events.defaultPrompt6': '本期卡池UP六星干员：',
+    'events.defaultPrompt5': '本期卡池UP五星干员：',
 
     // Settings
     'settings.title': '系统设置与数据同步',

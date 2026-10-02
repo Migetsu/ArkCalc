@@ -1,4 +1,5 @@
 // src/data/eventsData.ts
+
 export interface EventShopItem {
   itemId: string;
   nameEn: string;
@@ -19,26 +20,37 @@ export interface EventFarmingStage {
   sanityPerItem: number;
 }
 
+export interface EventOperatorAvatar {
+  charId: string;
+  name: string;
+  rarity: 5 | 6;
+  role?: 'limited' | 'standard' | 'welfare';
+}
+
 export interface ArknightsEvent {
   id: string;
   nameEn: string;
   nameRu: string;
   nameCn: string;
-  type: 'side_story' | 'story_collection' | 'intermezzi' | 'rerun' | 'cc' | 'trials' | 'celebration';
+  headerTagEn: string;
+  headerTagRu: string;
+  headerTagCn: string;
+  type: 'side_story' | 'story_collection' | 'intermezzi' | 'rerun' | 'cc' | 'trials' | 'celebration' | 'headhunting';
   status: 'cn_active' | 'upcoming_global' | 'global_active' | 'past_cn_6m';
+  bannerPosterUrl: string;
   cnStartDate: string;
   cnEndDate: string;
   globalStartDate?: string;
   globalEndDate?: string;
   globalEstimatedArrival?: string;
-  bannerNameEn?: string;
-  bannerNameRu?: string;
-  featuredOperators: Array<{
-    name: string;
-    charId?: string;
-    rarity: number;
-    role: 'limited' | 'standard' | 'welfare';
-  }>;
+  prompt6En?: string;
+  prompt6Ru?: string;
+  prompt6Cn?: string;
+  sixStarOps: EventOperatorAvatar[];
+  prompt5En?: string;
+  prompt5Ru?: string;
+  prompt5Cn?: string;
+  fiveStarOps: EventOperatorAvatar[];
   shopItems: EventShopItem[];
   farmingStages: EventFarmingStage[];
   summaryEn: string;
@@ -48,21 +60,85 @@ export interface ArknightsEvent {
 
 export const ARKNIGHTS_EVENTS: ArknightsEvent[] = [
   {
+    id: 'act38_orienteering_8',
+    nameEn: 'Orienteering #8 (Directional Selection)',
+    nameRu: 'Orienteering #8 (Выборочный хедхантинг)',
+    nameCn: '定向甄选 #8',
+    headerTagEn: '[Standard Headhunting] Orienteering #8',
+    headerTagRu: '[Стандартный Хедхантинг] Orienteering #8',
+    headerTagCn: '[常驻定向甄选] 第八期',
+    type: 'headhunting',
+    status: 'cn_active',
+    bannerPosterUrl: '/banners/banner_orienteering_8.png',
+    cnStartDate: '2026/09/29',
+    cnEndDate: '2026/10/13',
+    globalEstimatedArrival: '2027/03',
+    prompt6En: 'Choose three of the following 6★ Operators; only these 6★ that will appear in a pull on this banner.',
+    prompt6Ru: 'Выберите трёх из следующих 6★ Оперативников: только они будут выпадать среди 6★ в данном баннере.',
+    prompt6Cn: '可选定3名六星干员概率提升；此卡池仅会出现选定的六星干员。',
+    sixStarOps: [
+      { charId: 'char_4087_ines', name: 'Ines', rarity: 6, role: 'standard' },
+      { charId: 'char_4088_hodrer', name: 'Hoederer', rarity: 6, role: 'standard' },
+      { charId: 'char_2012_typhon', name: 'Typhon', rarity: 6, role: 'standard' },
+      { charId: 'char_1032_excu2', name: 'Executor the Ex Foedere', rarity: 6, role: 'standard' },
+      { charId: 'char_4098_vvana', name: 'Viviana', rarity: 6, role: 'standard' },
+      { charId: 'char_4116_blkkgt', name: 'Degenbrecher', rarity: 6, role: 'standard' },
+    ],
+    prompt5En: 'Choose three of the following 5★ Operators; they have a 60% chance to be the 5★ that appears in a pull on this banner.',
+    prompt5Ru: 'Выберите трёх из следующих 5★ Оперативников: у них будет 60% шанс выпадения среди 5★.',
+    prompt5Cn: '可选定3名五星干员概率提升；在抽到五星干员时有60%概率为选定干员。',
+    fiveStarOps: [
+      { charId: 'char_4015_spuria', name: 'Spuria', rarity: 5, role: 'standard' },
+      { charId: 'char_4105_almond', name: 'Almond', rarity: 5, role: 'standard' },
+      { charId: 'char_4102_threye', name: 'Valarqvin', rarity: 5, role: 'standard' },
+      { charId: 'char_494_vendla', name: 'Vendela', rarity: 5, role: 'standard' },
+      { charId: 'char_464_cement', name: 'Cement', rarity: 5, role: 'standard' },
+      { charId: 'char_4109_baslin', name: 'Bassline', rarity: 5, role: 'standard' },
+    ],
+    shopItems: [
+      { itemId: '4001', nameEn: 'LMD', nameRu: 'LMD (Юани)', nameCn: '龙门币', count: 300000, costPerItem: 1, tokenType: 'headhunt_token' },
+      { itemId: '2004', nameEn: 'Strategic Battle Record', nameRu: 'Стратегическая запись боя (T4)', nameCn: '高级作战记录', count: 80, costPerItem: 5, tokenType: 'headhunt_token' },
+      { itemId: 'mod_unlock_token', nameEn: 'Module Data Block', nameRu: 'Блок данных модуля', nameCn: '模组数据块', count: 2, costPerItem: 120, tokenType: 'headhunt_token' },
+      { itemId: '30064', nameEn: 'Optimized Device', nameRu: 'Улучшенный прибор (T4)', nameCn: '改量装置', count: 5, costPerItem: 45, tokenType: 'headhunt_token' },
+      { itemId: '30014', nameEn: 'Orirock Concentration', nameRu: 'Очищенный орирок (T4)', nameCn: '提纯源岩', count: 5, costPerItem: 35, tokenType: 'headhunt_token' },
+    ],
+    farmingStages: [
+      { stageCode: '1-7', itemId: '30012', itemNameEn: 'Orirock Cube', itemNameRu: 'Куб орирока (T2)', dropRatePercent: 125.0, apCost: 6, sanityPerItem: 4.8 },
+      { stageCode: 'S4-1', itemId: '30042', itemNameEn: 'Oriron', itemNameRu: 'Орижелезо (T2)', dropRatePercent: 82.0, apCost: 15, sanityPerItem: 18.2 },
+    ],
+    summaryEn: 'Special targeted headhunting banner where players customize their rate-up pool by selecting 3 out of 6 elite 6-star operators and 3 out of 6 5-star operators.',
+    summaryRu: 'Особый баннер направленного поиска оперативников (Orienteering #8). Позволяет выбрать 3 из 6 представленных 6★ оперативников и 3 из 6 представленных 5★ для персонального повышенного шанса.',
+    summaryCn: '定向甄选特别寻访活动，玩家可从6位六星干员中任选3位、6位五星干员中任选3位定制专属UP卡池。',
+  },
+  {
     id: 'act38side_lappland',
     nameEn: 'I Portatori dei Velluti (Bearers of the Velvet)',
     nameRu: 'I Portatori dei Velluti (Носители бархата)',
     nameCn: '引路者与背誓之人',
+    headerTagEn: '[Celebration] I Portatori dei Velluti',
+    headerTagRu: '[Празднование] I Portatori dei Velluti',
+    headerTagCn: '[叙拉古感谢庆典] 引路者与背誓之人',
     type: 'celebration',
     status: 'cn_active',
-    cnStartDate: '2026-09-25',
-    cnEndDate: '2026-10-16',
-    globalEstimatedArrival: '2027-03 (Spring)',
-    bannerNameEn: 'Symphony of the Decadent',
-    bannerNameRu: 'Симфония упадка',
-    featuredOperators: [
-      { name: 'Lappland the Decadenza', charId: 'char_1037_lappld', rarity: 6, role: 'limited' },
-      { name: 'Vincenzo', charId: 'char_4140_vincen', rarity: 6, role: 'standard' },
-      { name: 'Crownslayer', charId: 'char_4141_crnslr', rarity: 6, role: 'welfare' },
+    bannerPosterUrl: '/banners/banner_act38side_lappland.png',
+    cnStartDate: '2026/09/25',
+    cnEndDate: '2026/10/16',
+    globalEstimatedArrival: '2027/03 (Spring)',
+    prompt6En: 'Featured 6★ Operators in Siracusa Celebration banner:',
+    prompt6Ru: 'Ключевые 6★ Оперативники праздничного баннера в Сиракузах:',
+    prompt6Cn: '叙拉古庆典限定卡池六星干员：',
+    sixStarOps: [
+      { charId: 'char_1041_lappd2', name: 'Lappland the Decadenza', rarity: 6, role: 'limited' },
+      { charId: 'char_4226_veen', name: 'Vincenzo', rarity: 6, role: 'standard' },
+      { charId: 'char_4228_closur', name: 'Crownslayer', rarity: 6, role: 'welfare' },
+    ],
+    prompt5En: 'Featured 5★ Operators and Event Welfare:',
+    prompt5Ru: 'Ключевые 5★ Оперативники и бесплатные персонажи ивента:',
+    prompt5Cn: '庆典卡池五星干员及活动赠送：',
+    fiveStarOps: [
+      { charId: 'char_4142_sandr', name: 'Sand Reckoner', rarity: 5, role: 'welfare' },
+      { charId: 'char_4105_almond', name: 'Almond', rarity: 5, role: 'standard' },
+      { charId: 'char_4122_grabds', name: 'Grain Buds', rarity: 5, role: 'standard' },
     ],
     shopItems: [
       { itemId: '4001', nameEn: 'LMD', nameRu: 'LMD (Юани)', nameCn: '龙门币', count: 500000, costPerItem: 1, tokenType: 'velvet_token' },
@@ -88,20 +164,31 @@ export const ARKNIGHTS_EVENTS: ArknightsEvent[] = [
   },
   {
     id: 'act37side_sunken_waves',
-    nameEn: 'Sunken Waves, Rising Stars (Summer 2026)',
-    nameRu: 'Sunken Waves, Rising Stars (Летний ивент)',
+    nameEn: 'Adventure That Cannot Wait for the Sun',
+    nameRu: 'Adventure That Cannot Wait for the Sun (Летний ивент)',
     nameCn: '太阳落下的地方',
+    headerTagEn: '[Summer Event] Adventure That Cannot Wait for the Sun',
+    headerTagRu: '[Летнее Событие] Приключение, не ждущее рассвета',
+    headerTagCn: '[夏日嘉年华] 太阳落下的地方',
     type: 'side_story',
     status: 'upcoming_global',
-    cnStartDate: '2026-08-01',
-    cnEndDate: '2026-08-22',
-    globalEstimatedArrival: '2027-01 (Winter)',
-    bannerNameEn: 'Desert Horizons',
-    bannerNameRu: 'Пустынные горизонты',
-    featuredOperators: [
-      { name: 'Pepe', charId: 'char_4138_pepe', rarity: 6, role: 'limited' },
-      { name: 'Narantuya', charId: 'char_4139_narant', rarity: 6, role: 'standard' },
-      { name: 'Sand Reckoner', charId: 'char_4142_sandr', rarity: 5, role: 'welfare' },
+    bannerPosterUrl: '/banners/banner_act37side_sunken_waves.png',
+    cnStartDate: '2026/08/01',
+    cnEndDate: '2026/08/22',
+    globalEstimatedArrival: '2027/01 (Winter)',
+    prompt6En: 'Featured 6★ Operators in Summer Carnival:',
+    prompt6Ru: 'Ключевые 6★ Оперативники летнего карнавала:',
+    prompt6Cn: '夏日嘉年华六星限定与标准干员：',
+    sixStarOps: [
+      { charId: 'char_1037_pepe', name: 'Pepe', rarity: 6, role: 'limited' },
+      { charId: 'char_1033_narant', name: 'Narantuya', rarity: 6, role: 'standard' },
+    ],
+    prompt5En: 'Featured 5★ Operators:',
+    prompt5Ru: 'Ключевые 5★ Оперативники события:',
+    prompt5Cn: '五星干员：',
+    fiveStarOps: [
+      { charId: 'char_4142_sandr', name: 'Sand Reckoner', rarity: 5, role: 'welfare' },
+      { charId: 'char_4079_haini', name: 'Lucilla', rarity: 5, role: 'standard' },
     ],
     shopItems: [
       { itemId: '4001', nameEn: 'LMD', nameRu: 'LMD (Юани)', nameCn: '龙门币', count: 500000, costPerItem: 1, tokenType: 'oasis_token' },
@@ -125,17 +212,27 @@ export const ARKNIGHTS_EVENTS: ArknightsEvent[] = [
     nameEn: 'Babel',
     nameRu: 'Babel (Вавилон)',
     nameCn: '巴别塔',
+    headerTagEn: '[Side Story] Babel',
+    headerTagRu: '[Сюжетное Событие] Вавилон',
+    headerTagCn: '[SideStory] 巴别塔',
     type: 'side_story',
     status: 'upcoming_global',
-    cnStartDate: '2026-04-11',
-    cnEndDate: '2026-05-02',
-    globalEstimatedArrival: '2026-10 (Coming next!)',
-    bannerNameEn: 'Where the Fire Shines',
-    bannerNameRu: 'Там где светит пламя',
-    featuredOperators: [
-      { name: 'Ascalon', charId: 'char_4130_ascaln', rarity: 6, role: 'standard' },
-      { name: 'Aroma', charId: 'char_4131_aroma', rarity: 5, role: 'standard' },
-      { name: 'Odda', charId: 'char_4132_odda', rarity: 5, role: 'welfare' },
+    bannerPosterUrl: '/banners/banner_act36side_babel.png',
+    cnStartDate: '2026/04/11',
+    cnEndDate: '2026/05/02',
+    globalEstimatedArrival: '2026/10 (Coming next!)',
+    prompt6En: 'Featured 6★ Operator in Babel banner:',
+    prompt6Ru: 'Ключевой 6★ Оперативник баннера Вавилона:',
+    prompt6Cn: '巴别塔专属卡池六星干员：',
+    sixStarOps: [
+      { charId: 'char_2023_aska', name: 'Ascalon', rarity: 6, role: 'standard' },
+    ],
+    prompt5En: 'Featured 5★ Operators:',
+    prompt5Ru: 'Ключевые 5★ Оперативники:',
+    prompt5Cn: '五星干员：',
+    fiveStarOps: [
+      { charId: 'char_4110_delphn', name: 'Delphine', rarity: 5, role: 'standard' },
+      { charId: 'char_498_inside', name: 'Insider', rarity: 5, role: 'welfare' },
     ],
     shopItems: [
       { itemId: '4001', nameEn: 'LMD', nameRu: 'LMD (Юани)', nameCn: '龙门币', count: 500000, costPerItem: 1, tokenType: 'babel_coin' },
@@ -156,20 +253,32 @@ export const ARKNIGHTS_EVENTS: ArknightsEvent[] = [
   },
   {
     id: 'act35side_wisadel_5th',
-    nameEn: 'In Krätzeschall (5th Anniversary Celebration)',
-    nameRu: 'In Krätzeschall (5-я Годовщина)',
-    nameCn: '在喧嚣中',
+    nameEn: 'In Krätzeschall (Episode 14 - 5th Anniversary)',
+    nameRu: 'In Krätzeschall (Эпизод 14 - 5-я Годовщина)',
+    nameCn: '慈悲灯塔（五周年庆典）',
+    headerTagEn: '[Celebration] In Krätzeschall (5th Anniversary)',
+    headerTagRu: '[5-я Годовщина] In Krätzeschall (Маяк милосердия)',
+    headerTagCn: '[五周年特别感谢] 慈悲灯塔',
     type: 'celebration',
     status: 'upcoming_global',
-    cnStartDate: '2026-05-01',
-    cnEndDate: '2026-05-22',
-    globalEstimatedArrival: '2026-11 (Global 5th Anniv)',
-    bannerNameEn: 'Remnant of the Victorious',
-    bannerNameRu: 'Остаток победителя',
-    featuredOperators: [
-      { name: "Wis'adel", charId: 'char_1033_wisa', rarity: 6, role: 'limited' },
-      { name: 'Logos', charId: 'char_4133_logos', rarity: 6, role: 'standard' },
-      { name: 'Civilight Eterna', charId: 'char_4134_cve', rarity: 6, role: 'welfare' },
+    bannerPosterUrl: '/banners/banner_act35side_wisadel.png',
+    cnStartDate: '2026/05/01',
+    cnEndDate: '2026/05/22',
+    globalEstimatedArrival: '2026/11 (Global 5th Anniv)',
+    prompt6En: 'Featured 6★ Operators in 5th Anniversary banner:',
+    prompt6Ru: 'Ключевые 6★ Оперативники баннера 5-й Годовщины:',
+    prompt6Cn: '五周年重磅卡池六星干员：',
+    sixStarOps: [
+      { charId: 'char_1035_wisdel', name: "Wis'adel", rarity: 6, role: 'limited' },
+      { charId: 'char_1036_logos', name: 'Logos', rarity: 6, role: 'standard' },
+      { charId: 'char_4134_cve', name: 'Civilight Eterna', rarity: 6, role: 'welfare' },
+    ],
+    prompt5En: 'Featured 5★ Operators:',
+    prompt5Ru: 'Ключевые 5★ Оперативники:',
+    prompt5Cn: '五星干员：',
+    fiveStarOps: [
+      { charId: 'char_4015_spuria', name: 'Spuria', rarity: 5, role: 'standard' },
+      { charId: 'char_4079_haini', name: 'Lucilla', rarity: 5, role: 'standard' },
     ],
     shopItems: [
       { itemId: '4001', nameEn: 'LMD', nameRu: 'LMD (Юани)', nameCn: '龙门币', count: 600000, costPerItem: 1, tokenType: 'anniv_token' },
@@ -186,7 +295,7 @@ export const ARKNIGHTS_EVENTS: ArknightsEvent[] = [
       { stageCode: '14-17', itemId: '30023', itemNameEn: 'Sugar Pack', itemNameRu: 'Пачка сахара (T3)', dropRatePercent: 73.0, apCost: 18, sanityPerItem: 24.6 },
       { stageCode: '14-20', itemId: '30033', itemNameEn: 'Polyester Pack', itemNameRu: 'Пачка полиэстера (T3)', dropRatePercent: 70.0, apCost: 21, sanityPerItem: 30.0 },
     ],
-    summaryEn: 'Massive 5th Anniversary event. Introducing game-breaking limited Sniper Wisadel (W Alter) and Primal Caster Logos, along with free 6-star Supporter Civilight Eterna (Theresa). Highest tier event shop rewards of the year.',
+    summaryEn: 'Massive 5th Anniversary celebration event. Introducing game-breaking limited Sniper Wisadel (W Alter) and Primal Caster Logos, along with free 6-star Supporter Civilight Eterna (Theresa). Highest tier event shop rewards of the year.',
     summaryRu: 'Масштабная 5-я годовщина Arknights. Дебют сильнейшего лимитированного Снайпера Wisadel (W Alter), Кастера Logos и бесплатного 6★ Саппорта Civilight Eterna (Тереза). Богатейший ивентовый магазин года.',
     summaryCn: '五周年重磅庆典。超神限定狙击干员维什戴尔（异格W）与本源术师逻各斯，及免费六星辅助干员魔王（特蕾西娅）。全年最丰厚商店奖励。',
   },
@@ -195,18 +304,29 @@ export const ARKNIGHTS_EVENTS: ArknightsEvent[] = [
     nameEn: 'Here A People Sows (Spring Festival 2026)',
     nameRu: 'Here A People Sows (Новогодний фестиваль)',
     nameCn: '怀黍离',
+    headerTagEn: '[Celebration] Here A People Sows',
+    headerTagRu: '[Новогодний Фестиваль] Here A People Sows',
+    headerTagCn: '[春节庆典] 怀黍离',
     type: 'celebration',
     status: 'past_cn_6m',
-    cnStartDate: '2026-02-01',
-    cnEndDate: '2026-02-22',
-    globalStartDate: '2026-07-30',
-    globalEndDate: '2026-08-20',
-    bannerNameEn: 'Abundance in the Grain',
-    bannerNameRu: 'Изобилие в зерне',
-    featuredOperators: [
-      { name: 'Shu', charId: 'char_4135_shu', rarity: 6, role: 'limited' },
-      { name: 'Zuo Le', charId: 'char_4136_zuole', rarity: 6, role: 'standard' },
-      { name: 'Wanqing', charId: 'char_4137_wanq', rarity: 5, role: 'welfare' },
+    bannerPosterUrl: '/banners/banner_act34side_shu.png',
+    cnStartDate: '2026/02/01',
+    cnEndDate: '2026/02/22',
+    globalStartDate: '2026/07/30',
+    globalEndDate: '2026/08/20',
+    prompt6En: 'Featured 6★ Operators in Spring Festival banner:',
+    prompt6Ru: 'Ключевые 6★ Оперативники новогоднего баннера Суй:',
+    prompt6Cn: '岁兽新春限定卡池六星干员：',
+    sixStarOps: [
+      { charId: 'char_4135_shu', name: 'Shu', rarity: 6, role: 'limited' },
+      { charId: 'char_4136_zuole', name: 'Zuo Le', rarity: 6, role: 'standard' },
+    ],
+    prompt5En: 'Featured 5★ Operators:',
+    prompt5Ru: 'Ключевые 5★ Оперативники события:',
+    prompt5Cn: '五星干员：',
+    fiveStarOps: [
+      { charId: 'char_4137_wanq', name: 'Wanqing', rarity: 5, role: 'welfare' },
+      { charId: 'char_4122_grabds', name: 'Grain Buds', rarity: 5, role: 'standard' },
     ],
     shopItems: [
       { itemId: '4001', nameEn: 'LMD', nameRu: 'LMD (Юани)', nameCn: '龙门币', count: 500000, costPerItem: 1, tokenType: 'grain_token' },
@@ -228,18 +348,29 @@ export const ARKNIGHTS_EVENTS: ArknightsEvent[] = [
     id: 'act33side_zwillingsturme_rerun',
     nameEn: 'Zwillingstürme im Herbst (Rerun)',
     nameRu: 'Zwillingstürme im Herbst (Реран)',
-    nameCn: '秋日双塔（复刻）',
+    nameCn: '崔林特尔梅之秋（复刻）',
+    headerTagEn: '[Rerun] Zwillingstürme im Herbst',
+    headerTagRu: '[Реран] Осенние башни-близнецы',
+    headerTagCn: '[复刻] 崔林特尔梅之秋',
     type: 'rerun',
     status: 'past_cn_6m',
-    cnStartDate: '2026-03-05',
-    cnEndDate: '2026-03-19',
-    globalEstimatedArrival: '2026-09 (Completed)',
-    bannerNameEn: 'Sunset of Leithanien',
-    bannerNameRu: 'Закат Лейтании',
-    featuredOperators: [
-      { name: 'Arturia (Virtuosa)', charId: 'char_1032_virtua', rarity: 6, role: 'limited' },
-      { name: 'Viviana', charId: 'char_4130_vivian', rarity: 6, role: 'standard' },
-      { name: 'Lessing', charId: 'char_4131_lessing', rarity: 6, role: 'welfare' },
+    bannerPosterUrl: '/banners/banner_act33side_arturia_rerun.png',
+    cnStartDate: '2026/03/05',
+    cnEndDate: '2026/03/19',
+    globalEstimatedArrival: '2026/09 (Completed)',
+    prompt6En: 'Featured 6★ Operators in Leithanien Rerun:',
+    prompt6Ru: 'Ключевые 6★ Оперативники рерана Лейтании:',
+    prompt6Cn: '莱塔尼亚复刻卡池六星干员：',
+    sixStarOps: [
+      { charId: 'char_1032_virtua', name: 'Arturia (Virtuosa)', rarity: 6, role: 'limited' },
+      { charId: 'char_4098_vvana', name: 'Viviana', rarity: 6, role: 'standard' },
+      { charId: 'char_4131_lessing', name: 'Lessing', rarity: 6, role: 'welfare' },
+    ],
+    prompt5En: 'Featured 5★ Operators:',
+    prompt5Ru: 'Ключевые 5★ Оперативники:',
+    prompt5Cn: '五星干员：',
+    fiveStarOps: [
+      { charId: 'char_4109_baslin', name: 'Bassline', rarity: 5, role: 'welfare' },
     ],
     shopItems: [
       { itemId: '4001', nameEn: 'LMD', nameRu: 'LMD (Юани)', nameCn: '龙门币', count: 300000, costPerItem: 1, tokenType: 'leith_token' },
