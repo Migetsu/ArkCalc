@@ -10,19 +10,16 @@ import {
   Zap,
   Calendar,
   Sparkles,
-  CheckCircle2,
   Radio,
 } from 'lucide-vue-next';
 
 const props = defineProps<{
   event: ArknightsEvent | null;
   isOpen: boolean;
-  isApplied: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'toggleApply', eventId: string): void;
 }>();
 
 const locale = useLocaleStore();
@@ -49,11 +46,6 @@ function handleClose() {
   emit('close');
 }
 
-function handleToggleApply() {
-  if (props.event) {
-    emit('toggleApply', props.event.id);
-  }
-}
 
 function handleKeyDown(e: KeyboardEvent) {
   if (e.key === 'Escape' && props.isOpen) {
@@ -240,28 +232,11 @@ onUnmounted(() => {
 
         <!-- Event Shop Section (Only if event has shop items) -->
         <div v-if="event.shopItems.length > 0">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+          <div class="flex items-center justify-between gap-2 mb-3">
             <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5 font-mono">
               <ShoppingBag class="w-4 h-4 text-cyan-400" />
               <span>{{ locale.t('events.eventShop') }} ({{ event.shopItems.length }})</span>
             </h4>
-
-            <!-- Apply to calculator toggle -->
-            <button
-              type="button"
-              class="py-1.5 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 self-start sm:self-auto"
-              :class="[
-                isApplied
-                  ? 'bg-emerald-950/90 text-emerald-300 border-emerald-600 shadow-sm'
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-              ]"
-              @click="handleToggleApply"
-            >
-              <CheckCircle2 class="w-4 h-4" />
-              <span>
-                {{ isApplied ? locale.t('events.appliedToCalc') : locale.t('events.applyToCalc') }}
-              </span>
-            </button>
           </div>
 
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">

@@ -17,9 +17,6 @@ const locale = useLocaleStore();
 const searchQuery = ref<string>('');
 const categoryFilter = ref<'all' | 'events' | 'banners'>('all');
 
-// Track which events have their shop supplies factored into calculator
-const appliedEvents = ref<Set<string>>(new Set());
-
 // Modal state
 const isModalOpen = ref<boolean>(false);
 const selectedEvent = ref<ArknightsEvent | null>(null);
@@ -27,14 +24,6 @@ const selectedEvent = ref<ArknightsEvent | null>(null);
 function openModal(e: ArknightsEvent) {
   selectedEvent.value = e;
   isModalOpen.value = true;
-}
-
-function toggleEventInCalculator(eventId: string) {
-  if (appliedEvents.value.has(eventId)) {
-    appliedEvents.value.delete(eventId);
-  } else {
-    appliedEvents.value.add(eventId);
-  }
 }
 
 const filteredEvents = computed(() => {
@@ -236,12 +225,6 @@ function handleAvatarError(e: Event) {
                   <span>{{ locale.currentLang === 'ru' ? `Магазин: ${event.shopItems.length}` : `Shop: ${event.shopItems.length}` }}</span>
                   <span v-if="event.farmingStages.length > 0">&bull; {{ locale.currentLang === 'ru' ? `Фарм: ${event.farmingStages.length}` : `Farm: ${event.farmingStages.length}` }}</span>
                 </button>
-                <span
-                  v-if="appliedEvents.has(event.id)"
-                  class="text-[9px] font-mono text-emerald-300 font-bold bg-emerald-950/90 px-1.5 py-0.5 rounded border border-emerald-700"
-                >
-                  ✓ In Calc
-                </span>
               </div>
             </div>
           </div>
@@ -372,9 +355,7 @@ function handleAvatarError(e: Event) {
     <EventDetailsModal
       :event="selectedEvent"
       :is-open="isModalOpen"
-      :is-applied="selectedEvent ? appliedEvents.has(selectedEvent.id) : false"
       @close="isModalOpen = false"
-      @toggle-apply="toggleEventInCalculator"
     />
   </div>
 </template>
