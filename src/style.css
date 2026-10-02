@@ -61,3 +61,38 @@
 .vue-recycle-scroller__item-view {
   width: 100%;
 }
+
+/* Tactical PRTS Glassmorphism & Cyber Grid */
+.bg-tactical-grid {
+  background-image: radial-gradient(rgba(14, 165, 233, 0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.prts-glass {
+  background: rgba(12, 16, 26, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+.prts-glow {
+  box-shadow: 0 0 24px -4px rgba(6, 182, 212, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.prts-glow-amber {
+  box-shadow: 0 0 24px -4px rgba(245, 158, 11, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.prts-card {
+  background: rgba(18, 24, 38, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(51, 65, 85, 0.4);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.prts-card:hover {
+  border-color: rgba(6, 182, 212, 0.35);
+  box-shadow: 0 4px 20px -2px rgba(6, 182, 212, 0.08);
+}
+
