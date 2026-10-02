@@ -11,6 +11,7 @@ import {
   Calendar,
   Sparkles,
   CheckCircle2,
+  Radio,
 } from 'lucide-vue-next';
 
 const props = defineProps<{
@@ -182,8 +183,31 @@ function handleToggleApply() {
           </div>
         </div>
 
-        <!-- Event Shop Section -->
-        <div>
+        <!-- Headhunting Banner Notice (When event has no shop/farming) -->
+        <div
+          v-if="event.shopItems.length === 0 && event.farmingStages.length === 0"
+          class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-start gap-3"
+        >
+          <div class="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 flex-shrink-0 mt-0.5">
+            <Radio class="w-5 h-5" />
+          </div>
+          <div class="space-y-1">
+            <h5 class="text-xs font-bold text-slate-200 uppercase tracking-wide">
+              {{ locale.currentLang === 'ru' ? 'Баннер призыва (Хедхантинг)' : locale.currentLang === 'cn' ? '定向/常规寻访卡池' : 'Headhunting Recruitment Banner' }}
+            </h5>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              {{ locale.currentLang === 'ru'
+                ? 'Этот баннер является ротацией призыва оперативников (гача) и не содержит отдельного ивентового магазина с ресурсами или стадий фарминга.'
+                : locale.currentLang === 'cn'
+                ? '该卡池为常驻/定向干员寻访，不包含独立的活动代币商店或专属材料掉落关卡。'
+                : 'This banner is an operator recruitment rotation (gacha) and does not feature a dedicated event token shop or farmable stages.'
+              }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Event Shop Section (Only if event has shop items) -->
+        <div v-if="event.shopItems.length > 0">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
             <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5 font-mono">
               <ShoppingBag class="w-4 h-4 text-cyan-400" />
@@ -227,8 +251,8 @@ function handleToggleApply() {
           </div>
         </div>
 
-        <!-- Farming Stages Section -->
-        <div>
+        <!-- Farming Stages Section (Only if event has farming stages) -->
+        <div v-if="event.farmingStages.length > 0">
           <div class="flex items-center justify-between mb-3">
             <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5 font-mono">
               <Zap class="w-4 h-4 text-amber-400" />

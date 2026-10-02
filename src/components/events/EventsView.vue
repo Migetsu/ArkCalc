@@ -10,11 +10,13 @@ import {
   Search,
   Flame,
   ChevronRight,
+  Radio,
 } from 'lucide-vue-next';
 
 const locale = useLocaleStore();
 
 const searchQuery = ref<string>('');
+const categoryFilter = ref<'all' | 'events' | 'banners'>('all');
 
 // Track which events have their shop supplies factored into calculator
 const appliedEvents = ref<Set<string>>(new Set());
@@ -38,6 +40,12 @@ function toggleEventInCalculator(eventId: string) {
 
 const filteredEvents = computed(() => {
   let list = ARKNIGHTS_EVENTS;
+
+  if (categoryFilter.value === 'events') {
+    list = list.filter((e) => e.shopItems.length > 0 || e.farmingStages.length > 0);
+  } else if (categoryFilter.value === 'banners') {
+    list = list.filter((e) => e.type === 'headhunting' && e.shopItems.length === 0);
+  }
 
   const q = searchQuery.value.trim().toLowerCase();
   if (q) {
@@ -115,13 +123,46 @@ function handleAvatarError(e: Event) {
 
     <!-- Navigation & Filters Toolbar -->
     <div class="bg-ark-card border border-ark-border rounded-2xl p-4 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-      <!-- CN Server Timeline Header Badge -->
-      <div class="inline-flex items-center gap-2 bg-cyan-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm flex-shrink-0">
-        <Flame class="w-4 h-4 text-amber-300" />
-        <span>{{ locale.t('events.tabCn') }}</span>
-        <span class="bg-cyan-800/80 text-cyan-100 font-mono text-[11px] px-2 py-0.5 rounded-md ml-1">
-          {{ filteredEvents.length }}
-        </span>
+      <!-- Category Tabs (All / Events with Shops / Headhunting Banners) -->
+      <div class="flex items-center gap-1.5 flex-wrap">
+        <button
+          type="button"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+          :class="categoryFilter === 'all' ? 'bg-cyan-600 text-white shadow-sm' : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'"
+          @click="categoryFilter = 'all'"
+        >
+          <Flame class="w-3.5 h-3.5 text-amber-300" />
+          <span>{{ locale.currentLang === 'ru' ? 'Все' : locale.currentLang === 'cn' ? '全部' : 'All' }}</span>
+          <span class="bg-slate-950/60 font-mono text-[10px] px-1.5 py-0.2 rounded">
+            {{ ARKNIGHTS_EVENTS.length }}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+          :class="categoryFilter === 'events' ? 'bg-cyan-600 text-white shadow-sm' : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'"
+          @click="categoryFilter = 'events'"
+        >
+          <ShoppingBag class="w-3.5 h-3.5 text-cyan-300" />
+          <span>{{ locale.currentLang === 'ru' ? 'Ивенты с магазином' : locale.currentLang === 'cn' ? '活动商店与掉落' : 'Events & Shops' }}</span>
+          <span class="bg-slate-950/60 font-mono text-[10px] px-1.5 py-0.2 rounded">
+            {{ ARKNIGHTS_EVENTS.filter(e => e.shopItems.length > 0).length }}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+          :class="categoryFilter === 'banners' ? 'bg-cyan-600 text-white shadow-sm' : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'"
+          @click="categoryFilter = 'banners'"
+        >
+          <Radio class="w-3.5 h-3.5 text-amber-300" />
+          <span>{{ locale.currentLang === 'ru' ? 'Баннеры хедхантинга' : locale.currentLang === 'cn' ? '寻访卡池' : 'Headhunting Banners' }}</span>
+          <span class="bg-slate-950/60 font-mono text-[10px] px-1.5 py-0.2 rounded">
+            {{ ARKNIGHTS_EVENTS.filter(e => e.type === 'headhunting' && e.shopItems.length === 0).length }}
+          </span>
+        </button>
       </div>
 
       <!-- Search Filter -->
@@ -182,6 +223,25 @@ function handleAvatarError(e: Event) {
                   Global est: <strong>{{ event.globalEstimatedArrival }}</strong>
                 </div>
               </div>
+
+              <!-- Content Type Pill Badge -->
+              <div class="pt-0.5 pb-1 flex items-center justify-center">
+                <span
+                  v-if="event.shopItems.length > 0"
+                  class="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold px-2.5 py-1 rounded-full bg-cyan-950/80 border border-cyan-700/80 text-cyan-300 shadow-sm"
+                >
+                  <ShoppingBag class="w-3.5 h-3.5 text-cyan-400" />
+                  {{ locale.currentLang === 'ru' ? `Магазин: ${event.shopItems.length} поз.` : `Shop: ${event.shopItems.length} items` }}
+                  <span v-if="event.farmingStages.length > 0">&bull; {{ locale.currentLang === 'ru' ? `Фарм: ${event.farmingStages.length}` : `Farm: ${event.farmingStages.length}` }}</span>
+                </span>
+                <span
+                  v-else
+                  class="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold px-2.5 py-1 rounded-full bg-amber-950/50 border border-amber-800/60 text-amber-300 shadow-sm"
+                >
+                  <Radio class="w-3.5 h-3.5 text-amber-400" />
+                  {{ locale.currentLang === 'ru' ? 'Баннер призыва (гача)' : 'Headhunting Banner (Gacha)' }}
+                </span>
+              </div>
             </div>
 
             <!-- Modal Action Button -->
@@ -195,8 +255,9 @@ function handleAvatarError(e: Event) {
               ]"
               @click="openModal(event)"
             >
-              <ShoppingBag class="w-4 h-4 text-cyan-400" />
-              <span>{{ locale.t('events.viewDetails') }}</span>
+              <ShoppingBag v-if="event.shopItems.length > 0" class="w-4 h-4 text-cyan-400" />
+              <Radio v-else class="w-4 h-4 text-amber-400" />
+              <span>{{ event.shopItems.length > 0 ? locale.t('events.viewDetails') : (locale.currentLang === 'ru' ? 'Подробнее о баннере' : 'Banner Details') }}</span>
               <span v-if="appliedEvents.has(event.id)" class="ml-1 inline-flex items-center text-[10px] text-emerald-400 font-mono">
                 [✓ {{ locale.t('calc.eventShopActive') }}]
               </span>
