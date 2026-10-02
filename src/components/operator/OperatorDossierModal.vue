@@ -191,9 +191,14 @@ function closeFullscreenArt() {
 }
 
 function handleKeyDown(e: KeyboardEvent) {
-  if (e.key === 'Escape' && isArtFullscreen.value) {
-    isArtFullscreen.value = false;
-    e.stopPropagation();
+  if (e.key === 'Escape') {
+    if (isArtFullscreen.value) {
+      isArtFullscreen.value = false;
+      e.stopPropagation();
+    } else if (props.isOpen) {
+      emit('close');
+      e.stopPropagation();
+    }
   }
 }
 
@@ -392,7 +397,20 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown);
+  document.body.style.overflow = '';
 });
+
+watch(
+  () => [props.isOpen, isArtFullscreen.value],
+  ([isOpen, isFullscreen]) => {
+    if (isOpen || isFullscreen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  },
+  { immediate: true }
+);
 
 // Reset to E2 or E0 on operator change
 watch(
@@ -445,14 +463,23 @@ watch(
 </script>
 
 <template>
-  <div
-    v-if="isOpen && operator"
-    class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/85 backdrop-blur-md overflow-y-auto animate-fade-in"
-    @click.self="emit('close')"
-  >
-    <div
-      class="bg-ark-darker border border-ark-border rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]"
+  <Teleport to="body">
+    <Transition
+      enter-active-class="transition-opacity duration-200 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-150 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
     >
+      <div
+        v-if="isOpen && operator"
+        class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/85 backdrop-blur-md overflow-y-auto"
+        @click.self="emit('close')"
+      >
+        <div
+          class="bg-ark-darker border border-ark-border rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200"
+        >
       <!-- Header -->
       <div class="px-6 py-4 bg-ark-card border-b border-ark-border flex items-center justify-between gap-4">
         <div class="flex items-center gap-3 min-w-0">
@@ -1096,6 +1123,8 @@ watch(
       </div>
     </div>
   </div>
+    </Transition>
+  </Teleport>
 
   <!-- Fullscreen High-Resolution Art Lightbox Modal -->
   <Teleport to="body">

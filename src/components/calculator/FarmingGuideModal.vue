@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useGameDataStore } from '@/stores/gamedata';
 import { useInventoryStore } from '@/stores/inventory';
 import { useLocaleStore } from '@/stores/locale';
@@ -99,17 +99,54 @@ function goBack() {
     currentItemId.value = prev;
   }
 }
+
+function handleKeyDown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && props.isOpen) {
+    emit('close');
+    e.stopPropagation();
+  }
+}
+
+watch(
+  () => props.isOpen,
+  (open) => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  },
+  { immediate: true }
+);
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown);
+  document.body.style.overflow = '';
+});
 </script>
 
 <template>
-  <div
-    v-if="isOpen && currentItemId && item"
-    class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/85 backdrop-blur-md overflow-y-auto animate-fade-in"
-    @click.self="emit('close')"
-  >
-    <div
-      class="bg-ark-darker border border-ark-border rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+  <Teleport to="body">
+    <Transition
+      enter-active-class="transition-opacity duration-200 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-150 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
     >
+      <div
+        v-if="isOpen && currentItemId && item"
+        class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/85 backdrop-blur-md overflow-y-auto"
+        @click.self="emit('close')"
+      >
+        <div
+          class="bg-ark-darker border border-ark-border rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200"
+        >
       <!-- Header -->
       <div class="px-5 py-4 bg-ark-card border-b border-ark-border flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
@@ -324,4 +361,6 @@ function goBack() {
       </div>
     </div>
   </div>
+    </Transition>
+  </Teleport>
 </template>

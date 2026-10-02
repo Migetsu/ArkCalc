@@ -73,7 +73,7 @@ function getModuleInfo(modId: string) {
       <!-- Avatar -->
       <div
         class="relative w-14 h-14 flex-shrink-0 rounded-lg overflow-hidden border border-ark-border bg-slate-900 shadow cursor-pointer group/avatar"
-        title="Нажмите, чтобы открыть досье оперативника"
+        :title="locale.currentLang === 'ru' ? 'Нажмите, чтобы открыть досье оперативника' : 'Click to open operator dossier'"
         @click="emit('dossier', operator)"
       >
         <img

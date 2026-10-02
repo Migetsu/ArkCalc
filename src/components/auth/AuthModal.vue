@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useLocaleStore } from '@/stores/locale';
 import { useAuthStore } from '@/stores/auth';
 import {
@@ -15,7 +15,7 @@ import {
   ShieldCheck,
 } from 'lucide-vue-next';
 
-defineProps<{
+const props = defineProps<{
   isOpen: boolean;
 }>();
 
@@ -76,17 +76,54 @@ function formatSyncTime(isoString: string | null): string {
     return isoString;
   }
 }
+
+function handleKeyDown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && props.isOpen) {
+    emit('close');
+    e.stopPropagation();
+  }
+}
+
+watch(
+  () => props.isOpen,
+  (open) => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  },
+  { immediate: true }
+);
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown);
+  document.body.style.overflow = '';
+});
 </script>
 
 <template>
-  <div
-    v-if="isOpen"
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
-    @click.self="emit('close')"
-  >
-    <div
-      class="bg-ark-darker border border-ark-border rounded-2xl w-full max-w-md overflow-hidden shadow-2xl relative animate-in fade-in zoom-in-95 duration-200"
+  <Teleport to="body">
+    <Transition
+      enter-active-class="transition-opacity duration-200 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-150 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
     >
+      <div
+        v-if="isOpen"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+        @click.self="emit('close')"
+      >
+        <div
+          class="bg-ark-darker border border-ark-border rounded-2xl w-full max-w-md overflow-hidden shadow-2xl relative animate-in fade-in zoom-in-95 duration-200"
+        >
       <!-- Header -->
       <div class="px-5 py-4 border-b border-ark-border flex items-center justify-between">
         <div class="flex items-center gap-2.5">
@@ -291,4 +328,6 @@ function formatSyncTime(isoString: string | null): string {
       </div>
     </div>
   </div>
+    </Transition>
+  </Teleport>
 </template>

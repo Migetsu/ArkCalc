@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useGameDataStore } from '@/stores/gamedata';
 import { useInventoryStore } from '@/stores/inventory';
 import { usePlannerStore } from '@/stores/planner';
@@ -111,13 +111,25 @@ onMounted(async () => {
   await auth.initAuth();
 });
 
+watch(
+  () => isDrawerOpen.value,
+  (open) => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }
+);
+
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown);
+  document.body.style.overflow = '';
 });
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col bg-ark-dark text-slate-100 selection:bg-cyan-500 selection:text-slate-950 bg-tactical-grid relative">
+  <div class="min-h-screen flex flex-col bg-ark-dark text-slate-100 selection:bg-cyan-500 selection:text-slate-950 bg-tactical-grid relative overflow-x-hidden">
     <!-- Ambient Background Neon Gradients -->
     <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
       <div class="absolute -top-40 left-1/4 w-96 h-96 bg-cyan-500/[0.04] rounded-full blur-3xl"></div>

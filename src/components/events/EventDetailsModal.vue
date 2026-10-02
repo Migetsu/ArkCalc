@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, watch, onMounted, onUnmounted } from 'vue';
 import type { ArknightsEvent } from '@/data/eventsData';
 import { useLocaleStore } from '@/stores/locale';
 import ItemIcon from '@/components/common/ItemIcon.vue';
@@ -54,17 +54,54 @@ function handleToggleApply() {
     emit('toggleApply', props.event.id);
   }
 }
+
+function handleKeyDown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && props.isOpen) {
+    emit('close');
+    e.stopPropagation();
+  }
+}
+
+watch(
+  () => props.isOpen,
+  (open) => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  },
+  { immediate: true }
+);
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown);
+  document.body.style.overflow = '';
+});
 </script>
 
 <template>
-  <div
-    v-if="isOpen && event"
-    class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in"
-    @click.self="handleClose"
-  >
-    <div
-      class="bg-ark-card border border-ark-border rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+  <Teleport to="body">
+    <Transition
+      enter-active-class="transition-opacity duration-200 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-150 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
     >
+      <div
+        v-if="isOpen && event"
+        class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto"
+        @click.self="handleClose"
+      >
+        <div
+          class="bg-ark-card border border-ark-border rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        >
       <!-- Modal Header -->
       <div class="px-5 py-4 border-b border-ark-border flex items-center justify-between bg-slate-900/90 gap-3">
         <div class="min-w-0">
@@ -300,4 +337,6 @@ function handleToggleApply() {
       </div>
     </div>
   </div>
+    </Transition>
+  </Teleport>
 </template>
