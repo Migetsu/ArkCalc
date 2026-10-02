@@ -64,7 +64,8 @@ const filteredEvents = computed(() => {
     });
   }
 
-  return list;
+  // Reverse order: oldest at top, newest/most recent at bottom
+  return [...list].sort((a, b) => a.cnStartDate.localeCompare(b.cnStartDate));
 });
 
 function getHeaderTag(e: ArknightsEvent): string {
