@@ -9,6 +9,7 @@ import ItemIcon from '@/components/common/ItemIcon.vue';
 const CraftingTree = defineAsyncComponent(() => import('./CraftingTree.vue'));
 const FarmingGuideModal = defineAsyncComponent(() => import('./FarmingGuideModal.vue'));
 const FarmingPlanOptimizer = defineAsyncComponent(() => import('./FarmingPlanOptimizer.vue'));
+const PlanShareModal = defineAsyncComponent(() => import('./PlanShareModal.vue'));
 import {
   getRecommendedStage,
   calculatePlanSanityEstimate,
@@ -23,6 +24,7 @@ import {
   Hammer,
   Zap,
   Home,
+  Share2,
 } from 'lucide-vue-next';
 
 const planner = usePlannerStore();
@@ -140,6 +142,9 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
   selectedFarmingNeededCount.value = neededCount;
   isFarmingGuideOpen.value = true;
 }
+
+// Plan Share Modal state
+const isPlanShareOpen = ref(false);
 </script>
 
 <template>
@@ -397,9 +402,19 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
         </button>
       </div>
 
-      <div class="text-xs text-slate-400 flex items-center gap-2">
-        <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block animate-pulse"></span>
-        {{ locale.currentLang === 'ru' ? 'Красный цвет: требуется получить/скрафтить' : 'Red color: needed to farm/craft' }}
+      <div class="flex items-center gap-3 flex-wrap">
+        <div class="text-xs text-slate-400 flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block animate-pulse"></span>
+          {{ locale.currentLang === 'ru' ? 'Красный цвет: требуется получить/скрафтить' : 'Red color: needed to farm/craft' }}
+        </div>
+        <button
+          type="button"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all flex-shrink-0"
+          @click="isPlanShareOpen = true"
+        >
+          <Share2 class="w-3.5 h-3.5" />
+          {{ locale.currentLang === 'ru' ? 'Экспорт' : 'Export' }}
+        </button>
       </div>
     </div>
 
@@ -777,5 +792,8 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
       :needed-count="selectedFarmingNeededCount"
       @close="isFarmingGuideOpen = false"
     />
+
+    <!-- Plan Export & Share Modal -->
+    <PlanShareModal v-if="isPlanShareOpen" @close="isPlanShareOpen = false" />
   </div>
 </template>
