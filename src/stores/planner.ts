@@ -87,20 +87,82 @@ export const usePlannerStore = defineStore('planner', () => {
       }
     }
 
+    // Determine initial plan order (from Dexie plans' .order or localStorage)
+    const savedOrder = loadOrderFromLocalStorage();
+    const orderedCharIds: string[] = [];
+
+    // 1. Check if plans have explicit .order property
+    const plansWithOrder = Object.values(effectivePlans)
+      .filter((p) => typeof p.order === 'number')
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      .map((p) => p.charId);
+
+    if (plansWithOrder.length > 0) {
+      orderedCharIds.push(...plansWithOrder);
+    } else if (savedOrder.length > 0) {
+      for (const id of savedOrder) {
+        if (effectivePlans[id] && !orderedCharIds.includes(id)) {
+          orderedCharIds.push(id);
+        }
+      }
+    }
+
+    // 2. Append any plans that were not yet in the ordered list
+    for (const id of Object.keys(effectivePlans)) {
+      if (!orderedCharIds.includes(id)) {
+        orderedCharIds.push(id);
+      }
+    }
+
+    // 3. Normalize .order numbers on plans
+    orderedCharIds.forEach((id, idx) => {
+      if (effectivePlans[id]) {
+        effectivePlans[id].order = idx;
+      }
+    });
+
     plans.value = effectivePlans;
+    planOrder.value = orderedCharIds;
+    saveOrderToLocalStorage(orderedCharIds);
+    savePlansToLocalStorage(effectivePlans);
     isLoaded.value = true;
+  }
+
+  async function persistOrder(newOrder: string[]) {
+    planOrder.value = [...newOrder];
+    saveOrderToLocalStorage(newOrder);
+
+    // Update .order property on plan objects in memory and DB
+    newOrder.forEach((id, idx) => {
+      if (plans.value[id]) {
+        plans.value[id].order = idx;
+      }
+    });
+
+    savePlansToLocalStorage(plans.value);
+
+    try {
+      await db.plans.bulkPut(Object.values(plans.value));
+      useAuthStore().triggerAutoSync();
+    } catch (e) {
+      console.warn('Failed to persist plan order to Dexie:', e);
+    }
   }
 
   async function savePlan(plan: OperatorTargetPlan) {
     const cleanPlan: OperatorTargetPlan = JSON.parse(JSON.stringify(plan));
+    if (!planOrder.value.includes(cleanPlan.charId)) {
+      planOrder.value.push(cleanPlan.charId);
+      cleanPlan.order = planOrder.value.length - 1;
+      saveOrderToLocalStorage(planOrder.value);
+    } else {
+      cleanPlan.order = planOrder.value.indexOf(cleanPlan.charId);
+    }
+
     plans.value = {
       ...plans.value,
       [cleanPlan.charId]: cleanPlan,
     };
-    if (!planOrder.value.includes(cleanPlan.charId)) {
-      planOrder.value.push(cleanPlan.charId);
-      saveOrderToLocalStorage(planOrder.value);
-    }
     savePlansToLocalStorage(plans.value);
     try {
       await db.plans.put(cleanPlan);
@@ -114,9 +176,8 @@ export const usePlannerStore = defineStore('planner', () => {
     const updated = { ...plans.value };
     delete updated[charId];
     plans.value = updated;
-    planOrder.value = planOrder.value.filter((id) => id !== charId);
-    saveOrderToLocalStorage(planOrder.value);
-    savePlansToLocalStorage(updated);
+    const newOrder = planOrder.value.filter((id) => id !== charId);
+    await persistOrder(newOrder);
     try {
       await db.plans.delete(charId);
       useAuthStore().triggerAutoSync();
@@ -138,20 +199,54 @@ export const usePlannerStore = defineStore('planner', () => {
     }
   }
 
-  async function bulkImportPlans(newPlans: Record<string, OperatorTargetPlan>) {
-    plans.value = { ...newPlans };
-    planOrder.value = Object.keys(newPlans);
-    saveOrderToLocalStorage(planOrder.value);
-    savePlansToLocalStorage(newPlans);
+  async function bulkImportPlans(
+    newPlans: Record<string, OperatorTargetPlan>,
+    explicitOrder?: string[],
+  ) {
+    const cleanPlans: Record<string, OperatorTargetPlan> = {};
+    for (const [id, p] of Object.entries(newPlans)) {
+      cleanPlans[id] = JSON.parse(JSON.stringify(p));
+    }
+    plans.value = cleanPlans;
+
+    let order: string[] = [];
+    if (explicitOrder && Array.isArray(explicitOrder) && explicitOrder.length > 0) {
+      order = explicitOrder.filter((id) => cleanPlans[id]);
+    } else {
+      const sortedByProp = Object.values(cleanPlans)
+        .filter((p) => typeof p.order === 'number')
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        .map((p) => p.charId);
+      if (sortedByProp.length > 0) {
+        order = sortedByProp;
+      }
+    }
+
+    for (const id of Object.keys(cleanPlans)) {
+      if (!order.includes(id)) {
+        order.push(id);
+      }
+    }
+
+    order.forEach((id, idx) => {
+      if (cleanPlans[id]) {
+        cleanPlans[id].order = idx;
+      }
+    });
+
+    planOrder.value = order;
+    saveOrderToLocalStorage(order);
+    savePlansToLocalStorage(cleanPlans);
+
     try {
       await db.plans.clear();
-      await db.plans.bulkPut(Object.values(newPlans));
+      await db.plans.bulkPut(Object.values(cleanPlans));
     } catch (e) {
       console.warn('Dexie bulk import plans failed:', e);
     }
   }
 
-  function movePlan(charId: string, direction: 'up' | 'down') {
+  async function movePlan(charId: string, direction: 'up' | 'down') {
     const currentList = orderedPlanList.value.map((p) => p.charId);
     const idx = currentList.indexOf(charId);
     if (idx === -1) return;
@@ -160,20 +255,17 @@ export const usePlannerStore = defineStore('planner', () => {
     const temp = currentList[idx];
     currentList[idx] = currentList[targetIdx];
     currentList[targetIdx] = temp;
-    planOrder.value = currentList;
-    saveOrderToLocalStorage(currentList);
+    await persistOrder(currentList);
   }
 
-  function setPlanTop(charId: string) {
+  async function setPlanTop(charId: string) {
     const currentList = orderedPlanList.value.map((p) => p.charId).filter((id) => id !== charId);
     currentList.unshift(charId);
-    planOrder.value = currentList;
-    saveOrderToLocalStorage(currentList);
+    await persistOrder(currentList);
   }
 
-  function setPlanOrder(newOrder: string[]) {
-    planOrder.value = [...newOrder];
-    saveOrderToLocalStorage(planOrder.value);
+  async function setPlanOrder(newOrder: string[]) {
+    await persistOrder([...newOrder]);
   }
 
   async function completePlanStep(charId: string, deductMaterials: boolean = true) {

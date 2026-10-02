@@ -23,6 +23,7 @@ export interface OperatorTargetPlan {
     masteries: number[];
     modules: Record<string, number>;
   };
+  order?: number; // 0-indexed custom priority rank for roadmap
 }
 
 // Оперативник в наличии на аккаунте игрока (импортированный из ArkPRTS / Skland)

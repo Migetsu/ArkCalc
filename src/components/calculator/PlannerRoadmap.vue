@@ -64,16 +64,16 @@ const roadmapSimulation = computed(() => {
   );
 });
 
-function moveUp(charId: string) {
-  planner.movePlan(charId, 'up');
+async function moveUp(charId: string) {
+  await planner.movePlan(charId, 'up');
 }
 
-function moveDown(charId: string) {
-  planner.movePlan(charId, 'down');
+async function moveDown(charId: string) {
+  await planner.movePlan(charId, 'down');
 }
 
-function setTop(charId: string) {
-  planner.setPlanTop(charId);
+async function setTop(charId: string) {
+  await planner.setPlanTop(charId);
 }
 
 function openEdit(op: OperatorSummary) {

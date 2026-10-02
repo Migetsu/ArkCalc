@@ -183,12 +183,18 @@ export const useAuthStore = defineStore('auth', () => {
   // Sync current local state (IndexedDB) to Supabase cloud
   async function syncToCloud(): Promise<{ success: boolean; error?: string }> {
     if (!user.value) {
-      return { success: false, error: 'Пользователь не авторизован' };
+      return {
+        success: false,
+        error: locale.currentLang === 'ru' ? 'Пользователь не авторизован' : 'User not authenticated',
+      };
     }
 
     isSyncing.value = true;
     syncError.value = null;
-    syncMessage.value = 'Синхронизация данных с облаком...';
+    syncMessage.value =
+      locale.currentLang === 'ru'
+        ? 'Синхронизация данных с облаком...'
+        : 'Syncing data to cloud...';
 
     try {
       const payload = {
@@ -200,6 +206,7 @@ export const useAuthStore = defineStore('auth', () => {
         settings_data: {
           language: locale.currentLang,
           itemLanguage: locale.currentLang,
+          planOrder: planner.planOrder,
         },
         updated_at: new Date().toISOString(),
       };
@@ -224,16 +231,22 @@ export const useAuthStore = defineStore('auth', () => {
         // ignore
       }
 
-      syncMessage.value = 'Данные успешно сохранены в облаке!';
+      const successMsg =
+        locale.currentLang === 'ru'
+          ? 'Данные успешно сохранены в облаке!'
+          : 'Data successfully saved to cloud!';
+      syncMessage.value = successMsg;
       setTimeout(() => {
-        if (syncMessage.value === 'Данные успешно сохранены в облаке!') {
+        if (syncMessage.value === successMsg) {
           syncMessage.value = null;
         }
       }, 4000);
 
       return { success: true };
     } catch (err: any) {
-      const msg = err?.message || 'Сбой синхронизации с облаком';
+      const msg =
+        err?.message ||
+        (locale.currentLang === 'ru' ? 'Сбой синхронизации с облаком' : 'Cloud sync failed');
       syncError.value = msg;
       return { success: false, error: msg };
     } finally {
@@ -244,13 +257,19 @@ export const useAuthStore = defineStore('auth', () => {
   // Pull latest cloud state from Supabase to local stores
   async function pullFromCloud(): Promise<{ success: boolean; error?: string }> {
     if (!user.value) {
-      return { success: false, error: 'Пользователь не авторизован' };
+      return {
+        success: false,
+        error: locale.currentLang === 'ru' ? 'Пользователь не авторизован' : 'User not authenticated',
+      };
     }
 
     isSyncing.value = true;
     isPulling.value = true;
     syncError.value = null;
-    syncMessage.value = 'Загрузка данных из облака...';
+    syncMessage.value =
+      locale.currentLang === 'ru'
+        ? 'Загрузка данных из облака...'
+        : 'Loading data from cloud...';
 
     try {
       const { data, error } = await supabase
@@ -271,7 +290,10 @@ export const useAuthStore = defineStore('auth', () => {
         }
 
         if (data.plans_data && typeof data.plans_data === 'object') {
-          await planner.bulkImportPlans(data.plans_data);
+          const cloudOrder: string[] | undefined = Array.isArray(data.settings_data?.planOrder)
+            ? data.settings_data.planOrder
+            : undefined;
+          await planner.bulkImportPlans(data.plans_data, cloudOrder);
         }
 
         if (Array.isArray(data.roster_data)) {
@@ -297,16 +319,22 @@ export const useAuthStore = defineStore('auth', () => {
         }
       }
 
-      syncMessage.value = 'Данные успешно обновлены из облака!';
+      const successMsg =
+        locale.currentLang === 'ru'
+          ? 'Данные успешно обновлены из облака!'
+          : 'Data successfully loaded from cloud!';
+      syncMessage.value = successMsg;
       setTimeout(() => {
-        if (syncMessage.value === 'Данные успешно обновлены из облака!') {
+        if (syncMessage.value === successMsg) {
           syncMessage.value = null;
         }
       }, 4000);
 
       return { success: true };
     } catch (err: any) {
-      const msg = err?.message || 'Сбой загрузки данных из облака';
+      const msg =
+        err?.message ||
+        (locale.currentLang === 'ru' ? 'Сбой загрузки данных из облака' : 'Cloud download failed');
       syncError.value = msg;
       return { success: false, error: msg };
     } finally {
