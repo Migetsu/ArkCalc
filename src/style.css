@@ -96,3 +96,16 @@
   box-shadow: 0 4px 20px -2px rgba(6, 182, 212, 0.08);
 }
 
+/* PRTS Tactical Easing & Drawer Transitions */
+.ease-out-expo {
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.ease-in-expo {
+  transition-timing-function: cubic-bezier(0.7, 0, 0.84, 0) !important;
+}
+
+.will-change-transform {
+  will-change: transform;
+}
+

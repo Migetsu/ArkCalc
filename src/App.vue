@@ -469,17 +469,39 @@ onUnmounted(() => {
 
     <!-- Universal PRTS Navigation & System Side Drawer (Desktop & Mobile) -->
     <Teleport to="body">
-      <div v-if="isDrawerOpen" class="fixed inset-0 z-50 flex justify-end">
-        <!-- Backdrop -->
-        <div
-          class="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity duration-300 animate-in fade-in"
-          @click="isDrawerOpen = false"
-        ></div>
-
-        <!-- Drawer Content Panel -->
-        <aside
-          class="relative w-full sm:w-[440px] md:w-[460px] h-full bg-slate-950/95 border-l border-cyan-500/30 shadow-2xl flex flex-col z-10 backdrop-blur-xl animate-in slide-in-from-right duration-300 prts-glow overflow-hidden"
+      <div
+        class="fixed inset-0 z-50 overflow-hidden pointer-events-none flex justify-end"
+        :class="{ 'pointer-events-auto': isDrawerOpen }"
+      >
+        <!-- Backdrop Transition -->
+        <Transition
+          enter-active-class="transition-opacity duration-300 ease-out"
+          enter-from-class="opacity-0"
+          enter-to-class="opacity-100"
+          leave-active-class="transition-opacity duration-250 ease-in"
+          leave-from-class="opacity-100"
+          leave-to-class="opacity-0"
         >
+          <div
+            v-if="isDrawerOpen"
+            class="fixed inset-0 bg-slate-950/80 backdrop-blur-md"
+            @click="isDrawerOpen = false"
+          ></div>
+        </Transition>
+
+        <!-- Aside Slide Transition -->
+        <Transition
+          enter-active-class="transition-transform duration-350 ease-out-expo will-change-transform"
+          enter-from-class="translate-x-full"
+          enter-to-class="translate-x-0"
+          leave-active-class="transition-transform duration-250 ease-in-expo will-change-transform"
+          leave-from-class="translate-x-0"
+          leave-to-class="translate-x-full"
+        >
+          <aside
+            v-if="isDrawerOpen"
+            class="relative w-full sm:w-[440px] md:w-[460px] h-full bg-slate-950/95 border-l border-cyan-500/30 shadow-2xl flex flex-col z-10 backdrop-blur-xl prts-glow overflow-hidden"
+          >
           <!-- Drawer Header -->
           <div class="p-4 sm:p-5 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/50 flex-shrink-0">
             <div class="flex items-center gap-3">
@@ -760,6 +782,7 @@ onUnmounted(() => {
             <span class="text-slate-500">Live Engine v4.2</span>
           </div>
         </aside>
+      </Transition>
       </div>
     </Teleport>
 
