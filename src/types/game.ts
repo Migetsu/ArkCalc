@@ -24,10 +24,38 @@ export interface RangeInfo {
   grids: RangeGrid[];
 }
 
+export interface AttributeKeyFrame {
+  level: number;
+  data: {
+    maxHp: number;
+    atk: number;
+    def: number;
+    magicResistance: number;
+    cost: number;
+    blockCnt: number;
+    baseAttackTime?: number;
+    respawnTime?: number;
+  };
+}
+
+export interface PotentialRank {
+  type: number; // 0 = stat / cost, 1 = talent
+  description: string;
+  attribMod?: {
+    hp?: number;
+    atk?: number;
+    def?: number;
+    cost?: number;
+    respawnTime?: number;
+    attackSpeed?: number;
+  };
+}
+
 export interface OperatorPhase {
   maxLevel: number;
   rangeId?: string;
   evolveCost: MaterialCost[] | null;
+  attributesKeyFrames?: AttributeKeyFrame[];
 }
 
 export interface SkillMasteryCost {
@@ -155,6 +183,8 @@ export interface OperatorSummary {
   talentsCn?: OperatorTalent[];
   attributes?: OperatorAttributes;
   skins?: OperatorSkin[];
+  favorKeyFrames?: AttributeKeyFrame[];
+  potentialRanks?: PotentialRank[];
 }
 
 export interface ItemSummary {

@@ -29,7 +29,7 @@ import { useLocaleStore } from './locale';
 
 const CACHE_DB_NAME = 'ARKCalcCacheDB';
 const CACHE_STORE_NAME = 'gamedata_cache';
-const CACHE_KEY = 'ark_cleaned_gamedata_v21_cn_ops';
+const CACHE_KEY = 'ark_cleaned_gamedata_v22_stats_calc';
 
 // Open simple IndexedDB for game data cache
 function openCacheDb(): Promise<IDBDatabase> {
@@ -450,6 +450,7 @@ export const useGameDataStore = defineStore('gamedata', () => {
           evolveCost: p.evolveCost
             ? p.evolveCost.map((ec: any) => ({ id: ec.id, count: ec.count }))
             : null,
+          attributesKeyFrames: p.attributesKeyFrames || [],
         }));
 
         // Clean common skill level-ups (levels 1 -> 7)
@@ -745,6 +746,12 @@ export const useGameDataStore = defineStore('gamedata', () => {
           talents,
           attributes,
           skins: operatorSkinsMap[charId] || [],
+          favorKeyFrames: char.favorKeyFrames || [],
+          potentialRanks: (char.potentialRanks || []).map((pr: any) => ({
+            type: pr.type ?? 0,
+            description: pr.description || '',
+            attribMod: pr.attribMod || undefined,
+          })),
         };
       }
 

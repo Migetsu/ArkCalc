@@ -10,6 +10,7 @@ import type {
 } from '@/types/game';
 import { useGameDataStore } from '@/stores/gamedata';
 import AttackRangeGrid from '@/components/operator/AttackRangeGrid.vue';
+import OperatorCombatStatsCalculator from '@/components/operator/OperatorCombatStatsCalculator.vue';
 import {
   getTranslatedTalents,
   getTranslatedQuote,
@@ -61,7 +62,6 @@ import {
   X,
   Shield,
   Swords,
-  Zap,
   UserCheck,
   Layers,
   Palette,
@@ -69,6 +69,9 @@ import {
   Flame,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
   BookOpen,
   Sparkles,
 } from 'lucide-vue-next';
@@ -182,6 +185,54 @@ const currentModuleStageDetail = computed<ModuleStageDetail | null>(() => {
 });
 
 // ==================== METHODS ====================
+// All skins list for gallery and navigation
+const allSkinsList = computed(() => {
+  const list: { id: string; name: string; isSpecial: boolean; skin?: OperatorSkin }[] = [
+    {
+      id: 'default_1',
+      name: gameData.itemLanguage === 'ru' ? 'Базовый (E0)' : 'Default (E0)',
+      isSpecial: false,
+    },
+  ];
+  if (maxElite.value >= 2) {
+    list.push({
+      id: 'default_2',
+      name: gameData.itemLanguage === 'ru' ? 'Элита 2 (E2)' : 'Elite 2 (E2)',
+      isSpecial: false,
+    });
+  }
+  for (const s of specialSkins.value) {
+    list.push({
+      id: s.skinId,
+      name: s.skinName || 'Special Outfit',
+      isSpecial: true,
+      skin: s,
+    });
+  }
+  return list;
+});
+
+const currentSkinIndex = computed(() => {
+  const idx = allSkinsList.value.findIndex((s) => s.id === selectedSkinId.value);
+  return idx >= 0 ? idx : 0;
+});
+
+function selectNextSkin() {
+  const list = allSkinsList.value;
+  if (list.length === 0) return;
+  const curIdx = currentSkinIndex.value;
+  const nextIdx = (curIdx + 1) % list.length;
+  selectedSkinId.value = list[nextIdx].id;
+}
+
+function selectPrevSkin() {
+  const list = allSkinsList.value;
+  if (list.length === 0) return;
+  const curIdx = currentSkinIndex.value;
+  const prevIdx = (curIdx - 1 + list.length) % list.length;
+  selectedSkinId.value = list[prevIdx].id;
+}
+
 function openFullscreenArt() {
   isArtFullscreen.value = true;
 }
@@ -197,6 +248,14 @@ function handleKeyDown(e: KeyboardEvent) {
       e.stopPropagation();
     } else if (props.isOpen) {
       emit('close');
+      e.stopPropagation();
+    }
+  } else if (isArtFullscreen.value) {
+    if (e.key === 'ArrowRight') {
+      selectNextSkin();
+      e.stopPropagation();
+    } else if (e.key === 'ArrowLeft') {
+      selectPrevSkin();
       e.stopPropagation();
     }
   }
@@ -681,48 +740,8 @@ watch(
 
           <!-- Right: Combat Attributes & Mechanics (7 cols) -->
           <div class="lg:col-span-7 space-y-5">
-            <!-- Combat Stats Grid -->
-            <div class="p-4 bg-ark-card rounded-2xl border border-ark-border space-y-3">
-              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                <Zap class="w-4 h-4 text-amber-400" />
-                {{ gameData.itemLanguage === 'ru' ? 'Боевые характеристики (Макс. уровень)' : 'Combat Stats (Max Level)' }}
-              </h4>
-
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                <div class="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-500 font-mono block">{{ gameData.itemLanguage === 'ru' ? 'Здоровье (HP)' : 'Max HP' }}</span>
-                  <span class="text-base font-mono font-bold text-emerald-400">{{ operator.attributes?.hp || '&mdash;' }}</span>
-                </div>
-                <div class="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-500 font-mono block">{{ gameData.itemLanguage === 'ru' ? 'Атака (ATK)' : 'Attack (ATK)' }}</span>
-                  <span class="text-base font-mono font-bold text-red-400">{{ operator.attributes?.atk || '&mdash;' }}</span>
-                </div>
-                <div class="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-500 font-mono block">{{ gameData.itemLanguage === 'ru' ? 'Защита (DEF)' : 'Defense (DEF)' }}</span>
-                  <span class="text-base font-mono font-bold text-sky-400">{{ operator.attributes?.def || '&mdash;' }}</span>
-                </div>
-                <div class="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-500 font-mono block">{{ gameData.itemLanguage === 'ru' ? 'Сопр. магии (RES)' : 'Resist (RES)' }}</span>
-                  <span class="text-base font-mono font-bold text-purple-400">{{ operator.attributes?.res ?? 0 }}</span>
-                </div>
-                <div class="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-500 font-mono block">{{ gameData.itemLanguage === 'ru' ? 'Блок (Block)' : 'Block Count' }}</span>
-                  <span class="text-base font-mono font-bold text-amber-300">{{ operator.attributes?.blockCnt || 1 }}</span>
-                </div>
-                <div class="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-500 font-mono block">{{ gameData.itemLanguage === 'ru' ? 'Стоимость (DP)' : 'Deploy Cost' }}</span>
-                  <span class="text-base font-mono font-bold text-cyan-300">{{ operator.attributes?.cost || '&mdash;' }}</span>
-                </div>
-                <div class="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-500 font-mono block">{{ gameData.itemLanguage === 'ru' ? 'Интервал атаки' : 'Attack Interval' }}</span>
-                  <span class="text-base font-mono font-bold text-slate-300">{{ operator.attributes?.attackTime }}{{ gameData.itemLanguage === 'ru' ? 'с' : 's' }}</span>
-                </div>
-                <div class="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
-                  <span class="text-[10px] text-slate-500 font-mono block">{{ gameData.itemLanguage === 'ru' ? 'Перезарядка' : 'Redeploy Time' }}</span>
-                  <span class="text-base font-mono font-bold text-slate-300">{{ operator.attributes?.respawnTime }}{{ gameData.itemLanguage === 'ru' ? 'с' : 's' }}</span>
-                </div>
-              </div>
-            </div>
+            <!-- Interactive Combat Stats Calculator -->
+            <OperatorCombatStatsCalculator :operator="operator" />
 
             <!-- Class Trait -->
             <div v-if="(dynamicTrait || operator.description) || getArchetypeTraitRu(operator.subProfessionId)" class="p-4 bg-ark-card rounded-2xl border border-ark-border space-y-1.5">
@@ -1151,12 +1170,22 @@ watch(
             <span class="hidden sm:inline-block px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-cyan-950 border border-cyan-800/60 text-cyan-300">
               {{ currentSelectedSkin ? (dynamicSkinName || currentSelectedSkin.skinName) : (selectedSkinId === 'default_2' ? (gameData.itemLanguage === 'ru' ? 'Элита 2' : 'Elite 2') : (gameData.itemLanguage === 'ru' ? 'Базовый' : 'Default')) }}
             </span>
+            <span class="text-xs font-mono text-slate-400">
+              ({{ currentSkinIndex + 1 }} / {{ allSkinsList.length }})
+            </span>
           </div>
 
-          <div class="flex items-center gap-3">
-            <span class="text-xs text-slate-400 font-mono hidden sm:inline-block">
-              {{ gameData.itemLanguage === 'ru' ? 'ESC или клик для закрытия' : 'ESC or click outside to close' }}
-            </span>
+          <div class="flex items-center gap-2">
+            <a
+              :href="currentArtUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="p-2 rounded-xl text-slate-400 hover:text-cyan-300 hover:bg-slate-800 transition-colors flex items-center gap-1.5 text-xs font-mono"
+              :title="gameData.itemLanguage === 'ru' ? 'Открыть в полном разрешении' : 'Open in full resolution'"
+            >
+              <ExternalLink class="w-4 h-4" />
+              <span class="hidden sm:inline">{{ gameData.itemLanguage === 'ru' ? 'Оригинал' : 'Original' }}</span>
+            </a>
             <button
               type="button"
               class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
@@ -1168,11 +1197,22 @@ watch(
           </div>
         </div>
 
-        <!-- Main High-Res Art Viewport -->
+        <!-- Main High-Res Art Viewport with Prev / Next Buttons -->
         <div
-          class="flex-1 w-full h-full overflow-hidden flex items-center justify-center p-3 sm:p-6 cursor-zoom-out"
+          class="flex-1 w-full h-full overflow-hidden flex items-center justify-center p-3 sm:p-6 relative cursor-zoom-out"
           @click="closeFullscreenArt"
         >
+          <!-- Previous Skin Button -->
+          <button
+            v-if="allSkinsList.length > 1"
+            type="button"
+            class="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 z-20 p-3 rounded-2xl bg-slate-900/80 hover:bg-cyan-950/90 text-slate-300 hover:text-cyan-200 border border-slate-700/80 hover:border-cyan-500/60 backdrop-blur-md shadow-2xl transition-all cursor-pointer"
+            :title="gameData.itemLanguage === 'ru' ? 'Предыдущий скин (Стрелка влево)' : 'Previous skin (Left arrow)'"
+            @click.stop="selectPrevSkin"
+          >
+            <ChevronLeft class="w-6 h-6" />
+          </button>
+
           <img
             :key="`${operator.id}_${selectedSkinId}_fs`"
             :src="currentArtUrl"
@@ -1180,6 +1220,17 @@ watch(
             class="max-w-full max-h-[85vh] w-auto h-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.9)] select-none pointer-events-none transition-all duration-300"
             @error="handleArtError"
           />
+
+          <!-- Next Skin Button -->
+          <button
+            v-if="allSkinsList.length > 1"
+            type="button"
+            class="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 z-20 p-3 rounded-2xl bg-slate-900/80 hover:bg-cyan-950/90 text-slate-300 hover:text-cyan-200 border border-slate-700/80 hover:border-cyan-500/60 backdrop-blur-md shadow-2xl transition-all cursor-pointer"
+            :title="gameData.itemLanguage === 'ru' ? 'Следующий скин (Стрелка вправо)' : 'Next skin (Right arrow)'"
+            @click.stop="selectNextSkin"
+          >
+            <ChevronRight class="w-6 h-6" />
+          </button>
         </div>
 
         <!-- Bottom Outfits Quick Bar in Fullscreen -->
