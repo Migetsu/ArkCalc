@@ -279,10 +279,10 @@ const isFaqOpen = ref<boolean>(false);
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-red-400 flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full bg-red-400"></span>
-              Orundum (Орундум)
+              {{ locale.currentLang === 'ru' ? 'Orundum (Орундум)' : 'Orundum' }}
             </span>
             <span class="text-[11px] font-mono text-slate-400 font-bold bg-slate-800 px-2 py-0.5 rounded">
-              = {{ convertedPulls.orundumPulls }} кр.
+              = {{ convertedPulls.orundumPulls }} {{ locale.currentLang === 'ru' ? 'кр.' : 'pulls' }}
             </span>
           </div>
           <div class="relative">
@@ -295,9 +295,9 @@ const isFaqOpen = ref<boolean>(false);
             />
           </div>
           <div class="flex items-center gap-1 text-[10px] font-mono text-slate-400">
-            <span class="text-slate-500">Быстро:</span>
-            <button type="button" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200" @click="orundum += 600">+1 кр. (600)</button>
-            <button type="button" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200" @click="orundum += 6000">+10 кр.</button>
+            <span class="text-slate-500">{{ locale.currentLang === 'ru' ? 'Быстро:' : 'Quick:' }}</span>
+            <button type="button" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200" @click="orundum += 600">+1 {{ locale.currentLang === 'ru' ? 'кр.' : 'pull' }} (600)</button>
+            <button type="button" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200" @click="orundum += 6000">+10 {{ locale.currentLang === 'ru' ? 'кр.' : 'pulls' }}</button>
           </div>
         </div>
 
@@ -306,10 +306,10 @@ const isFaqOpen = ref<boolean>(false);
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-              Orig. Prime (OP)
+              {{ locale.currentLang === 'ru' ? 'Orig. Prime (OP)' : 'Originium Prime (OP)' }}
             </span>
             <span class="text-[11px] font-mono text-slate-400 font-bold bg-slate-800 px-2 py-0.5 rounded">
-              = {{ convertedPulls.opPulls }} кр.
+              = {{ convertedPulls.opPulls }} {{ locale.currentLang === 'ru' ? 'кр.' : 'pulls' }}
             </span>
           </div>
           <div class="relative">
@@ -322,7 +322,7 @@ const isFaqOpen = ref<boolean>(false);
             />
           </div>
           <div class="flex items-center gap-1 text-[10px] font-mono text-slate-400">
-            <span class="text-slate-500">Быстро:</span>
+            <span class="text-slate-500">{{ locale.currentLang === 'ru' ? 'Быстро:' : 'Quick:' }}</span>
             <button type="button" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200" @click="originiumPrime += 10">+10 OP</button>
             <button type="button" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200" @click="originiumPrime += 50">+50 OP</button>
           </div>
@@ -333,10 +333,10 @@ const isFaqOpen = ref<boolean>(false);
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-cyan-400 flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
-              Билеты (1x)
+              {{ locale.currentLang === 'ru' ? 'Билеты (1x)' : 'Tickets (1x)' }}
             </span>
             <span class="text-[11px] font-mono text-slate-400 font-bold bg-slate-800 px-2 py-0.5 rounded">
-              = {{ singleTickets }} кр.
+              = {{ singleTickets }} {{ locale.currentLang === 'ru' ? 'кр.' : 'pulls' }}
             </span>
           </div>
           <div class="relative">
@@ -349,7 +349,7 @@ const isFaqOpen = ref<boolean>(false);
             />
           </div>
           <div class="flex items-center gap-1 text-[10px] font-mono text-slate-400">
-            <span class="text-slate-500">Быстро:</span>
+            <span class="text-slate-500">{{ locale.currentLang === 'ru' ? 'Быстро:' : 'Quick:' }}</span>
             <button type="button" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200" @click="singleTickets += 1">+1</button>
             <button type="button" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200" @click="singleTickets += 5">+5</button>
           </div>
@@ -360,10 +360,10 @@ const isFaqOpen = ref<boolean>(false);
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-purple-400 flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full bg-purple-400"></span>
-              Билеты (10x)
+              {{ locale.currentLang === 'ru' ? 'Билеты (10x)' : 'Tickets (10x)' }}
             </span>
             <span class="text-[11px] font-mono text-slate-400 font-bold bg-slate-800 px-2 py-0.5 rounded">
-              = {{ tenTickets * 10 }} кр.
+              = {{ tenTickets * 10 }} {{ locale.currentLang === 'ru' ? 'кр.' : 'pulls' }}
             </span>
           </div>
           <div class="relative">
@@ -376,9 +376,9 @@ const isFaqOpen = ref<boolean>(false);
             />
           </div>
           <div class="flex items-center gap-1 text-[10px] font-mono text-slate-400">
-            <span class="text-slate-500">Быстро:</span>
-            <button type="button" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200" @click="tenTickets += 1">+1 (10 кр.)</button>
-            <button type="button" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200" @click="tenTickets += 2">+2 (20 кр.)</button>
+            <span class="text-slate-500">{{ locale.currentLang === 'ru' ? 'Быстро:' : 'Quick:' }}</span>
+            <button type="button" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200" @click="tenTickets += 1">+1 (10 {{ locale.currentLang === 'ru' ? 'кр.' : 'pulls' }})</button>
+            <button type="button" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200" @click="tenTickets += 2">+2 (20 {{ locale.currentLang === 'ru' ? 'кр.' : 'pulls' }})</button>
           </div>
         </div>
       </div>
@@ -458,7 +458,7 @@ const isFaqOpen = ref<boolean>(false);
               </div>
               <div class="text-[10px] font-mono text-cyan-400 mt-1 flex items-center gap-1">
                 <Calendar class="w-3 h-3" />
-                <span>{{ ev.globalEstimatedArrival || 'Скоро' }}</span>
+                <span>{{ ev.globalEstimatedArrival || (locale.currentLang === 'ru' ? 'Скоро' : 'Soon') }}</span>
               </div>
             </div>
           </button>
@@ -494,10 +494,15 @@ const isFaqOpen = ref<boolean>(false);
             @click="incomePreset = 'f2p'"
           >
             <div class="font-bold text-xs text-slate-100 flex items-center gap-2">
-              <span>🆓 F2P (Без доната)</span>
+              <span>{{ locale.currentLang === 'ru' ? '🆓 F2P (Без доната)' : '🆓 F2P (No Spend)' }}</span>
             </div>
             <p class="text-[11px] leading-relaxed">
-              Аннигиляция (1,800) + Ежедневки и еженедельки (1,200). <strong>~5 круток/нед.</strong>
+              {{
+                locale.currentLang === 'ru'
+                  ? 'Аннигиляция (1,800) + Ежедневки и еженедельки (1,200).'
+                  : 'Annihilation (1,800) + Dailies & Weeklies (1,200).'
+              }}
+              <strong>~{{ locale.currentLang === 'ru' ? '5 круток/нед.' : '5 pulls/wk' }}</strong>
             </p>
           </button>
 
@@ -509,10 +514,15 @@ const isFaqOpen = ref<boolean>(false);
             @click="incomePreset = 'monthly_card'"
           >
             <div class="font-bold text-xs text-slate-100 flex items-center gap-2">
-              <span>💳 Месячная карта (Monthly Card)</span>
+              <span>{{ locale.currentLang === 'ru' ? '💳 Месячная карта (Monthly Card)' : '💳 Monthly Card' }}</span>
             </div>
             <p class="text-[11px] leading-relaxed">
-              F2P + 200 Орундума в день + 6 OP в месяц. <strong>~8.5 круток/нед.</strong>
+              {{
+                locale.currentLang === 'ru'
+                  ? 'F2P + 200 Орундума в день + 6 OP в месяц.'
+                  : 'F2P + 200 Orundum daily + 6 OP monthly.'
+              }}
+              <strong>~{{ locale.currentLang === 'ru' ? '8.5 круток/нед.' : '8.5 pulls/wk' }}</strong>
             </p>
           </button>
 
@@ -524,10 +534,15 @@ const isFaqOpen = ref<boolean>(false);
             @click="incomePreset = 'all_in'"
           >
             <div class="font-bold text-xs text-slate-100 flex items-center gap-2">
-              <span>👑 Максимум (С магазином)</span>
+              <span>{{ locale.currentLang === 'ru' ? '👑 Максимум (С магазином)' : '👑 All-In (With Green Certs)' }}</span>
             </div>
             <p class="text-[11px] leading-relaxed">
-              Monthly Card + выкуп билетов в магазине зелёных сертификатов. <strong>~9.5 круток/нед.</strong>
+              {{
+                locale.currentLang === 'ru'
+                  ? 'Monthly Card + выкуп билетов в магазине зелёных сертификатов.'
+                  : 'Monthly Card + all green certificate ticket tiers.'
+              }}
+              <strong>~{{ locale.currentLang === 'ru' ? '9.5 круток/нед.' : '9.5 pulls/wk' }}</strong>
             </p>
           </button>
         </div>
@@ -582,7 +597,11 @@ const isFaqOpen = ref<boolean>(false);
               {{ totalProjectedPulls }}
             </div>
             <div class="text-[10px] text-slate-500 font-mono">
-              ({{ convertedPulls.totalPulls }} сейчас + {{ forecastResult.totalPullsGained }} накопите)
+              {{
+                locale.currentLang === 'ru'
+                  ? `(${convertedPulls.totalPulls} сейчас + ${forecastResult.totalPullsGained} накопите)`
+                  : `(${convertedPulls.totalPulls} current + ${forecastResult.totalPullsGained} saved)`
+              }}
             </div>
           </div>
         </div>
@@ -610,13 +629,17 @@ const isFaqOpen = ref<boolean>(false);
 
           <div class="flex justify-between text-[11px] text-slate-400">
             <span v-if="totalProjectedPulls >= projectedOddsResult.sparkTarget" class="text-emerald-400 font-semibold">
-              ✓ Полный запас на 300 круток обеспечен!
+              {{ locale.currentLang === 'ru' ? '✓ Полный запас на 300 круток обеспечен!' : '✓ Full 300 spark guarantee secured!' }}
             </span>
             <span v-else class="text-amber-300 font-semibold">
-              До 100% гаранта не хватает {{ Math.max(0, projectedOddsResult.sparkTarget - totalProjectedPulls) }} круток.
+              {{
+                locale.currentLang === 'ru'
+                  ? `До 100% гаранта не хватает ${Math.max(0, projectedOddsResult.sparkTarget - totalProjectedPulls)} круток.`
+                  : `Need ${Math.max(0, projectedOddsResult.sparkTarget - totalProjectedPulls)} more pulls for 100% spark.`
+              }}
             </span>
             <span class="text-slate-500 font-mono">
-              Шанс получить ≥1 копию: <strong class="text-white">{{ projectedOddsResult.probAtLeastOne }}%</strong>
+              {{ locale.currentLang === 'ru' ? 'Шанс получить ≥1 копию:' : 'Chance for ≥1 copy:' }} <strong class="text-white">{{ projectedOddsResult.probAtLeastOne }}%</strong>
             </span>
           </div>
         </div>
@@ -624,20 +647,32 @@ const isFaqOpen = ref<boolean>(false);
         <!-- Breakdown Numbers Table -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-800 text-xs font-mono">
           <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/80">
-            <span class="text-slate-400 block text-[10px]">Шанс на 1 копию:</span>
+            <span class="text-slate-400 block text-[10px]">
+              {{ locale.currentLang === 'ru' ? 'Шанс на 1 копию:' : 'Chance for 1 copy:' }}
+            </span>
             <span class="text-base font-bold text-emerald-400">{{ projectedOddsResult.probAtLeastOne }}%</span>
           </div>
           <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/80">
-            <span class="text-slate-400 block text-[10px]">Шанс на Потенциал 2:</span>
+            <span class="text-slate-400 block text-[10px]">
+              {{ locale.currentLang === 'ru' ? 'Шанс на Потенциал 2:' : 'Chance for Potential 2:' }}
+            </span>
             <span class="text-base font-bold text-purple-300">{{ projectedOddsResult.probAtLeastTwo }}%</span>
           </div>
           <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/80">
-            <span class="text-slate-400 block text-[10px]">Ожидаемо любых 6★:</span>
-            <span class="text-base font-bold text-amber-300">~{{ projectedOddsResult.expectedSixStars }} шт.</span>
+            <span class="text-slate-400 block text-[10px]">
+              {{ locale.currentLang === 'ru' ? 'Ожидаемо любых 6★:' : 'Expected any 6★:' }}
+            </span>
+            <span class="text-base font-bold text-amber-300">
+              ~{{ projectedOddsResult.expectedSixStars }} {{ locale.currentLang === 'ru' ? 'шт.' : 'ops' }}
+            </span>
           </div>
           <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800/80">
-            <span class="text-slate-400 block text-[10px]">Ожидаемо целевых:</span>
-            <span class="text-base font-bold text-cyan-300">~{{ projectedOddsResult.expectedRateUps }} шт.</span>
+            <span class="text-slate-400 block text-[10px]">
+              {{ locale.currentLang === 'ru' ? 'Ожидаемо целевых:' : 'Expected rate-up:' }}
+            </span>
+            <span class="text-base font-bold text-cyan-300">
+              ~{{ projectedOddsResult.expectedRateUps }} {{ locale.currentLang === 'ru' ? 'шт.' : 'ops' }}
+            </span>
           </div>
         </div>
       </div>
@@ -671,10 +706,10 @@ const isFaqOpen = ref<boolean>(false);
                 class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 text-xs font-semibold border border-slate-700"
                 @click="setSliderToCurrentPulls"
               >
-                Мои крутки ({{ convertedPulls.totalPulls }})
+                {{ locale.currentLang === 'ru' ? `Мои крутки (${convertedPulls.totalPulls})` : `My Pulls (${convertedPulls.totalPulls})` }}
               </button>
               <span class="text-2xl font-black font-mono text-cyan-400">{{ manualPullsSlider }}</span>
-              <span class="text-xs text-slate-400 font-mono">круток</span>
+              <span class="text-xs text-slate-400 font-mono">{{ locale.currentLang === 'ru' ? 'круток' : 'pulls' }}</span>
             </div>
           </div>
 
@@ -697,7 +732,7 @@ const isFaqOpen = ref<boolean>(false);
               :class="manualPullsSlider === p ? 'bg-cyan-600 text-white border-cyan-400 font-bold' : 'bg-slate-950 border-slate-800 hover:bg-slate-800'"
               @click="manualPullsSlider = p"
             >
-              {{ p }} кр.
+              {{ p }} {{ locale.currentLang === 'ru' ? 'кр.' : 'pulls' }}
             </button>
           </div>
         </div>
@@ -714,7 +749,7 @@ const isFaqOpen = ref<boolean>(false);
               :class="manualBannerType === 'limited' ? 'bg-amber-950/80 border-amber-500 text-amber-300 shadow-sm' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'"
               @click="manualBannerType = 'limited'"
             >
-              🌟 Лимитный (300 Spark, 70% рейт-ап)
+              {{ locale.currentLang === 'ru' ? '🌟 Лимитный (300 Spark, 70% рейт-ап)' : '🌟 Limited (300 Spark, 70% Rate-up)' }}
             </button>
             <button
               type="button"
@@ -722,7 +757,7 @@ const isFaqOpen = ref<boolean>(false);
               :class="manualBannerType === 'standard_solo' ? 'bg-cyan-950/80 border-cyan-500 text-cyan-300 shadow-sm' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'"
               @click="manualBannerType = 'standard_solo'"
             >
-              🎯 Обычный Соло (150 гарант, 50% рейт-ап)
+              {{ locale.currentLang === 'ru' ? '🎯 Обычный Соло (150 гарант, 50% рейт-ап)' : '🎯 Standard Solo (150 Guarantee, 50% Rate-up)' }}
             </button>
             <button
               type="button"
@@ -730,7 +765,7 @@ const isFaqOpen = ref<boolean>(false);
               :class="manualBannerType === 'standard_dual' ? 'bg-purple-950/80 border-purple-500 text-purple-300 shadow-sm' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'"
               @click="manualBannerType = 'standard_dual'"
             >
-              ⚖️ Двойной баннер 50/50 (два оператора)
+              {{ locale.currentLang === 'ru' ? '⚖️ Двойной баннер 50/50 (два оператора)' : '⚖️ Dual Standard Banner (50/50, 2 Operators)' }}
             </button>
           </div>
         </div>
@@ -739,7 +774,9 @@ const isFaqOpen = ref<boolean>(false);
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <!-- Probability 1+ -->
           <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-1">
-            <div class="text-xs text-slate-400 font-semibold">Шанс получить ≥1 копию:</div>
+            <div class="text-xs text-slate-400 font-semibold">
+              {{ locale.currentLang === 'ru' ? 'Шанс получить ≥1 копию:' : 'Chance for ≥1 copy:' }}
+            </div>
             <div
               class="text-3xl font-black font-mono"
               :class="manualOddsResult.probAtLeastOne >= 80 ? 'text-emerald-400' : manualOddsResult.probAtLeastOne >= 50 ? 'text-amber-400' : 'text-rose-400'"
@@ -747,29 +784,33 @@ const isFaqOpen = ref<boolean>(false);
               {{ manualOddsResult.probAtLeastOne }}%
             </div>
             <div class="text-[11px] text-slate-500">
-              Вероятность выбить целевого оператора
+              {{ locale.currentLang === 'ru' ? 'Вероятность выбить целевого оператора' : 'Odds of pulling at least 1 rate-up operator' }}
             </div>
           </div>
 
           <!-- Probability 2+ -->
           <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-1">
-            <div class="text-xs text-slate-400 font-semibold">Шанс на Потенциал 2 (≥2):</div>
+            <div class="text-xs text-slate-400 font-semibold">
+              {{ locale.currentLang === 'ru' ? 'Шанс на Потенциал 2 (≥2):' : 'Chance for Potential 2 (≥2):' }}
+            </div>
             <div class="text-3xl font-black font-mono text-purple-300">
               {{ manualOddsResult.probAtLeastTwo }}%
             </div>
             <div class="text-[11px] text-slate-500">
-              Вероятность выбить повторку для баффа
+              {{ locale.currentLang === 'ru' ? 'Вероятность выбить повторку для баффа' : 'Odds of getting duplicate copy for potential' }}
             </div>
           </div>
 
           <!-- Expected 6 Stars -->
           <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-1">
-            <div class="text-xs text-slate-400 font-semibold">Ожидаемо любых 6★:</div>
+            <div class="text-xs text-slate-400 font-semibold">
+              {{ locale.currentLang === 'ru' ? 'Ожидаемо любых 6★:' : 'Expected total 6★:' }}
+            </div>
             <div class="text-3xl font-black font-mono text-amber-300">
               ~{{ manualOddsResult.expectedSixStars }}
             </div>
             <div class="text-[11px] text-slate-500">
-              В среднем 1 шестёрка каждые ~34.6 крутки
+              {{ locale.currentLang === 'ru' ? 'В среднем 1 шестёрка каждые ~34.6 крутки' : 'Average rate of 1 six-star per ~34.6 pulls' }}
             </div>
           </div>
         </div>
@@ -777,24 +818,24 @@ const isFaqOpen = ref<boolean>(false);
         <!-- Milestones Bar -->
         <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2">
           <div class="text-xs font-bold text-slate-300">
-            📌 Сколько круток нужно для уверенности:
+            {{ locale.currentLang === 'ru' ? '📌 Сколько круток нужно для уверенности:' : '📌 Pulls required for confidence levels:' }}
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
             <div class="bg-slate-950 p-2 rounded-lg border border-slate-800">
-              <span class="text-slate-400 block text-[10px]">50% (как монетка):</span>
-              <strong class="text-amber-400 text-sm">{{ manualOddsResult.pullsToFiftyPercent }} кр.</strong>
+              <span class="text-slate-400 block text-[10px]">{{ locale.currentLang === 'ru' ? '50% (как монетка):' : '50% (Coinflip):' }}</span>
+              <strong class="text-amber-400 text-sm">{{ manualOddsResult.pullsToFiftyPercent }} {{ locale.currentLang === 'ru' ? 'кр.' : 'pulls' }}</strong>
             </div>
             <div class="bg-slate-950 p-2 rounded-lg border border-slate-800">
-              <span class="text-slate-400 block text-[10px]">75% (хороший шанс):</span>
-              <strong class="text-cyan-400 text-sm">{{ manualOddsResult.pullsToSeventyFivePercent }} кр.</strong>
+              <span class="text-slate-400 block text-[10px]">{{ locale.currentLang === 'ru' ? '75% (хороший шанс):' : '75% (Good odds):' }}</span>
+              <strong class="text-cyan-400 text-sm">{{ manualOddsResult.pullsToSeventyFivePercent }} {{ locale.currentLang === 'ru' ? 'кр.' : 'pulls' }}</strong>
             </div>
             <div class="bg-slate-950 p-2 rounded-lg border border-slate-800">
-              <span class="text-slate-400 block text-[10px]">90% (почти наверняка):</span>
-              <strong class="text-purple-300 text-sm">{{ manualOddsResult.pullsToNinetyPercent }} кр.</strong>
+              <span class="text-slate-400 block text-[10px]">{{ locale.currentLang === 'ru' ? '90% (почти наверняка):' : '90% (Near certain):' }}</span>
+              <strong class="text-purple-300 text-sm">{{ manualOddsResult.pullsToNinetyPercent }} {{ locale.currentLang === 'ru' ? 'кр.' : 'pulls' }}</strong>
             </div>
             <div class="bg-slate-950 p-2 rounded-lg border border-emerald-800/80">
-              <span class="text-slate-400 block text-[10px]">100% (Spark):</span>
-              <strong class="text-emerald-400 text-sm">{{ manualOddsResult.sparkTarget }} кр.</strong>
+              <span class="text-slate-400 block text-[10px]">{{ locale.currentLang === 'ru' ? '100% (Spark):' : '100% (Spark/Guar.):' }}</span>
+              <strong class="text-emerald-400 text-sm">{{ manualOddsResult.sparkTarget }} {{ locale.currentLang === 'ru' ? 'кр.' : 'pulls' }}</strong>
             </div>
           </div>
         </div>
@@ -817,12 +858,12 @@ const isFaqOpen = ref<boolean>(false);
           <!-- Stats Pill -->
           <div class="flex items-center gap-3 font-mono text-xs">
             <span class="text-slate-400">Pity: <strong class="text-cyan-400">{{ simPity }} / 99</strong></span>
-            <span class="text-slate-400">Всего 6★: <strong class="text-amber-400">{{ simSixStarCount }}</strong></span>
-            <span class="text-slate-400">Целевых: <strong class="text-emerald-400">{{ simRateUpCount }}</strong></span>
+            <span class="text-slate-400">{{ locale.currentLang === 'ru' ? 'Всего 6★:' : 'Total 6★:' }} <strong class="text-amber-400">{{ simSixStarCount }}</strong></span>
+            <span class="text-slate-400">{{ locale.currentLang === 'ru' ? 'Целевых:' : 'Rate-Up:' }} <strong class="text-emerald-400">{{ simRateUpCount }}</strong></span>
             <button
               type="button"
               class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white"
-              title="Сброс"
+              :title="locale.currentLang === 'ru' ? 'Сброс' : 'Reset'"
               @click="resetSim"
             >
               <RotateCcw class="w-3.5 h-3.5" />
@@ -866,7 +907,7 @@ const isFaqOpen = ref<boolean>(false);
                 {{ item.name }}
               </div>
               <div v-if="item.isRateUp" class="text-[9px] font-mono font-bold text-emerald-400 uppercase">
-                Рейт-ап!
+                {{ locale.currentLang === 'ru' ? 'Рейт-ап!' : 'Rate-Up!' }}
               </div>
             </div>
           </div>
@@ -891,32 +932,54 @@ const isFaqOpen = ref<boolean>(false);
       <div v-if="isFaqOpen" class="p-4 pt-0 border-t border-ark-border/60 text-xs text-slate-300 space-y-3 leading-relaxed">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
           <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-            <div class="font-bold text-cyan-400">1. Базовый шанс и Soft Pity</div>
+            <div class="font-bold text-cyan-400">
+              {{ locale.currentLang === 'ru' ? '1. Базовый шанс и Soft Pity' : '1. Base Rate & Soft Pity' }}
+            </div>
             <p class="text-slate-400 text-[11px]">
-              Базовый шанс выбить 6★ составляет <strong>2.0%</strong>. Если за 50 круток 6★ не выпал, начиная с 51-й крутки шанс увеличивается на <strong>+2.0%</strong> за каждую последующую (51-я = 4%, 52-я = 6%, ..., 99-я = 100%). В среднем 6★ падает каждые <strong>34-35 круток</strong>.
+              {{
+                locale.currentLang === 'ru'
+                  ? 'Базовый шанс выбить 6★ составляет 2.0%. Если за 50 круток 6★ не выпал, начиная с 51-й крутки шанс увеличивается на +2.0% за каждую последующую (51-я = 4%, 52-я = 6%, ..., 99-я = 100%). В среднем 6★ падает каждые 34-35 круток.'
+                  : 'The base chance to pull a 6★ is 2.0%. If no 6★ has appeared after 50 pulls, starting on the 51st pull the rate increases by +2.0% per pull (51st = 4%, 52nd = 6%, ..., 99th = 100%). On average, a 6★ arrives every 34-35 pulls.'
+              }}
             </p>
           </div>
 
           <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-            <div class="font-bold text-amber-400">2. Лимитные баннеры и 300 Spark</div>
+            <div class="font-bold text-amber-400">
+              {{ locale.currentLang === 'ru' ? '2. Лимитные баннеры и 300 Spark' : '2. Limited Banners & 300 Spark' }}
+            </div>
             <p class="text-slate-400 text-[11px]">
-              На лимитках (Carnival/Celebration) шанс на рейт-ап составляет <strong>70%</strong> от выпавших 6★. За каждую крутку вы получаете 1 сертификат. Накопив <strong>300 сертификатов</strong>, вы гарантированно забираете оператора из магазина.
+              {{
+                locale.currentLang === 'ru'
+                  ? 'На лимитках (Carnival/Celebration) шанс на рейт-ап составляет 70% от выпавших 6★. За каждую крутку вы получаете 1 сертификат. Накопив 300 сертификатов, вы гарантированно забираете оператора из магазина.'
+                  : 'On limited banners (Carnival/Celebration), rate-up operators comprise 70% of 6★ pulls (35% each for dual rate-ups). Each pull grants 1 headhunting certificate. Reaching 300 spark certificates lets you claim the featured limited operator directly from the certificate shop.'
+              }}
             </p>
           </div>
 
           <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-            <div class="font-bold text-purple-400">3. Одиночные баннеры (150 Guarantee)</div>
+            <div class="font-bold text-purple-400">
+              {{ locale.currentLang === 'ru' ? '3. Одиночные баннеры (150 Guarantee)' : '3. Standard Solo Banners (150 Guarantee)' }}
+            </div>
             <p class="text-slate-400 text-[11px]">
-              На новых соло-баннерах действует жесткий потолок: если за <strong>150 круток</strong> целевой оператор не выпал, на 150-й крутке он гарантированно выдается игроку.
+              {{
+                locale.currentLang === 'ru'
+                  ? 'На новых соло-баннерах действует жесткий потолок: если за 150 круток целевой оператор не выпал, на 150-й крутке он гарантированно выдается игроку.'
+                  : 'On modern solo standard banners, a hard ceiling exists: if you have not acquired the featured rate-up operator within 150 pulls, the 150th pull is guaranteed to be that operator.'
+              }}
             </p>
           </div>
 
           <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-            <div class="font-bold text-emerald-400">4. Конвертация валют</div>
+            <div class="font-bold text-emerald-400">
+              {{ locale.currentLang === 'ru' ? '4. Конвертация валют' : '4. Currency Conversions' }}
+            </div>
             <p class="text-slate-400 text-[11px]">
-              <strong>1 крутка = 600 Орундума</strong>.<br />
-              <strong>1 Originium Prime (OP) = 180 Орундума</strong> (3.33 OP за 1 крутку).<br />
-              Одиночные и 10x билеты эквивалентны 1 и 10 круткам соответственно.
+              {{
+                locale.currentLang === 'ru'
+                  ? '1 крутка = 600 Орундума. 1 Originium Prime (OP) = 180 Орундума (3.33 OP за 1 крутку). Одиночные и 10x билеты эквивалентны 1 и 10 круткам соответственно.'
+                  : '1 pull = 600 Orundum. 1 Originium Prime (OP) = 180 Orundum (3.33 OP per 1 pull). Single and 10x headhunting permits correspond to 1 and 10 pulls respectively.'
+              }}
             </p>
           </div>
         </div>
