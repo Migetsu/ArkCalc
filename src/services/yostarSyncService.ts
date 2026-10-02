@@ -71,10 +71,10 @@ export async function requestVerificationCode(
   email: string,
   server: ArknightsServer = 'en'
 ): Promise<{ success: boolean; message?: string; error?: string }> {
-  const { ok, data } = await safeFetchJson('/api/arknights/send-code', {
+  const { ok, data } = await safeFetchJson('/api/arknights', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, server }),
+    body: JSON.stringify({ action: 'send-code', email, server }),
   });
 
   if (!ok || !data.success) {
@@ -99,10 +99,10 @@ export async function linkAndSync(
   rosterCount?: number;
 }> {
   try {
-    const { ok, data } = await safeFetchJson('/api/arknights/login-and-sync', {
+    const { ok, data } = await safeFetchJson('/api/arknights', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, code, server }),
+      body: JSON.stringify({ action: 'login-and-sync', email, code, server }),
     });
 
   if (!ok || !data.success) {
@@ -170,10 +170,11 @@ export async function syncDirect(): Promise<{
   }
 
   try {
-    const { ok, data } = await safeFetchJson('/api/arknights/sync-with-token', {
+    const { ok, data } = await safeFetchJson('/api/arknights', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        action: 'sync',
         yostarUid: account.yostarUid,
         yostarToken: account.yostarToken,
         server: account.server || 'en',

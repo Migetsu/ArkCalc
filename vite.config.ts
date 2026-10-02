@@ -9,12 +9,9 @@ function vercelApiDevPlugin() {
     name: 'vercel-api-dev-middleware',
     configureServer(server: any) {
       server.middlewares.use(async (req: any, res: any, next: any) => {
-        if (!req.url?.startsWith('/api/arknights/')) {
+        if (!req.url?.startsWith('/api/arknights')) {
           return next();
         }
-
-        const url = new URL(req.url, `http://${req.headers.host || '127.0.0.1:5173'}`);
-        const pathname = url.pathname;
 
         try {
           let bodyData = '';
@@ -47,18 +44,8 @@ function vercelApiDevPlugin() {
             },
           };
 
-          if (pathname === '/api/arknights/send-code') {
-            const mod = await server.ssrLoadModule('/api/arknights/send-code.ts');
-            return await mod.default(req, customRes);
-          } else if (pathname === '/api/arknights/login-and-sync') {
-            const mod = await server.ssrLoadModule('/api/arknights/login-and-sync.ts');
-            return await mod.default(req, customRes);
-          } else if (pathname === '/api/arknights/sync-with-token') {
-            const mod = await server.ssrLoadModule('/api/arknights/sync-with-token.ts');
-            return await mod.default(req, customRes);
-          }
-
-          next();
+          const mod = await server.ssrLoadModule('/api/arknights.ts');
+          return await mod.default(req, customRes);
         } catch (err: any) {
           console.error('[API Dev Error]', err);
           res.statusCode = 500;

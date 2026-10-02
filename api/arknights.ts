@@ -1,4 +1,4 @@
-// api/arknights/_yostarClient.ts
+// api/arknights.ts
 import crypto from 'node:crypto';
 
 export type ArknightsServer = 'en' | 'jp' | 'kr';
@@ -11,7 +11,7 @@ export interface ServerConfig {
   channelId: string;
 }
 
-export const SERVER_CONFIG: Record<ArknightsServer, ServerConfig> = {
+const SERVER_CONFIG: Record<ArknightsServer, ServerConfig> = {
   en: {
     networkRoute: 'https://ak-conf.arknights.global/config/prod/official/network_config',
     yostarUrl: 'https://en-sdk-api.yostarplat.com',
@@ -35,7 +35,7 @@ export const SERVER_CONFIG: Record<ArknightsServer, ServerConfig> = {
   },
 };
 
-export function generateYostarplatHeaders(
+function generateYostarplatHeaders(
   body: string,
   uid: string = '',
   token: string = '',
@@ -74,7 +74,7 @@ export function generateYostarplatHeaders(
   };
 }
 
-export function generateU8Sign(data: Record<string, any>): string {
+function generateU8Sign(data: Record<string, any>): string {
   const sortedKeys = Object.keys(data).sort();
   const query = sortedKeys
     .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(String(data[key]))}`)
@@ -85,7 +85,7 @@ export function generateU8Sign(data: Record<string, any>): string {
   return hmac.digest('hex').toLowerCase();
 }
 
-export function createRandomDeviceIds(): [string, string, string] {
+function createRandomDeviceIds(): [string, string, string] {
   const id1 = crypto.randomUUID().replace(/-/g, '');
   const id2 = '86' + Array.from({ length: 13 }, () => Math.floor(Math.random() * 10)).join('');
   const id3 = crypto.randomUUID().replace(/-/g, '');
@@ -102,7 +102,7 @@ const configCache: {
   };
 } = {};
 
-export async function getNetworkConfig(server: ArknightsServer = 'en') {
+async function getNetworkConfig(server: ArknightsServer = 'en') {
   const now = Date.now();
   const cached = configCache[server];
   if (cached && now - cached.cachedAt < 1000 * 60 * 15) {
@@ -136,7 +136,7 @@ export async function getNetworkConfig(server: ArknightsServer = 'en') {
   return resolved;
 }
 
-export async function sendYostarCode(email: string, server: ArknightsServer = 'en') {
+async function sendYostarCode(email: string, server: ArknightsServer = 'en') {
   const conf = SERVER_CONFIG[server] || SERVER_CONFIG.en;
   const bodyObj = { Account: email.trim(), Randstr: '', Ticket: '' };
   const body = JSON.stringify(bodyObj);
@@ -155,7 +155,7 @@ export async function sendYostarCode(email: string, server: ArknightsServer = 'e
   return data;
 }
 
-export async function loginWithEmailCode(
+async function loginWithEmailCode(
   email: string,
   code: string,
   server: ArknightsServer = 'en'
@@ -220,7 +220,7 @@ export async function loginWithEmailCode(
   };
 }
 
-export async function fetchArknightsGameData(
+async function fetchArknightsGameData(
   yostarUid: string,
   yostarToken: string,
   server: ArknightsServer = 'en'
@@ -323,4 +323,96 @@ export async function fetchArknightsGameData(
     },
     rawSyncData: syncData,
   };
+}
+
+export default async function handler(req: any, res: any) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Method Not Allowed' });
+  }
+
+  try {
+    let body = req.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch {
+        body = {};
+      }
+    }
+
+    const url = req.url || '';
+    let action = body?.action;
+    if (!action) {
+      if (url.includes('send-code')) action = 'send-code';
+      else if (url.includes('login-and-sync')) action = 'login-and-sync';
+      else if (url.includes('sync')) action = 'sync';
+    }
+
+    const server: ArknightsServer = body?.server || 'en';
+
+    // Action 1: Send verification code
+    if (action === 'send-code') {
+      const email = body?.email;
+      if (!email || typeof email !== 'string' || !email.includes('@')) {
+        return res.status(400).json({ success: false, error: 'Укажите корректный email адрес' });
+      }
+      await sendYostarCode(email, server);
+      return res.status(200).json({
+        success: true,
+        message: `Код подтверждения отправлен на почту ${email}`,
+      });
+    }
+
+    // Action 2: Login with code and sync
+    if (action === 'login-and-sync') {
+      const email = body?.email;
+      const code = body?.code;
+      if (!email || !code) {
+        return res.status(400).json({ success: false, error: 'Укажите email и 6-значный код' });
+      }
+      const credentials = await loginWithEmailCode(email, code, server);
+      const gameData = await fetchArknightsGameData(credentials.yostarUid, credentials.yostarToken, server);
+      return res.status(200).json({
+        success: true,
+        yostarUid: credentials.yostarUid,
+        yostarToken: credentials.yostarToken,
+        email: credentials.email,
+        server: credentials.server,
+        playerInfo: gameData.playerInfo,
+        rawSyncData: gameData.rawSyncData,
+      });
+    }
+
+    // Action 3: 1-Click Sync with persistent token
+    if (action === 'sync' || action === 'sync-with-token') {
+      const yostarUid = body?.yostarUid;
+      const yostarToken = body?.yostarToken;
+      if (!yostarUid || !yostarToken) {
+        return res.status(400).json({ success: false, error: 'Отсутствуют учетные данные Yostar' });
+      }
+      const gameData = await fetchArknightsGameData(yostarUid, yostarToken, server);
+      return res.status(200).json({
+        success: true,
+        server,
+        playerInfo: gameData.playerInfo,
+        rawSyncData: gameData.rawSyncData,
+      });
+    }
+
+    return res.status(400).json({ success: false, error: 'Неизвестное действие (action)' });
+  } catch (err: any) {
+    console.error('[Arknights API Error]', err);
+    return res.status(500).json({
+      success: false,
+      error: err?.message || 'Ошибка обработки запроса к Arknights API',
+    });
+  }
 }
