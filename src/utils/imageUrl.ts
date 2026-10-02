@@ -1,7 +1,8 @@
-const CDN_ARK = 'https://raw.githubusercontent.com/yuanyan3060/Arknights-Bot-Resource/main';
+const CDN_ARK = 'https://fastly.jsdelivr.net/gh/yuanyan3060/Arknights-Bot-Resource@main';
 
 export function getAvatarUrl(charId: string): string {
-  // Use Yuanyan CDN for reliable avatars
+  if (!charId) return PLACEHOLDER_AVATAR;
+  if (charId.startsWith('/') || charId.startsWith('http')) return charId;
   return `${CDN_ARK}/avatar/${charId}.png`;
 }
 

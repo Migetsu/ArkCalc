@@ -259,7 +259,7 @@ function handleAvatarError(e: Event) {
                   @click="openModal(event)"
                 >
                   <img
-                    :src="getAvatarUrl(op.charId)"
+                    :src="op.avatarUrl || getAvatarUrl(op.charId)"
                     :alt="op.name"
                     loading="lazy"
                     class="w-full h-full object-cover"
@@ -288,7 +288,7 @@ function handleAvatarError(e: Event) {
                   @click="openModal(event)"
                 >
                   <img
-                    :src="getAvatarUrl(op.charId)"
+                    :src="op.avatarUrl || getAvatarUrl(op.charId)"
                     :alt="op.name"
                     loading="lazy"
                     class="w-full h-full object-cover"

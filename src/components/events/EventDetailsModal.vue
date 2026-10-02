@@ -140,7 +140,7 @@ function handleToggleApply() {
                 >
                   <div class="w-8 h-8 rounded overflow-hidden border-b-2 border-amber-400 flex-shrink-0 bg-slate-900">
                     <img
-                      :src="getAvatarUrl(op.charId)"
+                      :src="op.avatarUrl || getAvatarUrl(op.charId)"
                       :alt="op.name"
                       class="w-full h-full object-cover"
                       @error="($event.target as HTMLImageElement).src = PLACEHOLDER_AVATAR"
@@ -167,7 +167,7 @@ function handleToggleApply() {
                 >
                   <div class="w-8 h-8 rounded overflow-hidden border-b-2 border-yellow-300 flex-shrink-0 bg-slate-900">
                     <img
-                      :src="getAvatarUrl(op.charId)"
+                      :src="op.avatarUrl || getAvatarUrl(op.charId)"
                       :alt="op.name"
                       class="w-full h-full object-cover"
                       @error="($event.target as HTMLImageElement).src = PLACEHOLDER_AVATAR"
