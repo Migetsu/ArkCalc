@@ -240,22 +240,8 @@ onUnmounted(() => {
           </template>
         </nav>
 
-        <!-- Right Action Cluster: Language Switcher, Cloud Pill & PRTS Menu Burger Button -->
+        <!-- Right Action Cluster: Cloud Pill & PRTS Menu Burger Button -->
         <div class="flex items-center gap-2">
-          <!-- Desktop Language Quick Selector -->
-          <div class="hidden sm:flex items-center bg-slate-950/90 border border-slate-800 p-0.5 rounded-xl text-[10px] font-mono font-bold shadow-inner">
-            <button
-              v-for="lang in (['en', 'ru'] as AppLanguage[])"
-              :key="lang"
-              type="button"
-              class="px-2.5 py-1 rounded-lg transition-all uppercase"
-              :class="locale.currentLang === lang ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200 border border-transparent'"
-              @click="locale.setLanguage(lang)"
-            >
-              {{ lang }}
-            </button>
-          </div>
-
           <!-- Cloud Sync Status Pill -->
           <button
             type="button"

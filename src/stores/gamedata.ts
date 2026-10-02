@@ -25,6 +25,7 @@ import {
 } from '@/data/materialTranslations';
 import { CN_OPERATOR_TRANSLATIONS } from '@/data/cnOperatorTranslations';
 import { CN_TALENT_NAMES_MAP } from '@/data/translations/cnOperatorsComplete';
+import { useLocaleStore } from './locale';
 
 const CACHE_DB_NAME = 'ARKCalcCacheDB';
 const CACHE_STORE_NAME = 'gamedata_cache';
@@ -88,27 +89,11 @@ export const useGameDataStore = defineStore('gamedata', () => {
   const recipes = ref<Record<string, WorkshopRecipe>>({}); // mapped by itemId
   const constants = ref<GameConstants | null>(null);
   const ranges = ref<Record<string, RangeInfo>>({});
-
-  function getSavedLanguage(): 'ru' | 'en' {
-    try {
-      const saved = localStorage.getItem('ark_item_language');
-      if (saved === 'ru' || saved === 'en') return saved;
-    } catch {
-      // ignore
-    }
-    return 'en';
-  }
-
-  const itemLanguage = ref<'ru' | 'en'>(getSavedLanguage());
+  const localeStore = useLocaleStore();
+  const itemLanguage = computed<'ru' | 'en'>(() => localeStore.currentLang);
 
   function setItemLanguage(lang: 'ru' | 'en') {
-    if (lang !== 'ru' && lang !== 'en') return;
-    itemLanguage.value = lang;
-    try {
-      localStorage.setItem('ark_item_language', lang);
-    } catch {
-      // ignore
-    }
+    localeStore.setLanguage(lang);
   }
 
   const operatorList = computed(() => {

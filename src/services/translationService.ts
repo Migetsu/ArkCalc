@@ -217,6 +217,34 @@ export async function translateText(
  * Resolves translation for an operator skill (name & description)
  * Offline-first: matches database curated skills, then generic skill dictionary.
  */
+import { getCNSkillTranslation } from '@/data/translations/cnSkillsDatabase';
+
+/**
+ * Synchronous quick skill name resolver guaranteeing NO Chinese characters in the UI
+ */
+export function getQuickSkillName(
+  charId: string,
+  skillId: string,
+  rawName: string,
+  targetLang: AppLanguage = 'en'
+): string {
+  if (targetLang === 'ru') {
+    const localSkill = getSkillLocalizationRu(charId, skillId, rawName);
+    if (localSkill?.name) return localSkill.name;
+    const staticSkill = STATIC_OPERATOR_DATA_RU[charId]?.skills?.[skillId];
+    if (staticSkill?.name) return staticSkill.name;
+    const cn = getCNSkillTranslation(skillId, 'ru');
+    if (cn) return cn;
+  } else {
+    const cn = getCNSkillTranslation(skillId, 'en');
+    if (cn) return cn;
+  }
+  if (hasChinese(rawName)) {
+    return targetLang === 'ru' ? 'Навык' : 'Skill';
+  }
+  return rawName;
+}
+
 export async function getTranslatedSkillInfo(
   charId: string,
   skillId: string,
@@ -226,6 +254,9 @@ export async function getTranslatedSkillInfo(
   _rawDescCn?: string,
   targetLang: AppLanguage = 'en'
 ): Promise<{ name: string; description: string }> {
+  // Check curated CN database first
+  const cnSkillName = getCNSkillTranslation(skillId, targetLang);
+
   if (targetLang === 'ru') {
     // 1. Check comprehensive Arknights RU database
     const localSkill = getSkillLocalizationRu(charId, skillId, rawName);
@@ -247,16 +278,26 @@ export async function getTranslatedSkillInfo(
 
     // 3. Translate dynamically with tag protection and glossary
     const [tlName, tlDesc] = await Promise.all([
-      needsTranslation(rawName, 'ru') ? translateText(rawName, 'ru') : Promise.resolve(rawName),
+      cnSkillName ? Promise.resolve(cnSkillName) : (needsTranslation(rawName, 'ru') ? translateText(rawName, 'ru') : Promise.resolve(rawName)),
       needsTranslation(rawDesc, 'ru') ? translateText(rawDesc, 'ru') : Promise.resolve(rawDesc),
     ]);
 
-    return { name: tlName, description: tlDesc };
+    let finalName = tlName;
+    if (hasChinese(finalName)) {
+      finalName = cnSkillName || 'Навык';
+    }
+
+    return { name: finalName, description: tlDesc };
   }
 
   // Target: EN
+  let name = cnSkillName || (needsTranslation(rawName, 'en') ? await translateText(rawName, 'en') : rawName);
+  if (hasChinese(name)) {
+    name = cnSkillName || 'Skill';
+  }
+
   return {
-    name: needsTranslation(rawName, 'en') ? await translateText(rawName, 'en') : rawName,
+    name,
     description: needsTranslation(rawDesc, 'en') ? await translateText(rawDesc, 'en') : rawDesc,
   };
 }

@@ -18,6 +18,8 @@ import {
   getTranslatedSkinInfo,
   needsTranslation,
   translateText,
+  hasChinese,
+  getQuickSkillName,
 } from '@/services/translationService';
 import {
   cleanArknightsTalentNameRu,
@@ -252,6 +254,25 @@ function handleOpenPlan() {
   }
 }
 
+function getDisplaySkillName(skill: OperatorSkill, sIdx: number): string {
+  if (selectedSkillIndex.value === sIdx && dynamicSkillName.value && !hasChinese(dynamicSkillName.value)) {
+    return dynamicSkillName.value;
+  }
+  const quick = getQuickSkillName(
+    props.operator?.id || '',
+    skill.skillId,
+    skill.name,
+    gameData.itemLanguage
+  );
+  if (quick && !hasChinese(quick)) {
+    return quick;
+  }
+  if (skill.name && !hasChinese(skill.name)) {
+    return skill.name;
+  }
+  return gameData.itemLanguage === 'ru' ? `Навык ${sIdx + 1}` : `Skill ${sIdx + 1}`;
+}
+
 async function resolveSkillTranslations() {
   const detail = currentSkillLevelDetail.value;
   if (!detail || !currentSkill.value) {
@@ -462,26 +483,6 @@ watch(
         </div>
 
         <div class="flex items-center gap-2">
-          <!-- Quick Language Switcher -->
-          <div class="inline-flex bg-slate-900 p-0.5 rounded-lg border border-ark-border">
-            <button
-              type="button"
-              class="px-2 py-0.5 rounded text-[11px] font-bold transition-all"
-              :class="gameData.itemLanguage === 'ru' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
-              @click="gameData.setItemLanguage('ru')"
-            >
-              RU
-            </button>
-            <button
-              type="button"
-              class="px-2 py-0.5 rounded text-[11px] font-bold transition-all"
-              :class="gameData.itemLanguage === 'en' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
-              @click="gameData.setItemLanguage('en')"
-            >
-              EN
-            </button>
-          </div>
-
           <button
             type="button"
             class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
@@ -629,15 +630,20 @@ watch(
               </div>
             </div>
 
-            <!-- Recruitment Tags (Placed between Art/Skins and Range Grid) -->
-            <div v-if="operator.tagList && operator.tagList.length > 0" class="w-full flex flex-wrap gap-1.5 justify-center py-0.5">
-              <span
-                v-for="tag in operator.tagList"
-                :key="tag"
-                class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-900 border border-slate-800 text-slate-300 shadow-sm"
-              >
-                {{ getOperatorTag(tag, gameData.itemLanguage) }}
-              </span>
+            <!-- Recruitment Tags -->
+            <div v-if="operator.tagList && operator.tagList.length > 0" class="w-full p-2.5 bg-slate-900/60 rounded-xl border border-slate-800/80">
+              <div class="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                <span>{{ gameData.itemLanguage === 'ru' ? 'Теги оперативника' : 'Operator Tags' }}</span>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                <span
+                  v-for="tag in operator.tagList"
+                  :key="tag"
+                  class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-950 border border-slate-800 text-slate-300 shadow-sm"
+                >
+                  {{ getOperatorTag(tag, gameData.itemLanguage) }}
+                </span>
+              </div>
             </div>
 
             <!-- Attack Range Grid Component -->
@@ -670,7 +676,7 @@ watch(
                 </div>
                 <div class="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
                   <span class="text-[10px] text-slate-500 font-mono block">{{ gameData.itemLanguage === 'ru' ? 'Сопр. магии (RES)' : 'Resist (RES)' }}</span>
-                  <span class="text-base font-mono font-bold text-purple-400">{{ operator.attributes?.res || 0 }}</span>
+                  <span class="text-base font-mono font-bold text-purple-400">{{ operator.attributes?.res ?? 0 }}</span>
                 </div>
                 <div class="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
                   <span class="text-[10px] text-slate-500 font-mono block">{{ gameData.itemLanguage === 'ru' ? 'Блок (Block)' : 'Block Count' }}</span>
@@ -682,11 +688,11 @@ watch(
                 </div>
                 <div class="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
                   <span class="text-[10px] text-slate-500 font-mono block">{{ gameData.itemLanguage === 'ru' ? 'Интервал атаки' : 'Attack Interval' }}</span>
-                  <span class="text-base font-mono font-bold text-slate-300">{{ operator.attributes?.attackTime }}с</span>
+                  <span class="text-base font-mono font-bold text-slate-300">{{ operator.attributes?.attackTime }}{{ gameData.itemLanguage === 'ru' ? 'с' : 's' }}</span>
                 </div>
                 <div class="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800">
                   <span class="text-[10px] text-slate-500 font-mono block">{{ gameData.itemLanguage === 'ru' ? 'Перезарядка' : 'Redeploy Time' }}</span>
-                  <span class="text-base font-mono font-bold text-slate-300">{{ operator.attributes?.respawnTime }}с</span>
+                  <span class="text-base font-mono font-bold text-slate-300">{{ operator.attributes?.respawnTime }}{{ gameData.itemLanguage === 'ru' ? 'с' : 's' }}</span>
                 </div>
               </div>
             </div>
@@ -756,7 +762,7 @@ watch(
                         S{{ sIdx + 1 }}
                       </span>
                       <span class="text-xs font-bold truncate">
-                        {{ skill.name }}
+                        {{ getDisplaySkillName(skill, sIdx) }}
                       </span>
                     </div>
                     <span v-if="skill.levels && skill.levels.length > 7" class="text-[10px] text-amber-400/80 font-mono block mt-0.5">
@@ -812,7 +818,7 @@ watch(
                       {{ gameData.itemLanguage === 'ru' ? 'SP (Старт / Стоимость)' : 'SP (Init / Cost)' }}
                     </span>
                     <span class="font-mono font-bold text-cyan-300">
-                      {{ currentSkillLevelDetail.initSp }} / {{ currentSkillLevelDetail.spCost }}
+                      {{ (currentSkillLevelDetail.skillType === 'PASSIVE' || (currentSkillLevelDetail.spCost === 0 && currentSkillLevelDetail.initSp === 0)) ? '&mdash;' : `${currentSkillLevelDetail.initSp} / ${currentSkillLevelDetail.spCost}` }}
                     </span>
                   </div>
 
@@ -822,7 +828,7 @@ watch(
                       {{ gameData.itemLanguage === 'ru' ? 'Зарядка SP' : 'SP Recovery' }}
                     </span>
                     <span class="font-mono font-bold text-slate-200 truncate block">
-                      {{ getSpTypeName(currentSkillLevelDetail.spType, gameData.itemLanguage) }}
+                      {{ currentSkillLevelDetail.skillType === 'PASSIVE' ? (gameData.itemLanguage === 'ru' ? 'Пассивный' : 'Passive') : getSpTypeName(currentSkillLevelDetail.spType, gameData.itemLanguage) }}
                     </span>
                   </div>
 
@@ -852,7 +858,7 @@ watch(
                   <div class="flex items-center justify-between">
                     <span class="font-bold text-slate-100 text-xs flex items-center gap-1.5">
                       <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-                      {{ dynamicSkillName || currentSkillLevelDetail.name }}
+                      {{ (!hasChinese(dynamicSkillName) ? dynamicSkillName : null) || getDisplaySkillName(currentSkill, selectedSkillIndex) }}
                     </span>
                     <span class="text-[10px] font-mono text-slate-500">
                       {{ getSkillRankLabel(selectedSkillLevel, gameData.itemLanguage) }}

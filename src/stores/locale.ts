@@ -744,6 +744,8 @@ export const useLocaleStore = defineStore('locale', () => {
       if (stored === 'en' || stored === 'ru') {
         return stored;
       }
+      localStorage.setItem(STORAGE_KEY, 'en');
+      localStorage.setItem('ark_item_language', 'en');
     } catch {
       // ignore
     }
