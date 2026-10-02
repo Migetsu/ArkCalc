@@ -11,6 +11,14 @@ export const MATERIAL_TRANSLATIONS: Record<string, MaterialTranslation> = {
   '2003': { en: 'Tactical Battle Record', ru: 'Тактическая запись боя (EXP 1000)' },
   '2004': { en: 'Strategic Battle Record', ru: 'Стратегическая запись боя (EXP 2000)' },
 
+  // Recruitment & Gacha Currencies
+  '4002': { en: 'Originium Prime', ru: 'Чистый ориджиниум (OP)' },
+  '4003': { en: 'Orundum', ru: 'Синтезированный ориджиниум' },
+  '7001': { en: 'Headhunting Permit', ru: 'Билет найма (1x)' },
+  '7002': { en: 'Ten-roll Headhunting Permit', ru: 'Билет найма (10x)' },
+  '7003': { en: 'Limited Headhunting Permit', ru: 'Особый билет найма' },
+  '7004': { en: 'Special Ten-roll Permit', ru: 'Особый билет найма (10x)' },
+
   // Skill Summaries
   '3301': { en: 'Skill Summary - 1', ru: 'Сводка навыков · Том 1' },
   '3302': { en: 'Skill Summary - 2', ru: 'Сводка навыков · Том 2' },
@@ -818,8 +826,8 @@ export function isCraftResource(itemId: string): boolean {
   // Explicitly defined materials
   if (MATERIAL_TRANSLATIONS[itemId]) return true;
 
-  // LMD
-  if (itemId === '4001') return true;
+  // LMD & Recruitment / Gacha Currencies
+  if (['4001', '4002', '4003', '7001', '7002', '7003', '7004'].includes(itemId)) return true;
 
   // Battle Records
   if (['2001', '2002', '2003', '2004'].includes(itemId)) return true;

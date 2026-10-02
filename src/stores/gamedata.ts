@@ -29,7 +29,7 @@ import { useLocaleStore } from './locale';
 
 const CACHE_DB_NAME = 'ARKCalcCacheDB';
 const CACHE_STORE_NAME = 'gamedata_cache';
-const CACHE_KEY = 'ark_cleaned_gamedata_v22_stats_calc';
+const CACHE_KEY = 'ark_cleaned_gamedata_v23_gacha_items';
 
 // Open simple IndexedDB for game data cache
 function openCacheDb(): Promise<IDBDatabase> {
@@ -302,7 +302,7 @@ export const useGameDataStore = defineStore('gamedata', () => {
           sortId: item.sortId || 999999,
         };
       }
-      // Ensure LMD item exists
+      // Ensure LMD and recruitment/gacha currencies exist
       if (!parsedItems['4001']) {
         const lmdName = getLocalizedItemName('4001', itemLanguage.value) || 'LMD';
         parsedItems['4001'] = {
@@ -313,6 +313,50 @@ export const useGameDataStore = defineStore('gamedata', () => {
           classifyType: 'NORMAL',
           itemType: 'GOLD',
           sortId: 1,
+        };
+      }
+      if (!parsedItems['4002']) {
+        parsedItems['4002'] = {
+          itemId: '4002',
+          name: getLocalizedItemName('4002', itemLanguage.value) || 'Originium Prime',
+          rarity: 5,
+          iconId: 'DIAMOND',
+          classifyType: 'NORMAL',
+          itemType: 'DIAMOND',
+          sortId: 2,
+        };
+      }
+      if (!parsedItems['4003']) {
+        parsedItems['4003'] = {
+          itemId: '4003',
+          name: getLocalizedItemName('4003', itemLanguage.value) || 'Orundum',
+          rarity: 4,
+          iconId: 'DIAMOND_SHD',
+          classifyType: 'NORMAL',
+          itemType: 'DIAMOND_SHARD',
+          sortId: 3,
+        };
+      }
+      if (!parsedItems['7001']) {
+        parsedItems['7001'] = {
+          itemId: '7001',
+          name: getLocalizedItemName('7001', itemLanguage.value) || 'Headhunting Permit',
+          rarity: 4,
+          iconId: 'TKT_GACHA',
+          classifyType: 'NORMAL',
+          itemType: 'RECRUIT_TICKET',
+          sortId: 4,
+        };
+      }
+      if (!parsedItems['7002']) {
+        parsedItems['7002'] = {
+          itemId: '7002',
+          name: getLocalizedItemName('7002', itemLanguage.value) || 'Ten-roll Headhunting Permit',
+          rarity: 5,
+          iconId: 'TKT_GACHA_10',
+          classifyType: 'NORMAL',
+          itemType: 'RECRUIT_TICKET',
+          sortId: 5,
         };
       }
       items.value = parsedItems;

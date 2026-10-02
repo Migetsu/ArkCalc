@@ -30,7 +30,7 @@ const categories = computed(() => [
   { id: 'chip', label: locale.currentLang === 'ru' ? 'Чипы' : 'Chips' },
   { id: 'book', label: locale.currentLang === 'ru' ? 'Книги навыков' : 'Skill Summaries' },
   { id: 'module', label: locale.currentLang === 'ru' ? 'Модули' : 'Modules' },
-  { id: 'currency', label: 'LMD & EXP' },
+  { id: 'currency', label: locale.currentLang === 'ru' ? 'Валюта и крутки' : 'Currency & Pulls' },
 ]);
 
 function isChip(item: ItemSummary): boolean {
@@ -61,9 +61,12 @@ function isModuleMaterial(item: ItemSummary): boolean {
 
 function isCurrencyOrExp(item: ItemSummary): boolean {
   return (
-    item.itemId === '4001' ||
+    ['4001', '4002', '4003', '7001', '7002', '7003', '7004'].includes(item.itemId) ||
     item.itemType === 'GOLD' ||
+    item.itemType === 'DIAMOND' ||
+    item.itemType === 'DIAMOND_SHARD' ||
     item.itemType === 'CARD_EXP' ||
+    item.itemType === 'RECRUIT_TICKET' ||
     item.iconId.includes('exp_card') ||
     item.itemId.startsWith('200')
   );
@@ -168,8 +171,11 @@ const filteredItems = computed(() => {
     });
   }
 
-  // Sort by rarity descending, then sortId, then name
+  // Sort by rarity descending, then sortId, then name (for currency, sortId first)
   return list.sort((a, b) => {
+    if (activeCategory.value === 'currency') {
+      if (a.sortId !== b.sortId) return a.sortId - b.sortId;
+    }
     if (b.rarity !== a.rarity) return b.rarity - a.rarity;
     if (a.sortId !== b.sortId) return a.sortId - b.sortId;
     return a.name.localeCompare(b.name);

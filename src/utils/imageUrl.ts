@@ -70,9 +70,18 @@ export function getSkillIconFallbackUrl(iconIdOrSkillId: string): string {
   return `https://fastly.jsdelivr.net/gh/Aceship/Arknight-Images@main/skills/${encodeURIComponent(cleanId)}.png`;
 }
 
+const CURRENCY_ICON_MAP: Record<string, string> = {
+  '4001': 'GOLD',
+  '4002': 'DIAMOND',
+  '4003': 'DIAMOND_SHD',
+  '7001': 'TKT_GACHA',
+  '7002': 'TKT_GACHA_10',
+};
+
 export function getItemIconUrl(iconIdOrItemId: string): string {
+  const iconId = CURRENCY_ICON_MAP[iconIdOrItemId] || iconIdOrItemId;
   // Yuanyan repo stores item icons in "item" folder
-  return `${CDN_ARK}/item/${iconIdOrItemId}.png`;
+  return `${CDN_ARK}/item/${iconId}.png`;
 }
 
 // Module equipment illustration / icon (from fexli ArknightsResource or jsdelivr mirror)

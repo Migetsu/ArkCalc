@@ -133,23 +133,70 @@ export async function parseAndImportData(rawText: string): Promise<{
           }
         }
 
-        // Extract LMD (4001) from status (Arknights official game sync stores gold in user.status.gold)
+        // Helper to insert or take the highest amount of an item
+        const setOrUpdateItem = (id: string, amount: number) => {
+          if (amount <= 0 || isNaN(amount)) return;
+          const existing = parsedInventory.find((i) => i.itemId === id);
+          if (existing) {
+            existing.amount = Math.max(existing.amount, amount);
+          } else {
+            parsedInventory.push({ itemId: id, amount });
+          }
+        };
+
+        // Arknights official game sync / ArkPRTS stores currencies in user.status / status
+        const st = data.user?.status || data.status || data.data?.status || {};
+
+        // 1. Extract LMD (4001)
         const goldVal = Number(
-          data.user?.status?.gold ??
-          data.status?.gold ??
-          data.data?.status?.gold ??
+          st.gold ??
           data.gold ??
           data.lmd ??
           0
         );
-        if (goldVal > 0) {
-          const existing = parsedInventory.find((i) => i.itemId === '4001');
-          if (existing) {
-            existing.amount = goldVal;
-          } else {
-            parsedInventory.push({ itemId: '4001', amount: goldVal });
-          }
-        }
+        setOrUpdateItem('4001', goldVal);
+
+        // 2. Extract Originium Prime (4002) (diamond / androidDiamond / iosDiamond / payDiamond + freeDiamond)
+        const opVal = Number(
+          st.diamond ??
+          (Number(st.androidDiamond || 0) + Number(st.iosDiamond || 0) > 0
+            ? Number(st.androidDiamond || 0) + Number(st.iosDiamond || 0)
+            : undefined) ??
+          (Number(st.payDiamond || 0) + Number(st.freeDiamond || 0) > 0
+            ? Number(st.payDiamond || 0) + Number(st.freeDiamond || 0)
+            : undefined) ??
+          data.diamond ??
+          data.op ??
+          0
+        );
+        setOrUpdateItem('4002', opVal);
+
+        // 3. Extract Orundum (4003) (diamondShard)
+        const orundumVal = Number(
+          st.diamondShard ??
+          data.diamondShard ??
+          data.orundum ??
+          0
+        );
+        setOrUpdateItem('4003', orundumVal);
+
+        // 4. Extract Single Headhunting Permit (7001) (gachaTicket)
+        const singleVal = Number(
+          st.gachaTicket ??
+          data.gachaTicket ??
+          data.singleTicket ??
+          0
+        );
+        setOrUpdateItem('7001', singleVal);
+
+        // 5. Extract 10-roll Headhunting Permit (7002) (tenGachaTicket)
+        const tenVal = Number(
+          st.tenGachaTicket ??
+          data.tenGachaTicket ??
+          data.tenTicket ??
+          0
+        );
+        setOrUpdateItem('7002', tenVal);
 
         // Find character troop (ArkPRTS player's owned roster)
         const charsSource =
@@ -268,14 +315,21 @@ export async function parseAndImportData(rawText: string): Promise<{
       }
     });
 
+    const isRu = (typeof localStorage !== 'undefined' ? localStorage.getItem('ark_lang') || 'ru' : 'ru') === 'ru';
     const parts = [];
-    if (parsedInventory.length > 0) parts.push(`${parsedInventory.length} предметов склада`);
-    if (parsedRoster.length > 0) parts.push(`${parsedRoster.length} оперативников в «Мой ростер»`);
-    if (parsedPlans.length > 0) parts.push(`${parsedPlans.length} планов прокачки`);
+    if (parsedInventory.length > 0) {
+      parts.push(isRu ? `${parsedInventory.length} предметов склада` : `${parsedInventory.length} depot items`);
+    }
+    if (parsedRoster.length > 0) {
+      parts.push(isRu ? `${parsedRoster.length} оперативников в «Мой ростер»` : `${parsedRoster.length} operators to My Roster`);
+    }
+    if (parsedPlans.length > 0) {
+      parts.push(isRu ? `${parsedPlans.length} планов прокачки` : `${parsedPlans.length} upgrade plans`);
+    }
 
     return {
       success: true,
-      message: `Успешно импортировано: ${parts.join(', ')}.`,
+      message: isRu ? `Успешно импортировано: ${parts.join(', ')}.` : `Successfully imported: ${parts.join(', ')}.`,
       inventoryCount: parsedInventory.length,
       plansCount: parsedPlans.length,
       rosterCount: parsedRoster.length,
@@ -425,7 +479,7 @@ export async function downloadFromGitHubGist(
 
     const data = JSON.parse(fileObj.content) as Partial<ArkCalcBackupData>;
 
-    await db.transaction('rw', [db.inventory, db.plans], async () => {
+    await db.transaction('rw', [db.inventory, db.plans, db.roster], async () => {
       if (Array.isArray(data.inventory)) {
         await db.inventory.clear();
         if (data.inventory.length > 0) {
@@ -436,6 +490,12 @@ export async function downloadFromGitHubGist(
         await db.plans.clear();
         if (data.plans.length > 0) {
           await db.plans.bulkPut(data.plans);
+        }
+      }
+      if (Array.isArray(data.roster)) {
+        await db.roster.clear();
+        if (data.roster.length > 0) {
+          await db.roster.bulkPut(data.roster);
         }
       }
     });
