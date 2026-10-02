@@ -7,21 +7,17 @@ import EventDetailsModal from './EventDetailsModal.vue';
 import {
   Calendar,
   ShoppingBag,
-  Clock,
   Search,
   Flame,
-  Layers,
   ChevronRight,
 } from 'lucide-vue-next';
 
 const locale = useLocaleStore();
 
-const activeTab = ref<'cn' | 'global' | 'all'>('cn');
-const typeFilter = ref<string>('all');
 const searchQuery = ref<string>('');
 
 // Track which events have their shop supplies factored into calculator
-const appliedEvents = ref<Set<string>>(new Set(['act38side_lappland']));
+const appliedEvents = ref<Set<string>>(new Set());
 
 // Modal state
 const isModalOpen = ref<boolean>(false);
@@ -42,16 +38,6 @@ function toggleEventInCalculator(eventId: string) {
 
 const filteredEvents = computed(() => {
   let list = ARKNIGHTS_EVENTS;
-
-  if (activeTab.value === 'cn') {
-    list = list.filter((e) => e.status === 'cn_active' || e.status === 'upcoming_global');
-  } else if (activeTab.value === 'global') {
-    list = list.filter((e) => e.status === 'upcoming_global' || e.status === 'past_cn_6m');
-  }
-
-  if (typeFilter.value !== 'all') {
-    list = list.filter((e) => e.type === typeFilter.value);
-  }
 
   const q = searchQuery.value.trim().toLowerCase();
   if (q) {
@@ -129,37 +115,13 @@ function handleAvatarError(e: Event) {
 
     <!-- Navigation & Filters Toolbar -->
     <div class="bg-ark-card border border-ark-border rounded-2xl p-4 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-      <!-- Tabs -->
-      <div class="inline-flex bg-slate-950 p-1 rounded-xl border border-ark-border text-xs font-semibold overflow-x-auto max-w-full">
-        <button
-          type="button"
-          class="px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 flex-shrink-0"
-          :class="[activeTab === 'cn' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200']"
-          @click="activeTab = 'cn'"
-        >
-          <Flame class="w-4 h-4 text-amber-400" />
-          <span>{{ locale.t('events.tabCn') }}</span>
-        </button>
-
-        <button
-          type="button"
-          class="px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 flex-shrink-0"
-          :class="[activeTab === 'global' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200']"
-          @click="activeTab = 'global'"
-        >
-          <Clock class="w-4 h-4 text-cyan-400" />
-          <span>{{ locale.t('events.tabGlobal') }}</span>
-        </button>
-
-        <button
-          type="button"
-          class="px-3.5 py-2 rounded-lg transition-all flex items-center gap-1.5 flex-shrink-0"
-          :class="[activeTab === 'all' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200']"
-          @click="activeTab = 'all'"
-        >
-          <Layers class="w-4 h-4" />
-          <span>{{ locale.t('common.all') }} ({{ ARKNIGHTS_EVENTS.length }})</span>
-        </button>
+      <!-- CN Server Timeline Header Badge -->
+      <div class="inline-flex items-center gap-2 bg-cyan-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm flex-shrink-0">
+        <Flame class="w-4 h-4 text-amber-300" />
+        <span>{{ locale.t('events.tabCn') }}</span>
+        <span class="bg-cyan-800/80 text-cyan-100 font-mono text-[11px] px-2 py-0.5 rounded-md ml-1">
+          {{ filteredEvents.length }}
+        </span>
       </div>
 
       <!-- Search Filter -->
