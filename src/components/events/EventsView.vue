@@ -9,7 +9,6 @@ import {
   ShoppingBag,
   Search,
   Flame,
-  ChevronRight,
   Radio,
 } from 'lucide-vue-next';
 
@@ -81,6 +80,12 @@ function getPrompt6(e: ArknightsEvent): string {
 function getPrompt5(e: ArknightsEvent): string {
   if (locale.currentLang === 'ru') return e.prompt5Ru || locale.t('events.defaultPrompt5');
   return e.prompt5En || locale.t('events.defaultPrompt5');
+}
+
+function isCombinedPrompt(e: ArknightsEvent): boolean {
+  const p6 = (getPrompt6(e) || '').toLowerCase();
+  const p5 = (getPrompt5(e) || '').toLowerCase();
+  return !p5 || p5 === p6 || p6.includes('and 5★') || p6.includes('и 5★');
 }
 
 function handleAvatarError(e: Event) {
@@ -176,25 +181,25 @@ function handleAvatarError(e: Event) {
       </div>
     </div>
 
-    <!-- Events List Matching Reference Design -->
-    <div class="space-y-6">
+    <!-- Compact Events & Banners Table (Directly Matching Screenshot Reference) -->
+    <div class="border border-slate-800 bg-slate-950/95 rounded-xl shadow-xl overflow-hidden divide-y divide-slate-800">
       <div
         v-for="event in filteredEvents"
         :key="event.id"
-        class="bg-slate-900/95 border border-slate-800 hover:border-slate-700 rounded-2xl p-4 sm:p-5 shadow-lg transition-all"
+        class="hover:bg-slate-900/50 transition-colors"
       >
-        <div class="flex flex-col lg:flex-row items-stretch gap-6">
-          <!-- Left Column: Header Tag + Poster Banner + Date + Details Modal Button -->
-          <div class="w-full lg:w-[350px] xl:w-[370px] flex-shrink-0 flex flex-col justify-between space-y-3">
+        <div class="flex flex-col md:flex-row items-stretch">
+          <!-- Left Column: Cyan Tag Bar + Banner Art + Date + Shop Pill -->
+          <div class="w-full md:w-[350px] lg:w-[390px] xl:w-[410px] flex-shrink-0 md:border-r border-b md:border-b-0 border-slate-800 flex flex-col justify-between p-2 sm:p-2.5 bg-slate-950/80">
             <div>
-              <!-- Cyan Event / Banner Tag Bar -->
-              <div class="bg-cyan-400 text-slate-950 font-black text-xs sm:text-sm py-1.5 px-3 rounded-t-lg text-center tracking-tight uppercase shadow-sm">
+              <!-- Bright Cyan Header Bar -->
+              <div class="bg-[#00c0fa] text-slate-950 font-bold text-xs sm:text-[13px] py-1 px-2.5 text-center tracking-tight leading-snug">
                 {{ getHeaderTag(event) }}
               </div>
 
-              <!-- Poster image -->
+              <!-- Banner Poster Image -->
               <div
-                class="relative aspect-[3.2/1] w-full bg-slate-950 border-x border-b border-cyan-400/40 rounded-b-lg overflow-hidden shadow-md group/poster cursor-pointer"
+                class="relative aspect-[3.25/1] w-full bg-slate-900 overflow-hidden cursor-pointer group/poster"
                 title="Click to view details, shop & farming stages"
                 @click="openModal(event)"
               >
@@ -202,79 +207,58 @@ function handleAvatarError(e: Event) {
                   :src="event.bannerPosterUrl"
                   :alt="event.nameEn"
                   loading="lazy"
-                  class="w-full h-full object-cover group-hover/poster:scale-105 transition-transform duration-300"
+                  class="w-full h-full object-cover group-hover/poster:opacity-90 transition-opacity"
                 />
-                <div class="absolute inset-0 bg-slate-950/30 opacity-0 group-hover/poster:opacity-100 transition-opacity flex items-center justify-center">
-                  <span class="bg-slate-900/90 text-cyan-300 font-mono text-[11px] font-bold px-2.5 py-1 rounded-full border border-cyan-500/40">
-                    {{ locale.t('events.viewDetails') }}
-                  </span>
-                </div>
               </div>
 
-              <!-- Dates row -->
-              <div class="text-center py-2 px-1 text-xs font-mono font-bold text-slate-100 flex flex-col items-center gap-0.5">
-                <div>
-                  CN date: <span class="text-white">{{ event.cnStartDate }} – {{ event.cnEndDate }}</span>
-                </div>
-                <div v-if="event.globalEstimatedArrival" class="text-[11px] text-cyan-300 font-normal">
-                  Global est: <strong>{{ event.globalEstimatedArrival }}</strong>
-                </div>
-              </div>
-
-              <!-- Content Type Pill Badge -->
-              <div class="pt-0.5 pb-1 flex items-center justify-center">
-                <span
-                  v-if="event.shopItems.length > 0"
-                  class="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold px-2.5 py-1 rounded-full bg-cyan-950/80 border border-cyan-700/80 text-cyan-300 shadow-sm"
-                >
-                  <ShoppingBag class="w-3.5 h-3.5 text-cyan-400" />
-                  {{ locale.currentLang === 'ru' ? `Магазин: ${event.shopItems.length} поз.` : `Shop: ${event.shopItems.length} items` }}
-                  <span v-if="event.farmingStages.length > 0">&bull; {{ locale.currentLang === 'ru' ? `Фарм: ${event.farmingStages.length}` : `Farm: ${event.farmingStages.length}` }}</span>
+              <!-- Compact CN Date Line -->
+              <div class="text-center pt-1.5 pb-0.5 px-1 text-xs font-mono font-bold text-slate-100 flex flex-wrap items-center justify-center gap-x-2">
+                <span>
+                  CN date: <span class="text-white font-extrabold">{{ event.cnStartDate }} – {{ event.cnEndDate }}</span>
                 </span>
-                <span
-                  v-else
-                  class="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold px-2.5 py-1 rounded-full bg-amber-950/50 border border-amber-800/60 text-amber-300 shadow-sm"
+                <span v-if="event.globalEstimatedArrival" class="text-[11px] text-cyan-300 font-normal">
+                  (Global: {{ event.globalEstimatedArrival }})
+                </span>
+              </div>
+
+              <!-- Compact Shop Items / Farm Stages Pill (if event has shop items) -->
+              <div
+                v-if="event.shopItems.length > 0 || event.farmingStages.length > 0"
+                class="pt-1 flex items-center justify-center gap-1.5"
+              >
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-700/80 text-cyan-300 hover:bg-cyan-900/80 transition-colors shadow-sm"
+                  @click="openModal(event)"
                 >
-                  <Radio class="w-3.5 h-3.5 text-amber-400" />
-                  {{ locale.currentLang === 'ru' ? 'Баннер призыва (гача)' : 'Headhunting Banner (Gacha)' }}
+                  <ShoppingBag class="w-3 h-3 text-cyan-400" />
+                  <span>{{ locale.currentLang === 'ru' ? `Магазин: ${event.shopItems.length}` : `Shop: ${event.shopItems.length}` }}</span>
+                  <span v-if="event.farmingStages.length > 0">&bull; {{ locale.currentLang === 'ru' ? `Фарм: ${event.farmingStages.length}` : `Farm: ${event.farmingStages.length}` }}</span>
+                </button>
+                <span
+                  v-if="appliedEvents.has(event.id)"
+                  class="text-[9px] font-mono text-emerald-300 font-bold bg-emerald-950/90 px-1.5 py-0.5 rounded border border-emerald-700"
+                >
+                  ✓ In Calc
                 </span>
               </div>
             </div>
-
-            <!-- Modal Action Button -->
-            <button
-              type="button"
-              class="w-full py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2"
-              :class="[
-                appliedEvents.has(event.id)
-                  ? 'bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border-emerald-600'
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
-              ]"
-              @click="openModal(event)"
-            >
-              <ShoppingBag v-if="event.shopItems.length > 0" class="w-4 h-4 text-cyan-400" />
-              <Radio v-else class="w-4 h-4 text-amber-400" />
-              <span>{{ event.shopItems.length > 0 ? locale.t('events.viewDetails') : (locale.currentLang === 'ru' ? 'Подробнее о баннере' : 'Banner Details') }}</span>
-              <span v-if="appliedEvents.has(event.id)" class="ml-1 inline-flex items-center text-[10px] text-emerald-400 font-mono">
-                [✓ {{ locale.t('calc.eventShopActive') }}]
-              </span>
-              <ChevronRight class="w-3.5 h-3.5 ml-auto text-slate-400" />
-            </button>
           </div>
 
-          <!-- Right Column: Operator Avatars Rows matching reference image -->
-          <div class="flex-1 min-w-0 flex flex-col justify-center space-y-4">
-            <!-- 6 Star Section -->
-            <div class="space-y-2">
-              <div class="text-xs sm:text-[13px] font-medium text-slate-200 leading-snug">
+          <!-- Right Column: Operator Avatars & Prompts Matching Screenshot -->
+          <div class="flex-1 min-w-0 p-3 sm:p-4 flex flex-col justify-center space-y-2.5 text-center">
+            <!-- Mode A: Combined Prompt (e.g. Joint Operation: "Only the following 6★ and 5★ Operators...") -->
+            <template v-if="isCombinedPrompt(event)">
+              <p class="text-xs sm:text-[13px] font-medium text-slate-200 leading-tight">
                 {{ getPrompt6(event) }}
-              </div>
-
-              <div class="flex flex-wrap items-center gap-2 sm:gap-2.5">
+              </p>
+              
+              <!-- Row 1: 6★ Operators -->
+              <div v-if="event.sixStarOps.length > 0" class="flex flex-wrap items-center justify-center gap-2">
                 <div
                   v-for="op in event.sixStarOps"
                   :key="op.charId"
-                  class="relative w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 bg-slate-900 rounded-sm overflow-hidden border-b-4 border-amber-400 shadow-md group/op cursor-pointer transition-transform hover:scale-105"
+                  class="relative w-11 h-11 sm:w-12 sm:h-12 md:w-[48px] md:h-[48px] flex-shrink-0 bg-slate-900 overflow-hidden border-b-4 border-amber-400 shadow cursor-pointer group/op hover:scale-105 transition-transform"
                   :title="op.name"
                   @click="openModal(event)"
                 >
@@ -285,25 +269,18 @@ function handleAvatarError(e: Event) {
                     class="w-full h-full object-cover"
                     @error="handleAvatarError"
                   />
-                  <!-- Name tooltip on hover -->
-                  <div class="absolute inset-x-0 bottom-0 bg-slate-950/80 text-[9px] text-amber-300 text-center font-bold truncate opacity-0 group-hover/op:opacity-100 transition-opacity px-0.5">
+                  <div class="absolute inset-x-0 bottom-0 bg-slate-950/85 text-[8px] text-amber-300 text-center font-bold truncate opacity-0 group-hover/op:opacity-100 transition-opacity px-0.5">
                     {{ op.name }}
                   </div>
                 </div>
               </div>
-            </div>
 
-            <!-- 5 Star Section -->
-            <div class="space-y-2 pt-1">
-              <div class="text-xs sm:text-[13px] font-medium text-slate-200 leading-snug">
-                {{ getPrompt5(event) }}
-              </div>
-
-              <div class="flex flex-wrap items-center gap-2 sm:gap-2.5">
+              <!-- Row 2: 5★ Operators -->
+              <div v-if="event.fiveStarOps.length > 0" class="flex flex-wrap items-center justify-center gap-2 pt-0.5">
                 <div
                   v-for="op in event.fiveStarOps"
                   :key="op.charId"
-                  class="relative w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 bg-slate-900 rounded-sm overflow-hidden border-b-4 border-amber-300 shadow-md group/op cursor-pointer transition-transform hover:scale-105"
+                  class="relative w-11 h-11 sm:w-12 sm:h-12 md:w-[48px] md:h-[48px] flex-shrink-0 bg-slate-900 overflow-hidden border-b-4 border-yellow-200/90 shadow cursor-pointer group/op hover:scale-105 transition-transform"
                   :title="op.name"
                   @click="openModal(event)"
                 >
@@ -314,16 +291,80 @@ function handleAvatarError(e: Event) {
                     class="w-full h-full object-cover"
                     @error="handleAvatarError"
                   />
-                  <!-- Name tooltip on hover -->
-                  <div class="absolute inset-x-0 bottom-0 bg-slate-950/80 text-[9px] text-amber-200 text-center font-bold truncate opacity-0 group-hover/op:opacity-100 transition-opacity px-0.5">
+                  <div class="absolute inset-x-0 bottom-0 bg-slate-950/85 text-[8px] text-amber-200 text-center font-bold truncate opacity-0 group-hover/op:opacity-100 transition-opacity px-0.5">
                     {{ op.name }}
                   </div>
                 </div>
               </div>
-            </div>
+            </template>
+
+            <!-- Mode B: Distinct 6★ and 5★ Prompts (e.g. Orienteering #8) -->
+            <template v-else>
+              <!-- 6★ Section -->
+              <div v-if="event.sixStarOps.length > 0" class="space-y-1.5">
+                <p class="text-xs sm:text-[13px] font-medium text-slate-200 leading-tight">
+                  {{ getPrompt6(event) }}
+                </p>
+                <div class="flex flex-wrap items-center justify-center gap-2">
+                  <div
+                    v-for="op in event.sixStarOps"
+                    :key="op.charId"
+                    class="relative w-11 h-11 sm:w-12 sm:h-12 md:w-[48px] md:h-[48px] flex-shrink-0 bg-slate-900 overflow-hidden border-b-4 border-amber-400 shadow cursor-pointer group/op hover:scale-105 transition-transform"
+                    :title="op.name"
+                    @click="openModal(event)"
+                  >
+                    <img
+                      :src="op.avatarUrl || getAvatarUrl(op.charId)"
+                      :alt="op.name"
+                      loading="lazy"
+                      class="w-full h-full object-cover"
+                      @error="handleAvatarError"
+                    />
+                    <div class="absolute inset-x-0 bottom-0 bg-slate-950/85 text-[8px] text-amber-300 text-center font-bold truncate opacity-0 group-hover/op:opacity-100 transition-opacity px-0.5">
+                      {{ op.name }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 5★ Section -->
+              <div v-if="event.fiveStarOps.length > 0" class="space-y-1.5 pt-1">
+                <p class="text-xs sm:text-[13px] font-medium text-slate-200 leading-tight">
+                  {{ getPrompt5(event) }}
+                </p>
+                <div class="flex flex-wrap items-center justify-center gap-2">
+                  <div
+                    v-for="op in event.fiveStarOps"
+                    :key="op.charId"
+                    class="relative w-11 h-11 sm:w-12 sm:h-12 md:w-[48px] md:h-[48px] flex-shrink-0 bg-slate-900 overflow-hidden border-b-4 border-yellow-200/90 shadow cursor-pointer group/op hover:scale-105 transition-transform"
+                    :title="op.name"
+                    @click="openModal(event)"
+                  >
+                    <img
+                      :src="op.avatarUrl || getAvatarUrl(op.charId)"
+                      :alt="op.name"
+                      loading="lazy"
+                      class="w-full h-full object-cover"
+                      @error="handleAvatarError"
+                    />
+                    <div class="absolute inset-x-0 bottom-0 bg-slate-950/85 text-[8px] text-amber-200 text-center font-bold truncate opacity-0 group-hover/op:opacity-100 transition-opacity px-0.5">
+                      {{ op.name }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Empty Results State -->
+    <div
+      v-if="filteredEvents.length === 0"
+      class="bg-ark-card border border-ark-border rounded-xl p-8 text-center text-slate-400 text-xs"
+    >
+      {{ locale.currentLang === 'ru' ? 'События или баннеры по вашему запросу не найдены.' : 'No events or banners match your search filter.' }}
     </div>
 
     <!-- Event Details Modal (Shop Supplies & Farm Stages) -->
