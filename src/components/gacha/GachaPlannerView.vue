@@ -173,22 +173,22 @@ const isFaqOpen = ref<boolean>(false);
 <template>
   <div class="space-y-6 max-w-5xl mx-auto">
     <!-- Top Header: Clear & Friendly PRTS Terminal -->
-    <div class="bg-ark-card border border-ark-border rounded-2xl p-5 shadow-sm">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
+    <div class="bg-ark-card border border-ark-border rounded-2xl p-4 sm:p-5 shadow-sm overflow-hidden">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="flex items-center gap-3 min-w-0 flex-1">
           <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500/20 to-purple-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 flex-shrink-0 shadow-sm">
             <Sparkles class="w-6 h-6" />
           </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <h2 class="text-base sm:text-lg font-black text-slate-100 uppercase tracking-wider">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 class="text-base sm:text-lg font-black text-slate-100 uppercase tracking-wider truncate">
                 {{ locale.currentLang === 'ru' ? 'Планировщик баннеров и круток' : 'Headhunting & Spark Planner' }}
               </h2>
-              <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-950 border border-amber-800 text-amber-300">
+              <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-950 border border-amber-800 text-amber-300 flex-shrink-0">
                 PITY &amp; SPARK
               </span>
             </div>
-            <p class="text-xs text-slate-400 mt-0.5">
+            <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">
               {{
                 locale.currentLang === 'ru'
                   ? 'Узнайте точный шанс выбить оператора, успеете ли накопить к баннеру и хватит ли на 300 Spark (гарант).'
@@ -199,33 +199,33 @@ const isFaqOpen = ref<boolean>(false);
         </div>
 
         <!-- 3 Primary Mode Switchers -->
-        <div class="inline-flex bg-slate-900 p-1 rounded-xl border border-ark-border text-xs font-semibold self-start md:self-auto flex-wrap sm:flex-nowrap gap-1">
+        <div class="inline-flex bg-slate-900 p-1 rounded-xl border border-ark-border text-xs font-semibold self-stretch sm:self-start lg:self-auto overflow-x-auto max-w-full custom-scrollbar gap-1 flex-shrink-0">
           <button
             type="button"
-            class="px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 flex-shrink-0"
+            class="px-3 py-2 rounded-lg transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial flex-shrink-0 whitespace-nowrap"
             :class="activeMode === 'target_banner' ? 'bg-cyan-600 text-white shadow-sm font-bold' : 'text-slate-400 hover:text-slate-200'"
             @click="activeMode = 'target_banner'"
           >
-            <Target class="w-4 h-4" />
-            <span>{{ locale.currentLang === 'ru' ? 'Хватит ли на баннер?' : 'Will I get the operator?' }}</span>
+            <Target class="w-4 h-4 flex-shrink-0" />
+            <span>{{ locale.currentLang === 'ru' ? 'Цель на баннер' : 'Banner Goal' }}</span>
           </button>
           <button
             type="button"
-            class="px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 flex-shrink-0"
+            class="px-3 py-2 rounded-lg transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial flex-shrink-0 whitespace-nowrap"
             :class="activeMode === 'odds_calculator' ? 'bg-cyan-600 text-white shadow-sm font-bold' : 'text-slate-400 hover:text-slate-200'"
             @click="activeMode = 'odds_calculator'"
           >
-            <Percent class="w-4 h-4" />
-            <span>{{ locale.currentLang === 'ru' ? 'Шансы от круток' : 'Odds by Pull Count' }}</span>
+            <Percent class="w-4 h-4 flex-shrink-0" />
+            <span>{{ locale.currentLang === 'ru' ? 'Калькулятор шансов' : 'Odds Calculator' }}</span>
           </button>
           <button
             type="button"
-            class="px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 flex-shrink-0"
+            class="px-3 py-2 rounded-lg transition-all flex items-center justify-center gap-2 flex-1 sm:flex-initial flex-shrink-0 whitespace-nowrap"
             :class="activeMode === 'simulator' ? 'bg-cyan-600 text-white shadow-sm font-bold' : 'text-slate-400 hover:text-slate-200'"
             @click="activeMode = 'simulator'"
           >
-            <Flame class="w-4 h-4" />
-            <span>{{ locale.currentLang === 'ru' ? 'Симулятор удачи' : 'Roll Simulator' }}</span>
+            <Flame class="w-4 h-4 flex-shrink-0" />
+            <span>{{ locale.currentLang === 'ru' ? 'Симулятор удачи' : 'Pull Simulator' }}</span>
           </button>
         </div>
       </div>
