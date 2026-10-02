@@ -4,10 +4,11 @@ import { db, type OperatorTargetPlan } from '@/services/db';
 import { useGameDataStore } from '@/stores/gamedata';
 import { useInventoryStore } from '@/stores/inventory';
 import { useAuthStore } from '@/stores/auth';
-import { calculateAllPlans } from '@/services/calculatorEngine';
+import { calculateAllPlans, calculateOperatorPlanCosts } from '@/services/calculatorEngine';
 import type { CalculationResult } from '@/types/game';
 
 const LS_KEY = 'ark_plans_v1';
+const LS_ORDER_KEY = 'ark_plan_order_v1';
 
 function savePlansToLocalStorage(planMap: Record<string, OperatorTargetPlan>) {
   try {
@@ -27,8 +28,26 @@ function loadPlansFromLocalStorage(): Record<string, OperatorTargetPlan> | null 
   }
 }
 
+function saveOrderToLocalStorage(order: string[]) {
+  try {
+    localStorage.setItem(LS_ORDER_KEY, JSON.stringify(order));
+  } catch (e) {
+    console.warn('Cannot save plan order:', e);
+  }
+}
+
+function loadOrderFromLocalStorage(): string[] {
+  try {
+    const raw = localStorage.getItem(LS_ORDER_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
 export const usePlannerStore = defineStore('planner', () => {
   const plans = ref<Record<string, OperatorTargetPlan>>({});
+  const planOrder = ref<string[]>(loadOrderFromLocalStorage());
   const isLoaded = ref<boolean>(false);
 
   const gameData = useGameDataStore();
@@ -78,6 +97,10 @@ export const usePlannerStore = defineStore('planner', () => {
       ...plans.value,
       [cleanPlan.charId]: cleanPlan,
     };
+    if (!planOrder.value.includes(cleanPlan.charId)) {
+      planOrder.value.push(cleanPlan.charId);
+      saveOrderToLocalStorage(planOrder.value);
+    }
     savePlansToLocalStorage(plans.value);
     try {
       await db.plans.put(cleanPlan);
@@ -91,6 +114,8 @@ export const usePlannerStore = defineStore('planner', () => {
     const updated = { ...plans.value };
     delete updated[charId];
     plans.value = updated;
+    planOrder.value = planOrder.value.filter((id) => id !== charId);
+    saveOrderToLocalStorage(planOrder.value);
     savePlansToLocalStorage(updated);
     try {
       await db.plans.delete(charId);
@@ -102,6 +127,8 @@ export const usePlannerStore = defineStore('planner', () => {
 
   async function clearAllPlans() {
     plans.value = {};
+    planOrder.value = [];
+    saveOrderToLocalStorage([]);
     savePlansToLocalStorage({});
     try {
       await db.plans.clear();
@@ -113,6 +140,8 @@ export const usePlannerStore = defineStore('planner', () => {
 
   async function bulkImportPlans(newPlans: Record<string, OperatorTargetPlan>) {
     plans.value = { ...newPlans };
+    planOrder.value = Object.keys(newPlans);
+    saveOrderToLocalStorage(planOrder.value);
     savePlansToLocalStorage(newPlans);
     try {
       await db.plans.clear();
@@ -122,8 +151,70 @@ export const usePlannerStore = defineStore('planner', () => {
     }
   }
 
+  function movePlan(charId: string, direction: 'up' | 'down') {
+    const currentList = orderedPlanList.value.map((p) => p.charId);
+    const idx = currentList.indexOf(charId);
+    if (idx === -1) return;
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= currentList.length) return;
+    const temp = currentList[idx];
+    currentList[idx] = currentList[targetIdx];
+    currentList[targetIdx] = temp;
+    planOrder.value = currentList;
+    saveOrderToLocalStorage(currentList);
+  }
+
+  function setPlanTop(charId: string) {
+    const currentList = orderedPlanList.value.map((p) => p.charId).filter((id) => id !== charId);
+    currentList.unshift(charId);
+    planOrder.value = currentList;
+    saveOrderToLocalStorage(currentList);
+  }
+
+  function setPlanOrder(newOrder: string[]) {
+    planOrder.value = [...newOrder];
+    saveOrderToLocalStorage(planOrder.value);
+  }
+
+  async function completePlanStep(charId: string, deductMaterials: boolean = true) {
+    const plan = plans.value[charId];
+    const op = gameData.getOperator(charId);
+    if (!plan || !op || !gameData.constants) return;
+
+    if (deductMaterials) {
+      const costs = calculateOperatorPlanCosts(op, plan, gameData.constants);
+      // Deduct materials from inventory
+      for (const [matId, count] of Object.entries(costs.materials)) {
+        if (count > 0) {
+          const currentStock = inventory.getStock(matId) || 0;
+          await inventory.setItemStock(matId, Math.max(0, currentStock - count));
+        }
+      }
+      // Deduct LMD ('4001')
+      const totalLmd = costs.lmdLevel + costs.lmdEvolve;
+      if (totalLmd > 0) {
+        const curLmd = inventory.getStock('4001') || 0;
+        await inventory.setItemStock('4001', Math.max(0, curLmd - totalLmd));
+      }
+    }
+
+    // Set current to target
+    plan.current = JSON.parse(JSON.stringify(plan.target));
+    await savePlan(plan);
+  }
+
   const planList = computed(() => Object.values(plans.value));
   const planCount = computed(() => Object.keys(plans.value).length);
+
+  const orderedPlanList = computed<OperatorTargetPlan[]>(() => {
+    const list = Object.values(plans.value);
+    const orderMap = new Map(planOrder.value.map((id, index) => [id, index]));
+    return [...list].sort((a, b) => {
+      const idxA = orderMap.has(a.charId) ? orderMap.get(a.charId)! : 9999;
+      const idxB = orderMap.has(b.charId) ? orderMap.get(b.charId)! : 9999;
+      return idxA - idxB;
+    });
+  });
 
   const calculationResult = computed<CalculationResult>(() => {
     // Don't wait for isReady — it can lag after data is already in memory.
@@ -154,14 +245,20 @@ export const usePlannerStore = defineStore('planner', () => {
 
   return {
     plans,
+    planOrder,
     isLoaded,
     planList,
     planCount,
+    orderedPlanList,
     calculationResult,
     loadPlans,
     savePlan,
     removePlan,
     clearAllPlans,
     bulkImportPlans,
+    movePlan,
+    setPlanTop,
+    setPlanOrder,
+    completePlanStep,
   };
 });

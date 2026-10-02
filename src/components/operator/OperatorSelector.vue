@@ -9,7 +9,8 @@ import OperatorCard from './OperatorCard.vue';
 
 const PlanEditorModal = defineAsyncComponent(() => import('./PlanEditorModal.vue'));
 const OperatorDossierModal = defineAsyncComponent(() => import('./OperatorDossierModal.vue'));
-import { Search, Filter, UserCheck, X } from 'lucide-vue-next';
+const PlannerRoadmap = defineAsyncComponent(() => import('@/components/calculator/PlannerRoadmap.vue'));
+import { Search, Filter, UserCheck, X, LayoutGrid, ListOrdered } from 'lucide-vue-next';
 import {
   normalizeSearchString,
   transliterateRuToEn,
@@ -26,6 +27,7 @@ const searchQuery = ref('');
 const selectedRarity = ref<number | null>(null);
 const selectedProfession = ref<Profession | null>(null);
 const selectedPlanFilter = ref<'all' | 'planned' | 'unplanned'>('all');
+const planDisplayMode = ref<'grid' | 'roadmap'>('grid');
 
 const selectedOperatorForEdit = ref<OperatorSummary | null>(null);
 const isModalOpen = ref(false);
@@ -198,32 +200,59 @@ function clearFilters() {
         </div>
 
         <!-- Plan filter toggle buttons -->
-        <div class="inline-flex w-full sm:w-auto bg-slate-900 p-1 rounded-xl border border-ark-border text-xs font-medium">
-          <button
-            type="button"
-            class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg transition-all text-center"
-            :class="[selectedPlanFilter === 'all' ? 'bg-cyan-600 text-white font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200']"
-            @click="selectedPlanFilter = 'all'"
+        <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <div class="inline-flex w-full sm:w-auto bg-slate-900 p-1 rounded-xl border border-ark-border text-xs font-medium">
+            <button
+              type="button"
+              class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg transition-all text-center"
+              :class="[selectedPlanFilter === 'all' ? 'bg-cyan-600 text-white font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200']"
+              @click="selectedPlanFilter = 'all'"
+            >
+              {{ locale.t('op.filterAll') }} ({{ gameData.operatorList.length }})
+            </button>
+            <button
+              type="button"
+              class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5"
+              :class="[selectedPlanFilter === 'planned' ? 'bg-cyan-600 text-white font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200']"
+              @click="selectedPlanFilter = 'planned'"
+            >
+              <UserCheck class="w-3.5 h-3.5" />
+              {{ locale.t('op.filterPlanned') }} ({{ planner.planCount }})
+            </button>
+            <button
+              type="button"
+              class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg transition-all text-center"
+              :class="[selectedPlanFilter === 'unplanned' ? 'bg-cyan-600 text-white font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200']"
+              @click="selectedPlanFilter = 'unplanned'"
+            >
+              {{ locale.t('op.filterUnplanned') }}
+            </button>
+          </div>
+
+          <!-- Mode Toggle when Planned is selected -->
+          <div
+            v-if="selectedPlanFilter === 'planned' && planner.planCount > 0"
+            class="inline-flex bg-slate-950 p-1 rounded-xl border border-cyan-500/40 text-xs font-semibold gap-1"
           >
-            {{ locale.t('op.filterAll') }} ({{ gameData.operatorList.length }})
-          </button>
-          <button
-            type="button"
-            class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1.5"
-            :class="[selectedPlanFilter === 'planned' ? 'bg-cyan-600 text-white font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200']"
-            @click="selectedPlanFilter = 'planned'"
-          >
-            <UserCheck class="w-3.5 h-3.5" />
-            {{ locale.t('op.filterPlanned') }} ({{ planner.planCount }})
-          </button>
-          <button
-            type="button"
-            class="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg transition-all text-center"
-            :class="[selectedPlanFilter === 'unplanned' ? 'bg-cyan-600 text-white font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200']"
-            @click="selectedPlanFilter = 'unplanned'"
-          >
-            {{ locale.t('op.filterUnplanned') }}
-          </button>
+            <button
+              type="button"
+              class="px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5"
+              :class="planDisplayMode === 'grid' ? 'bg-cyan-600 text-white font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+              @click="planDisplayMode = 'grid'"
+            >
+              <LayoutGrid class="w-3.5 h-3.5" />
+              <span>{{ locale.currentLang === 'ru' ? 'Карточки' : 'Cards' }}</span>
+            </button>
+            <button
+              type="button"
+              class="px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5"
+              :class="planDisplayMode === 'roadmap' ? 'bg-cyan-600 text-white font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+              @click="planDisplayMode = 'roadmap'"
+            >
+              <ListOrdered class="w-3.5 h-3.5" />
+              <span>{{ locale.currentLang === 'ru' ? 'Очередь' : 'Roadmap' }}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -301,9 +330,14 @@ function clearFilters() {
       </div>
     </div>
 
-    <!-- Scroller Area -->
+    <!-- Scroller Area or Roadmap View -->
     <div class="flex-1 min-h-[450px]">
-      <div v-if="filteredOperators.length === 0" class="h-64 flex flex-col items-center justify-center text-center p-6 bg-ark-card rounded-2xl border border-ark-border">
+      <PlannerRoadmap
+        v-if="selectedPlanFilter === 'planned' && planDisplayMode === 'roadmap'"
+        @open-operators="selectedPlanFilter = 'all'"
+      />
+
+      <div v-else-if="filteredOperators.length === 0" class="h-64 flex flex-col items-center justify-center text-center p-6 bg-ark-card rounded-2xl border border-ark-border">
         <Filter class="w-10 h-10 text-slate-600 mb-2" />
         <p class="text-slate-400 text-sm font-medium">{{ locale.t('op.notFound') }}</p>
         <button

@@ -18,6 +18,7 @@ const ResourceSummary = defineAsyncComponent(() => import('@/components/calculat
 const EventsView = defineAsyncComponent(() => import('@/components/events/EventsView.vue'));
 const SettingsModal = defineAsyncComponent(() => import('@/components/common/SettingsModal.vue'));
 const AuthModal = defineAsyncComponent(() => import('@/components/auth/AuthModal.vue'));
+const GachaPlannerView = defineAsyncComponent(() => import('@/components/gacha/GachaPlannerView.vue'));
 
 import { exportDatabaseToJson } from '@/services/syncService';
 import {
@@ -40,6 +41,7 @@ import {
   Globe,
   Menu,
   Download,
+  Sparkles,
 } from 'lucide-vue-next';
 
 const gameData = useGameDataStore();
@@ -50,13 +52,13 @@ const auth = useAuthStore();
 const locale = useLocaleStore();
 const pwa = usePwaStore();
 
-type TabType = 'operators' | 'roster' | 'inventory' | 'calculator' | 'events' | 'recruitment' | 'wiki';
+type TabType = 'operators' | 'roster' | 'inventory' | 'calculator' | 'events' | 'recruitment' | 'wiki' | 'gacha';
 const currentTab = ref<TabType>('operators');
 const isSettingsOpen = ref<boolean>(false);
 const isAuthModalOpen = ref<boolean>(false);
 const isDrawerOpen = ref<boolean>(false);
 
-const isSecondaryTabActive = computed(() => ['events', 'roster', 'recruitment', 'wiki'].includes(currentTab.value));
+const isSecondaryTabActive = computed(() => ['events', 'roster', 'recruitment', 'wiki', 'gacha'].includes(currentTab.value));
 
 const activeSecondaryTabInfo = computed(() => {
   switch (currentTab.value) {
@@ -68,6 +70,8 @@ const activeSecondaryTabInfo = computed(() => {
       return { id: 'recruitment', label: locale.t('nav.recruitment'), icon: Radio, color: 'text-amber-400', border: 'border-amber-500/40', bg: 'bg-amber-500/10' };
     case 'wiki':
       return { id: 'wiki', label: locale.t('nav.wiki'), icon: BookOpen, color: 'text-blue-400', border: 'border-blue-500/40', bg: 'bg-blue-500/10' };
+    case 'gacha':
+      return { id: 'gacha', label: locale.currentLang === 'ru' ? 'Крутки & Spark' : 'Gacha & Spark', icon: Sparkles, color: 'text-amber-400', border: 'border-amber-500/40', bg: 'bg-amber-500/10' };
     default:
       return null;
   }
@@ -397,6 +401,7 @@ onUnmounted(() => {
         <ResourceSummary v-show="currentTab === 'calculator'" />
         <EventsView v-show="currentTab === 'events'" />
         <WikiView v-show="currentTab === 'wiki'" />
+        <GachaPlannerView v-show="currentTab === 'gacha'" />
       </div>
     </main>
 
@@ -732,6 +737,32 @@ onUnmounted(() => {
                   </div>
                 </div>
                 <ChevronRight class="w-4 h-4 text-slate-500 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+              </button>
+
+              <!-- Tool 4: Gacha & Spark Calculator -->
+              <button
+                type="button"
+                class="w-full p-3 rounded-2xl border text-left flex items-center justify-between gap-3 transition-all active:scale-[0.98] group"
+                :class="currentTab === 'gacha' ? 'bg-amber-950/50 border-amber-500/50 shadow-md ring-1 ring-amber-500/30' : 'bg-slate-900/70 border-slate-800 hover:border-amber-500/40 hover:bg-slate-900'"
+                @click="selectTab('gacha')"
+              >
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-9 h-9 rounded-xl bg-amber-950/80 border border-amber-700/60 flex items-center justify-center text-amber-400 flex-shrink-0 group-hover:scale-105 transition-transform">
+                    <Sparkles class="w-4.5 h-4.5" />
+                  </div>
+                  <div class="min-w-0">
+                    <div class="font-bold text-xs text-slate-100 flex items-center gap-2">
+                      <span>{{ locale.currentLang === 'ru' ? 'Крутки & Spark' : 'Gacha & Spark' }}</span>
+                      <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-950 border border-amber-800 text-amber-300 font-bold">
+                        PITY
+                      </span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 truncate">
+                      {{ locale.currentLang === 'ru' ? 'Калькулятор шансов, 300 Spark и симулятор' : 'Probability odds, 300 Spark & roll simulator' }}
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight class="w-4 h-4 text-slate-500 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
               </button>
             </div>
 

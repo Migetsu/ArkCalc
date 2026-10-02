@@ -10,6 +10,7 @@ const CraftingTree = defineAsyncComponent(() => import('./CraftingTree.vue'));
 const FarmingGuideModal = defineAsyncComponent(() => import('./FarmingGuideModal.vue'));
 const FarmingPlanOptimizer = defineAsyncComponent(() => import('./FarmingPlanOptimizer.vue'));
 const PlanShareModal = defineAsyncComponent(() => import('./PlanShareModal.vue'));
+const PlannerRoadmap = defineAsyncComponent(() => import('./PlannerRoadmap.vue'));
 import {
   getRecommendedStage,
   calculatePlanSanityEstimate,
@@ -25,6 +26,7 @@ import {
   Zap,
   Home,
   Share2,
+  ListOrdered,
 } from 'lucide-vue-next';
 
 const planner = usePlannerStore();
@@ -32,7 +34,7 @@ const gameData = useGameDataStore();
 const inventory = useInventoryStore();
 const locale = useLocaleStore();
 
-const activeTab = ref<'direct' | 'farm' | 'craftingTree'>('direct');
+const activeTab = ref<'direct' | 'farm' | 'craftingTree' | 'roadmap'>('direct');
 
 const calc = computed(() => planner.calculationResult);
 
@@ -399,6 +401,23 @@ const isPlanShareOpen = ref(false);
         >
           <Hammer class="w-4 h-4" />
           <span>{{ locale.t('calculator.crafting') }} ({{ calc.craftingSteps.length }})</span>
+        </button>
+
+        <button
+          type="button"
+          class="px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 flex-shrink-0"
+          :class="[activeTab === 'roadmap' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200']"
+          @click="activeTab = 'roadmap'"
+        >
+          <ListOrdered class="w-4 h-4" />
+          <span>{{ locale.currentLang === 'ru' ? 'Дорожная карта' : 'Roadmap' }}</span>
+          <span
+            v-if="planner.planCount > 0"
+            class="text-[10px] font-mono px-1.5 py-0.2 rounded-full font-bold"
+            :class="activeTab === 'roadmap' ? 'bg-white text-slate-950' : 'bg-cyan-950 text-cyan-300 border border-cyan-800'"
+          >
+            {{ planner.planCount }}
+          </span>
         </button>
       </div>
 
@@ -783,6 +802,11 @@ const isPlanShareOpen = ref(false);
     <!-- TAB 3: CRAFTING TREE -->
     <div v-else-if="activeTab === 'craftingTree'">
       <CraftingTree />
+    </div>
+
+    <!-- TAB 4: PROMOTION ROADMAP -->
+    <div v-else-if="activeTab === 'roadmap'">
+      <PlannerRoadmap />
     </div>
 
     <!-- Detailed Farming Guide Modal -->
