@@ -67,6 +67,36 @@ function isCurrencyOrExp(item: ItemSummary): boolean {
   );
 }
 
+function getItemNeeded(itemId: string): number {
+  if (itemId === '4001') return planner.calculationResult.totalLmd;
+  if (itemId === '2004') return Math.ceil(planner.calculationResult.totalExp / 2000);
+  if (itemId === '2003') return Math.ceil(planner.calculationResult.totalExp / 1000);
+  if (itemId === '2002') return Math.ceil(planner.calculationResult.totalExp / 400);
+  if (itemId === '2001') return Math.ceil(planner.calculationResult.totalExp / 200);
+  return planner.calculationResult.rawMaterials[itemId] || 0;
+}
+
+function getItemDeficit(itemId: string): number {
+  if (itemId === '4001') {
+    return Math.max(0, planner.calculationResult.totalLmd - (inventory.getStock('4001') || 0));
+  }
+  if (['2001', '2002', '2003', '2004'].includes(itemId)) {
+    const totalExpStock =
+      (inventory.getStock('2004') || 0) * 2000 +
+      (inventory.getStock('2003') || 0) * 1000 +
+      (inventory.getStock('2002') || 0) * 400 +
+      (inventory.getStock('2001') || 0) * 200;
+    const expDeficit = Math.max(0, planner.calculationResult.totalExp - totalExpStock);
+    if (itemId === '2004') return Math.ceil(expDeficit / 2000);
+    if (itemId === '2003') return Math.ceil(expDeficit / 1000);
+    if (itemId === '2002') return Math.ceil(expDeficit / 400);
+    if (itemId === '2001') return Math.ceil(expDeficit / 200);
+  }
+  const needed = planner.calculationResult.rawMaterials[itemId] || 0;
+  const stock = inventory.getStock(itemId);
+  return Math.max(0, needed - stock);
+}
+
 const relevantItemList = computed(() => {
   const rawNeeded = planner.calculationResult.rawMaterials;
   const stockedIds = Object.keys(inventory.stock || {});
@@ -74,6 +104,11 @@ const relevantItemList = computed(() => {
 
   if (onlyNeeded.value || onlyDeficit.value) {
     const ids = new Set([...stockedIds, ...neededIds]);
+    if (planner.calculationResult.totalLmd > 0) ids.add('4001');
+    if (planner.calculationResult.totalExp > 0) {
+      ids.add('2004');
+      ids.add('2003');
+    }
     return Array.from(ids)
       .filter((id) => isCraftResource(id))
       .map((id) => gameData.getItem(id))
@@ -87,7 +122,6 @@ const relevantItemList = computed(() => {
 
 const filteredItems = computed(() => {
   let list = relevantItemList.value;
-  const rawNeeded = planner.calculationResult.rawMaterials;
 
   // Category filter
   if (activeCategory.value === 't5') {
@@ -112,16 +146,12 @@ const filteredItems = computed(() => {
 
   // Only needed toggle
   if (onlyNeeded.value) {
-    list = list.filter((i) => (rawNeeded[i.itemId] || 0) > 0);
+    list = list.filter((i) => getItemNeeded(i.itemId) > 0);
   }
 
   // Only deficit toggle
   if (onlyDeficit.value) {
-    list = list.filter((i) => {
-      const needed = rawNeeded[i.itemId] || 0;
-      const stock = inventory.getStock(i.itemId);
-      return needed > stock;
-    });
+    list = list.filter((i) => getItemDeficit(i.itemId) > 0);
   }
 
   // Search filter: matches current localized name, RU, EN, or item ID
@@ -153,6 +183,12 @@ function handleFillNeeded() {
   const updates: Record<string, number> = {};
   for (const itemId in rawNeeded) {
     updates[itemId] = rawNeeded[itemId];
+  }
+  if (planner.calculationResult.totalLmd > 0) {
+    updates['4001'] = planner.calculationResult.totalLmd;
+  }
+  if (planner.calculationResult.totalExp > 0) {
+    updates['2004'] = Math.ceil(planner.calculationResult.totalExp / 2000);
   }
   inventory.bulkSetStock(updates);
 }
@@ -267,7 +303,7 @@ function handleClearStock() {
         :key="item.itemId"
         class="bg-ark-card border rounded-xl p-3 flex flex-col justify-between transition-all shadow-sm"
         :class="[
-          (planner.calculationResult.rawMaterials[item.itemId] || 0) > inventory.getStock(item.itemId)
+          getItemDeficit(item.itemId) > 0
             ? 'border-red-500/40 bg-red-950/10'
             : 'border-ark-border hover:border-slate-600',
         ]"
@@ -291,23 +327,18 @@ function handleClearStock() {
               <div class="flex items-center justify-between text-slate-400">
                 <span>Нужно:</span>
                 <span class="font-bold text-slate-200">
-                  {{ (planner.calculationResult.rawMaterials[item.itemId] || 0).toLocaleString() }}
+                  {{ getItemNeeded(item.itemId).toLocaleString() }}
                 </span>
               </div>
 
               <!-- Deficit row -->
               <div
-                v-if="(planner.calculationResult.rawMaterials[item.itemId] || 0) > inventory.getStock(item.itemId)"
+                v-if="getItemDeficit(item.itemId) > 0"
                 class="flex items-center justify-between text-red-400 font-bold"
               >
                 <span>Дефицит:</span>
                 <span>
-                  -{{
-                    (
-                      (planner.calculationResult.rawMaterials[item.itemId] || 0) -
-                      inventory.getStock(item.itemId)
-                    ).toLocaleString()
-                  }}
+                  -{{ getItemDeficit(item.itemId).toLocaleString() }}
                 </span>
               </div>
               <div v-else class="flex items-center justify-between text-emerald-400">

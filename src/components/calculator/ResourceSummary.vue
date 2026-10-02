@@ -30,17 +30,55 @@ const activeTab = ref<'direct' | 'farm' | 'craftingTree'>('direct');
 
 const calc = computed(() => planner.calculationResult);
 
-// Battle records breakdown for total EXP
-const expStrategicRecords = computed(() => Math.ceil(calc.value.totalExp / 2000));
-const expTacticalRecords = computed(() => Math.ceil(calc.value.totalExp / 1000));
+// LMD Stock, Needed, Deficit & Progress
+const lmdStock = computed(() => inventory.getStock('4001') || 0);
+const lmdTotalNeeded = computed(() => calc.value.totalLmd);
+const lmdDeficit = computed(() => Math.max(0, lmdTotalNeeded.value - lmdStock.value));
+const lmdProgress = computed(() => {
+  if (lmdTotalNeeded.value <= 0) return 100;
+  return Math.min(100, Math.round((lmdStock.value / lmdTotalNeeded.value) * 100));
+});
+
+// Battle records stock & EXP stats
+const cardStockT4 = computed(() => inventory.getStock('2004') || 0);
+const cardStockT3 = computed(() => inventory.getStock('2003') || 0);
+const cardStockT2 = computed(() => inventory.getStock('2002') || 0);
+const cardStockT1 = computed(() => inventory.getStock('2001') || 0);
+
+const expStock = computed(() => {
+  return (
+    cardStockT4.value * 2000 +
+    cardStockT3.value * 1000 +
+    cardStockT2.value * 400 +
+    cardStockT1.value * 200
+  );
+});
+const expTotalNeeded = computed(() => calc.value.totalExp);
+const expDeficit = computed(() => Math.max(0, expTotalNeeded.value - expStock.value));
+const expProgress = computed(() => {
+  if (expTotalNeeded.value <= 0) return 100;
+  return Math.min(100, Math.round((expStock.value / expTotalNeeded.value) * 100));
+});
+
+// Battle records breakdown
+const expStrategicRecords = computed(() => Math.ceil(expTotalNeeded.value / 2000));
+const expTacticalRecords = computed(() => Math.ceil(expTotalNeeded.value / 1000));
+const expDeficitT4 = computed(() => Math.ceil(expDeficit.value / 2000));
+const expDeficitT3 = computed(() => Math.ceil(expDeficit.value / 1000));
 
 // Deficit count stats
 const totalDeficitItemsCount = computed(() => {
-  return calc.value.directDeficit.filter((d) => d.deficit > 0).length;
+  let count = calc.value.directDeficit.filter((d) => d.deficit > 0).length;
+  if (lmdDeficit.value > 0) count++;
+  if (expDeficit.value > 0) count++;
+  return count;
 });
 
 const totalItemsReadyCount = computed(() => {
-  return calc.value.directDeficit.filter((d) => d.deficit === 0).length;
+  let count = calc.value.directDeficit.filter((d) => d.deficit === 0).length;
+  if (lmdDeficit.value === 0 && lmdTotalNeeded.value > 0) count++;
+  if (expDeficit.value === 0 && expTotalNeeded.value > 0) count++;
+  return count;
 });
 
 // Plan-wide Sanity estimation via Penguin Stats (Materials, LMD, EXP)
@@ -54,20 +92,12 @@ const planSanityEstimate = computed(() => {
   const matEstimate = calculatePlanSanityEstimate(farmList);
 
   // LMD Deficit Sanity (CE-6 gives ~10,000 LMD per 36 Sanity -> 0.0036 Sanity per 1 LMD)
-  const lmdStock = inventory.getStock('4001') || 0;
-  const lmdDeficit = Math.max(0, calc.value.totalLmd - lmdStock);
-  const lmdSanity = Math.round(lmdDeficit * 0.0036);
-  const lmdRuns = Math.ceil(lmdDeficit / 10000);
+  const lmdSanity = Math.round(lmdDeficit.value * 0.0036);
+  const lmdRuns = Math.ceil(lmdDeficit.value / 10000);
 
   // EXP Deficit Sanity (LS-6 gives ~10,000 EXP per 36 Sanity -> 0.0036 Sanity per 1 EXP)
-  const expStock =
-    (inventory.getStock('2004') || 0) * 2000 +
-    (inventory.getStock('2003') || 0) * 1000 +
-    (inventory.getStock('2002') || 0) * 400 +
-    (inventory.getStock('2001') || 0) * 200;
-  const expDeficit = Math.max(0, calc.value.totalExp - expStock);
-  const expSanity = Math.round(expDeficit * 0.0036);
-  const expRuns = Math.ceil(expDeficit / 10000);
+  const expSanity = Math.round(expDeficit.value * 0.0036);
+  const expRuns = Math.ceil(expDeficit.value / 10000);
 
   const totalSanity = matEstimate.totalSanity + lmdSanity + expSanity;
   const totalRuns = matEstimate.totalRuns + lmdRuns + expRuns;
@@ -79,8 +109,10 @@ const planSanityEstimate = computed(() => {
     materialsSanity: matEstimate.totalSanity,
     lmdSanity,
     expSanity,
-    lmdDeficit,
-    expDeficit,
+    lmdDeficit: lmdDeficit.value,
+    expDeficit: expDeficit.value,
+    lmdRuns,
+    expRuns,
     totalSanity,
     totalRuns,
     naturalDays,
@@ -113,15 +145,33 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
             </div>
             <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Всего LMD</span>
           </div>
-          <span class="text-xs font-mono font-medium text-slate-400">
-            Склад: {{ (inventory.getStock('4001') || 0).toLocaleString() }}
+          <span
+            class="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border"
+            :class="lmdDeficit > 0 ? 'bg-cyan-950/80 text-cyan-300 border-cyan-800' : 'bg-emerald-950/80 text-emerald-300 border-emerald-800'"
+          >
+            {{ lmdProgress }}%
           </span>
         </div>
 
         <div class="my-3">
-          <div class="text-2xl font-black font-mono tracking-tight text-cyan-400">
-            {{ calc.totalLmd.toLocaleString() }}
+          <div class="flex items-baseline gap-1.5">
+            <span class="text-2xl font-black font-mono tracking-tight text-cyan-400">
+              {{ lmdStock.toLocaleString() }}
+            </span>
+            <span class="text-xs font-mono text-slate-400">
+              / {{ lmdTotalNeeded.toLocaleString() }}
+            </span>
           </div>
+
+          <!-- Progress bar -->
+          <div class="mt-2 w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all duration-500"
+              :class="lmdDeficit > 0 ? 'bg-cyan-400' : 'bg-emerald-400'"
+              :style="{ width: `${lmdProgress}%` }"
+            ></div>
+          </div>
+
           <!-- LMD breakdown -->
           <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-400 font-mono">
             <span>Уровни: <strong class="text-slate-200">{{ calc.totalLmdLevel.toLocaleString() }}</strong></span>
@@ -132,12 +182,12 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
 
         <!-- Deficit indicator for LMD -->
         <div class="pt-2 border-t border-ark-border/60 text-xs flex justify-between items-center">
-          <span class="text-slate-400">Дефицит LMD:</span>
+          <span class="text-slate-400">Осталось накопить:</span>
           <span
-            v-if="calc.totalLmd > (inventory.getStock('4001') || 0)"
+            v-if="lmdDeficit > 0"
             class="font-mono font-bold text-red-400"
           >
-            -{{ (calc.totalLmd - (inventory.getStock('4001') || 0)).toLocaleString() }}
+            -{{ lmdDeficit.toLocaleString() }}
           </span>
           <span v-else class="font-mono font-bold text-emerald-400 flex items-center gap-1">
             <CheckCircle class="w-3.5 h-3.5" /> В наличии
@@ -154,22 +204,54 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
             </div>
             <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Всего EXP</span>
           </div>
+          <span
+            class="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border"
+            :class="expDeficit > 0 ? 'bg-amber-950/80 text-amber-300 border-amber-800' : 'bg-emerald-950/80 text-emerald-300 border-emerald-800'"
+          >
+            {{ expProgress }}%
+          </span>
         </div>
 
         <div class="my-3">
-          <div class="text-2xl font-black font-mono tracking-tight text-amber-400">
-            {{ calc.totalExp.toLocaleString() }}
+          <div class="flex items-baseline gap-1.5">
+            <span class="text-2xl font-black font-mono tracking-tight text-amber-400">
+              {{ expStock.toLocaleString() }}
+            </span>
+            <span class="text-xs font-mono text-slate-400">
+              / {{ expTotalNeeded.toLocaleString() }} (~{{ expStrategicRecords }} T4)
+            </span>
           </div>
-          <!-- Battle records equivalent -->
-          <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-400 font-mono">
-            <span>T4 книги: <strong class="text-amber-300">{{ expStrategicRecords }} шт.</strong></span>
-            <span>T3 книги: <strong class="text-sky-300">{{ expTacticalRecords }} шт.</strong></span>
+
+          <!-- Progress bar -->
+          <div class="mt-2 w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all duration-500"
+              :class="expDeficit > 0 ? 'bg-amber-400' : 'bg-emerald-400'"
+              :style="{ width: `${expProgress}%` }"
+            ></div>
+          </div>
+
+          <!-- Battle records breakdown -->
+          <div class="mt-2 flex flex-wrap gap-x-2.5 gap-y-1 text-[11px] text-slate-400 font-mono">
+            <span>T4: <strong class="text-amber-300">{{ cardStockT4 }} шт.</strong></span>
+            <span>T3: <strong class="text-sky-300">{{ cardStockT3 }} шт.</strong></span>
+            <span>T2: <strong class="text-emerald-300">{{ cardStockT2 }} шт.</strong></span>
+            <span>T1: <strong class="text-slate-300">{{ cardStockT1 }} шт.</strong></span>
           </div>
         </div>
 
+        <!-- Deficit indicator for EXP -->
         <div class="pt-2 border-t border-ark-border/60 text-xs flex justify-between items-center text-slate-400">
-          <span>На основе боевых записей</span>
-          <span class="text-slate-200 font-mono text-[11px] font-semibold">2,000 EXP / T4</span>
+          <span>Осталось накопить:</span>
+          <span
+            v-if="expDeficit > 0"
+            class="font-mono font-bold text-red-400"
+          >
+            -{{ expDeficit.toLocaleString() }} (~{{ expDeficitT4 }} T4)
+          </span>
+          <span v-else class="font-mono font-bold text-emerald-400 flex items-center gap-1">
+            <CheckCircle class="w-3.5 h-3.5" /> В наличии
+          </span>
         </div>
       </div>
 
@@ -306,7 +388,153 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
         </button>
       </div>
 
-      <div v-if="calc.directDeficit.length === 0" class="p-12 text-center bg-ark-card rounded-2xl border border-ark-border text-slate-400">
+      <!-- PRIMARY CURRENCY & EXP SECTION -->
+      <div v-if="lmdTotalNeeded > 0 || expTotalNeeded > 0 || lmdStock > 0 || expStock > 0" class="bg-ark-card border border-ark-border rounded-2xl p-4 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+            <h3 class="font-bold text-xs sm:text-sm text-slate-100 uppercase tracking-wide">
+              Основные ресурсы (LMD и опыт)
+            </h3>
+          </div>
+          <span class="text-xs text-slate-400 font-mono">
+            Баланс склада и остаток по планам
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <!-- LMD Detailed Card -->
+          <div
+            class="p-3.5 rounded-xl border bg-slate-900/60 flex flex-col justify-between gap-3"
+            :class="lmdDeficit > 0 ? 'border-red-500/40 bg-red-950/10' : 'border-ark-border'"
+          >
+            <div class="flex items-start gap-3">
+              <ItemIcon item-id="4001" size="lg" :deficit="lmdDeficit > 0 ? lmdDeficit : undefined" />
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <h4 class="font-bold text-xs text-slate-100">LMD (Юани Лунмэня)</h4>
+                  <span
+                    class="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border"
+                    :class="lmdDeficit > 0 ? 'bg-red-950/80 text-red-300 border-red-800' : 'bg-emerald-950/80 text-emerald-300 border-emerald-800'"
+                  >
+                    {{ lmdProgress }}%
+                  </span>
+                </div>
+
+                <div class="mt-2 space-y-1 text-xs font-mono">
+                  <div class="flex items-center justify-between text-slate-400">
+                    <span>Накоплено на складе:</span>
+                    <span class="font-bold text-slate-200">{{ lmdStock.toLocaleString() }}</span>
+                  </div>
+                  <div class="flex items-center justify-between text-slate-400">
+                    <span>Всего надо по плану:</span>
+                    <span class="font-semibold text-cyan-300">{{ lmdTotalNeeded.toLocaleString() }}</span>
+                  </div>
+                  <div class="flex items-center justify-between pt-1 border-t border-ark-border/60">
+                    <span class="text-slate-400">Осталось накопить:</span>
+                    <span v-if="lmdDeficit > 0" class="font-bold text-red-400">
+                      -{{ lmdDeficit.toLocaleString() }} LMD
+                    </span>
+                    <span v-else class="font-bold text-emerald-400 flex items-center gap-1">
+                      <CheckCircle class="w-3.5 h-3.5" /> В наличии
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="mt-2.5 w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    class="h-full rounded-full transition-all duration-500"
+                    :class="lmdDeficit > 0 ? 'bg-cyan-400' : 'bg-emerald-400'"
+                    :style="{ width: `${lmdProgress}%` }"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- EXP Cards Detailed Card -->
+          <div
+            class="p-3.5 rounded-xl border bg-slate-900/60 flex flex-col justify-between gap-3"
+            :class="expDeficit > 0 ? 'border-red-500/40 bg-red-950/10' : 'border-ark-border'"
+          >
+            <div class="flex items-start gap-3">
+              <ItemIcon item-id="2004" size="lg" :deficit="expDeficit > 0 ? expDeficit : undefined" />
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <h4 class="font-bold text-xs text-slate-100">Боевые записи (EXP)</h4>
+                  <span
+                    class="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border"
+                    :class="expDeficit > 0 ? 'bg-amber-950/80 text-amber-300 border-amber-800' : 'bg-emerald-950/80 text-emerald-300 border-emerald-800'"
+                  >
+                    {{ expProgress }}%
+                  </span>
+                </div>
+
+                <div class="mt-2 space-y-1 text-xs font-mono">
+                  <div class="flex items-center justify-between text-slate-400">
+                    <span>Накоплено на складе:</span>
+                    <span class="font-bold text-slate-200">{{ expStock.toLocaleString() }} EXP</span>
+                  </div>
+                  <div class="flex items-center justify-between text-slate-400">
+                    <span>Всего надо по плану:</span>
+                    <span class="font-semibold text-amber-300">
+                      {{ expTotalNeeded.toLocaleString() }} EXP (~{{ expStrategicRecords }} шт. T4 / ~{{ expTacticalRecords }} шт. T3)
+                    </span>
+                  </div>
+                  <div class="flex items-center justify-between pt-1 border-t border-ark-border/60">
+                    <span class="text-slate-400">Осталось накопить:</span>
+                    <span v-if="expDeficit > 0" class="font-bold text-red-400">
+                      -{{ expDeficit.toLocaleString() }} EXP (~{{ expDeficitT4 }} T4 / ~{{ expDeficitT3 }} T3)
+                    </span>
+                    <span v-else class="font-bold text-emerald-400 flex items-center gap-1">
+                      <CheckCircle class="w-3.5 h-3.5" /> В наличии
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="mt-2.5 w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    class="h-full rounded-full transition-all duration-500"
+                    :class="expDeficit > 0 ? 'bg-amber-400' : 'bg-emerald-400'"
+                    :style="{ width: `${expProgress}%` }"
+                  ></div>
+                </div>
+
+                <!-- Stocked cards badges -->
+                <div class="mt-2 flex flex-wrap gap-1.5 text-[10px] font-mono">
+                  <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-amber-300">
+                    T4 (2k): {{ cardStockT4 }} шт.
+                  </span>
+                  <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-sky-300">
+                    T3 (1k): {{ cardStockT3 }} шт.
+                  </span>
+                  <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-emerald-300">
+                    T2 (400): {{ cardStockT2 }} шт.
+                  </span>
+                  <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300">
+                    T1 (200): {{ cardStockT1 }} шт.
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Materials deficit section title -->
+      <div v-if="calc.directDeficit.length > 0" class="flex items-center justify-between pt-2">
+        <h3 class="font-bold text-xs sm:text-sm text-slate-100 uppercase tracking-wide flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+          <span>Материалы улучшения ({{ calc.directDeficit.length }})</span>
+        </h3>
+        <span class="text-xs text-slate-400 font-mono">
+          Дефицит: {{ calc.directDeficit.filter(d => d.deficit > 0).length }} шт.
+        </span>
+      </div>
+
+      <div v-if="calc.directDeficit.length === 0 && lmdDeficit === 0 && expDeficit === 0" class="p-12 text-center bg-ark-card rounded-2xl border border-ark-border text-slate-400">
         <CheckCircle class="w-12 h-12 mx-auto text-emerald-400 mb-2" />
         <h4 class="font-bold text-slate-200 text-base">Планы не настроены или все ресурсы собраны!</h4>
         <p class="text-xs mt-1">Добавьте оперативников во вкладке «Оперативники» для расчета необходимых ресурсов.</p>
@@ -401,9 +629,80 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
         </div>
       </div>
 
-      <div v-if="calc.farmRequirements.length === 0" class="p-12 text-center bg-ark-card rounded-2xl border border-ark-border text-slate-400">
+      <!-- Currency & EXP Farming Stage Recommendations -->
+      <div v-if="lmdDeficit > 0 || expDeficit > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <!-- CE-6 Card -->
+        <div v-if="lmdDeficit > 0" class="bg-ark-card border border-cyan-500/40 bg-cyan-950/15 rounded-xl p-3 flex flex-col justify-between shadow-sm space-y-3">
+          <div class="flex items-start gap-3">
+            <ItemIcon item-id="4001" size="lg" :count="lmdDeficit" />
+            <div class="flex-1 min-w-0">
+              <h4 class="font-bold text-xs text-slate-200 truncate">LMD (Юани Лунмэня)</h4>
+              <div class="mt-1 text-xs font-mono">
+                <span class="text-slate-400">Дефицит: </span>
+                <strong class="text-cyan-400 text-sm font-bold">{{ lmdDeficit.toLocaleString() }} LMD</strong>
+              </div>
+              <div class="text-[10px] text-slate-400 font-mono">
+                Склад: {{ lmdStock.toLocaleString() }}
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-1.5">
+              <span class="font-mono font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-800 px-2 py-0.5 rounded text-xs">
+                CE-6
+              </span>
+              <span class="text-[11px] text-slate-300 font-mono">~{{ planSanityEstimate.lmdRuns }} заходов</span>
+            </div>
+            <span class="text-amber-300 font-mono font-bold text-xs">~{{ planSanityEstimate.lmdSanity }} ⚡</span>
+          </div>
+        </div>
+
+        <!-- LS-6 Card -->
+        <div v-if="expDeficit > 0" class="bg-ark-card border border-amber-500/40 bg-amber-950/15 rounded-xl p-3 flex flex-col justify-between shadow-sm space-y-3">
+          <div class="flex items-start gap-3">
+            <ItemIcon item-id="2004" size="lg" :count="expDeficit" />
+            <div class="flex-1 min-w-0">
+              <h4 class="font-bold text-xs text-slate-200 truncate">Опыт оперативников (EXP)</h4>
+              <div class="mt-1 text-xs font-mono">
+                <span class="text-slate-400">Дефицит: </span>
+                <strong class="text-amber-400 text-sm font-bold">{{ expDeficit.toLocaleString() }} EXP</strong>
+              </div>
+              <div class="text-[10px] text-slate-400 font-mono">
+                ~{{ expDeficitT4 }} шт. T4 книг &bull; Склад: {{ expStock.toLocaleString() }} EXP
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-1.5">
+              <span class="font-mono font-bold text-amber-300 bg-amber-950/80 border border-amber-800 px-2 py-0.5 rounded text-xs">
+                LS-6
+              </span>
+              <span class="text-[11px] text-slate-300 font-mono">~{{ planSanityEstimate.expRuns }} заходов</span>
+            </div>
+            <span class="text-amber-300 font-mono font-bold text-xs">~{{ planSanityEstimate.expSanity }} ⚡</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Materials Section Title -->
+      <div v-if="calc.farmRequirements.length > 0" class="flex items-center justify-between pt-1">
+        <h3 class="font-bold text-xs sm:text-sm text-slate-100 uppercase tracking-wide flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+          <span>Базовые материалы к фарму ({{ calc.farmRequirements.length }})</span>
+        </h3>
+      </div>
+
+      <div v-if="calc.farmRequirements.length === 0 && lmdDeficit === 0 && expDeficit === 0" class="p-12 text-center bg-ark-card rounded-2xl border border-ark-border text-slate-400">
         <CheckCircle class="w-12 h-12 mx-auto text-emerald-400 mb-2" />
         <h4 class="font-bold text-slate-200 text-base">Фарм базовых компонентов не требуется!</h4>
+      </div>
+
+      <div v-else-if="calc.farmRequirements.length === 0" class="p-8 text-center bg-ark-card rounded-2xl border border-ark-border text-slate-400">
+        <CheckCircle class="w-10 h-10 mx-auto text-emerald-400 mb-2" />
+        <h4 class="font-bold text-slate-200 text-sm">Все материалы улучшения собраны!</h4>
+        <p class="text-xs text-slate-400 mt-1">Осталось добрать только LMD или EXP (см. рекомендации CE-6 / LS-6 выше).</p>
       </div>
 
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">

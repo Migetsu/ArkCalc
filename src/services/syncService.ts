@@ -122,11 +122,32 @@ export async function parseAndImportData(rawText: string): Promise<{
             }
           } else if (typeof invSource === 'object') {
             for (const [id, count] of Object.entries(invSource)) {
-              const num = Number(count);
+              const num =
+                typeof count === 'object' && count !== null
+                  ? Number((count as any).count ?? (count as any).amount ?? (count as any).have ?? 0)
+                  : Number(count);
               if (id && num > 0 && isCraftResource(id)) {
                 parsedInventory.push({ itemId: id, amount: num });
               }
             }
+          }
+        }
+
+        // Extract LMD (4001) from status (Arknights official game sync stores gold in user.status.gold)
+        const goldVal = Number(
+          data.user?.status?.gold ??
+          data.status?.gold ??
+          data.data?.status?.gold ??
+          data.gold ??
+          data.lmd ??
+          0
+        );
+        if (goldVal > 0) {
+          const existing = parsedInventory.find((i) => i.itemId === '4001');
+          if (existing) {
+            existing.amount = goldVal;
+          } else {
+            parsedInventory.push({ itemId: '4001', amount: goldVal });
           }
         }
 
