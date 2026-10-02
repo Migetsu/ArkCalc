@@ -2,22 +2,15 @@ import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import App from './App.vue';
 import './style.css';
-
-// Register Service Worker for PWA
-import { registerSW } from 'virtual:pwa-register';
-
-registerSW({
-  immediate: true,
-  onNeedRefresh() {
-    console.log('New content available, reload to update.');
-  },
-  onOfflineReady() {
-    console.log('App ready to work offline.');
-  },
-});
+import { usePwaStore } from './stores/pwa';
 
 const app = createApp(App);
 const pinia = createPinia();
 
 app.use(pinia);
+
+// Initialize PWA offline listener and service worker management
+const pwaStore = usePwaStore();
+pwaStore.initPwa();
+
 app.mount('#app');

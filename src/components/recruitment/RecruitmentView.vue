@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, defineAsyncComponent } from 'vue';
 import {
   RECRUIT_TAG_DEFINITIONS,
   solveRecruitment,
@@ -11,8 +11,9 @@ import { useGameDataStore } from '@/stores/gamedata';
 import type { OperatorSummary } from '@/types/game';
 import { getAvatarUrl, PLACEHOLDER_AVATAR } from '@/utils/imageUrl';
 import { getOperatorLocalizationRu } from '@/data/translations/ruDatabase';
-import OperatorDossierModal from '@/components/operator/OperatorDossierModal.vue';
-import PlanEditorModal from '@/components/operator/PlanEditorModal.vue';
+
+const OperatorDossierModal = defineAsyncComponent(() => import('@/components/operator/OperatorDossierModal.vue'));
+const PlanEditorModal = defineAsyncComponent(() => import('@/components/operator/PlanEditorModal.vue'));
 import { useLocaleStore } from '@/stores/locale';
 import {
   Radio,

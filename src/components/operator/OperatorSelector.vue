@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, defineAsyncComponent } from 'vue';
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import { useGameDataStore } from '@/stores/gamedata';
 import { usePlannerStore } from '@/stores/planner';
 import type { OperatorSummary, Profession } from '@/types/game';
 import OperatorCard from './OperatorCard.vue';
-import PlanEditorModal from './PlanEditorModal.vue';
-import OperatorDossierModal from './OperatorDossierModal.vue';
+
+const PlanEditorModal = defineAsyncComponent(() => import('./PlanEditorModal.vue'));
+const OperatorDossierModal = defineAsyncComponent(() => import('./OperatorDossierModal.vue'));
 import { Search, Filter, UserCheck, X } from 'lucide-vue-next';
 import {
   normalizeSearchString,

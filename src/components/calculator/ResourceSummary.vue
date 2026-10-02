@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, defineAsyncComponent } from 'vue';
 import { usePlannerStore } from '@/stores/planner';
 import { useGameDataStore } from '@/stores/gamedata';
 import { useInventoryStore } from '@/stores/inventory';
 import { useLocaleStore } from '@/stores/locale';
 import { ARKNIGHTS_EVENTS } from '@/data/eventsData';
 import ItemIcon from '@/components/common/ItemIcon.vue';
-import CraftingTree from './CraftingTree.vue';
-import FarmingGuideModal from './FarmingGuideModal.vue';
+
+const CraftingTree = defineAsyncComponent(() => import('./CraftingTree.vue'));
+const FarmingGuideModal = defineAsyncComponent(() => import('./FarmingGuideModal.vue'));
 import {
   getRecommendedStage,
   calculatePlanSanityEstimate,

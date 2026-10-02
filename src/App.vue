@@ -1,20 +1,24 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue';
 import { useGameDataStore } from '@/stores/gamedata';
 import { useInventoryStore } from '@/stores/inventory';
 import { usePlannerStore } from '@/stores/planner';
 import { useRosterStore } from '@/stores/roster';
 import { useAuthStore } from '@/stores/auth';
 import { useLocaleStore, type AppLanguage } from '@/stores/locale';
+import { usePwaStore } from '@/stores/pwa';
 import OperatorSelector from '@/components/operator/OperatorSelector.vue';
-import RosterView from '@/components/roster/RosterView.vue';
-import WikiView from '@/components/wiki/WikiView.vue';
-import RecruitmentView from '@/components/recruitment/RecruitmentView.vue';
-import InventoryGrid from '@/components/inventory/InventoryGrid.vue';
-import ResourceSummary from '@/components/calculator/ResourceSummary.vue';
-import EventsView from '@/components/events/EventsView.vue';
-import SettingsModal from '@/components/common/SettingsModal.vue';
-import AuthModal from '@/components/auth/AuthModal.vue';
+
+// Lazy-loaded views & modals for optimal bundle splitting
+const RosterView = defineAsyncComponent(() => import('@/components/roster/RosterView.vue'));
+const WikiView = defineAsyncComponent(() => import('@/components/wiki/WikiView.vue'));
+const RecruitmentView = defineAsyncComponent(() => import('@/components/recruitment/RecruitmentView.vue'));
+const InventoryGrid = defineAsyncComponent(() => import('@/components/inventory/InventoryGrid.vue'));
+const ResourceSummary = defineAsyncComponent(() => import('@/components/calculator/ResourceSummary.vue'));
+const EventsView = defineAsyncComponent(() => import('@/components/events/EventsView.vue'));
+const SettingsModal = defineAsyncComponent(() => import('@/components/common/SettingsModal.vue'));
+const AuthModal = defineAsyncComponent(() => import('@/components/auth/AuthModal.vue'));
+
 import { exportDatabaseToJson } from '@/services/syncService';
 import {
   Users,
@@ -44,6 +48,7 @@ const planner = usePlannerStore();
 const roster = useRosterStore();
 const auth = useAuthStore();
 const locale = useLocaleStore();
+const pwa = usePwaStore();
 
 type TabType = 'operators' | 'roster' | 'inventory' | 'calculator' | 'events' | 'recruitment' | 'wiki';
 const currentTab = ref<TabType>('operators');
@@ -135,6 +140,37 @@ onUnmounted(() => {
       <div class="absolute -top-40 left-1/4 w-96 h-96 bg-cyan-500/[0.04] rounded-full blur-3xl"></div>
       <div class="absolute top-1/3 -right-40 w-96 h-96 bg-blue-600/[0.04] rounded-full blur-3xl"></div>
       <div class="absolute bottom-10 left-10 w-80 h-80 bg-cyan-500/[0.03] rounded-full blur-3xl"></div>
+    </div>
+
+    <!-- PWA Service Worker Update Alert Banner -->
+    <div
+      v-if="pwa.needRefresh"
+      class="bg-gradient-to-r from-cyan-950 via-slate-900 to-cyan-950 border-b border-cyan-500/50 px-4 py-2 text-xs flex items-center justify-between gap-3 text-cyan-200 z-40 sticky top-0 shadow-lg backdrop-blur-md animate-fade-in"
+    >
+      <div class="flex items-center gap-2.5 min-w-0">
+        <RefreshCw class="w-4 h-4 text-cyan-400 animate-spin flex-shrink-0" />
+        <span class="font-medium truncate">
+          {{ locale.currentLang === 'ru' ? 'Доступна новая версия ARK-Calc! Нажмите для мгновенного обновления.' : 'New ARK-Calc version available! Click to reload.' }}
+        </span>
+      </div>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <button
+          type="button"
+          class="px-3 py-1 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-lg text-xs transition-all shadow-md active:scale-95 flex items-center gap-1.5"
+          @click="pwa.updateApp"
+        >
+          <RefreshCw class="w-3.5 h-3.5" />
+          <span>{{ locale.currentLang === 'ru' ? 'Обновить' : 'Reload' }}</span>
+        </button>
+        <button
+          type="button"
+          class="p-1 text-slate-400 hover:text-white rounded-lg transition-colors"
+          :title="locale.currentLang === 'ru' ? 'Закрыть' : 'Dismiss'"
+          @click="pwa.dismissRefresh"
+        >
+          <X class="w-4 h-4" />
+        </button>
+      </div>
     </div>
 
     <!-- Top Tactical Navigation Header -->
@@ -252,8 +288,18 @@ onUnmounted(() => {
           </template>
         </nav>
 
-        <!-- Right Action Cluster: Cloud Pill & PRTS Menu Burger Button -->
+        <!-- Right Action Cluster: Offline Pill, Cloud Pill & PRTS Menu Burger Button -->
         <div class="flex items-center gap-2">
+          <!-- Offline Indicator -->
+          <div
+            v-if="!pwa.isOnline"
+            class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-amber-500/50 bg-amber-950/50 text-amber-300 text-xs font-mono font-bold animate-pulse shadow-sm"
+            :title="locale.currentLang === 'ru' ? 'Оффлайн режим: все данные доступны из локального хранилища' : 'Offline mode: working from local cache'"
+          >
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+            <span class="text-[10px] tracking-wider">OFFLINE</span>
+          </div>
+
           <!-- Cloud Sync Status Pill -->
           <button
             type="button"
@@ -781,10 +827,10 @@ onUnmounted(() => {
           <!-- Drawer Footer -->
           <div class="p-3.5 sm:p-4 bg-slate-900/70 border-t border-slate-800 text-[10px] font-mono text-slate-400 flex items-center justify-between flex-shrink-0">
             <div class="flex items-center gap-1.5">
-              <ShieldCheck class="w-3.5 h-3.5 text-cyan-400" />
-              <span>PRTS Terminal &bull; Local-First</span>
+              <ShieldCheck class="w-3.5 h-3.5" :class="pwa.isOnline ? 'text-cyan-400' : 'text-amber-400'" />
+              <span>PRTS Terminal &bull; {{ pwa.isOnline ? 'ONLINE' : 'OFFLINE CACHE' }}</span>
             </div>
-            <span class="text-slate-500">Live Engine v4.2</span>
+            <span class="text-slate-500 font-mono">PWA v4.2</span>
           </div>
         </aside>
       </Transition>

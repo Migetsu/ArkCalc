@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, defineAsyncComponent } from 'vue';
 import { useRosterStore } from '@/stores/roster';
 import { usePlannerStore } from '@/stores/planner';
 import { useGameDataStore } from '@/stores/gamedata';
 import { useLocaleStore } from '@/stores/locale';
 import type { Profession, OperatorSummary } from '@/types/game';
-import PlanEditorModal from '@/components/operator/PlanEditorModal.vue';
-import OperatorDossierModal from '@/components/operator/OperatorDossierModal.vue';
+
+const PlanEditorModal = defineAsyncComponent(() => import('@/components/operator/PlanEditorModal.vue'));
+const OperatorDossierModal = defineAsyncComponent(() => import('@/components/operator/OperatorDossierModal.vue'));
 import {
   getAvatarUrl,
   PLACEHOLDER_AVATAR,

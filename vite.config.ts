@@ -91,6 +91,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/raw\.githubusercontent\.com\/.*/i,
@@ -98,8 +99,8 @@ export default defineConfig({
             options: {
               cacheName: 'arknights-cdn-cache',
               expiration: {
-                maxEntries: 1000,
-                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+                maxEntries: 2500,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
               },
               cacheableResponse: {
                 statuses: [0, 200]
@@ -107,12 +108,40 @@ export default defineConfig({
             }
           },
           {
-            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/.*/i,
+            urlPattern: /^https:\/\/(static|torappu|media)\.prts\.wiki\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'prts-wiki-cache',
+              expiration: {
+                maxEntries: 1500,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/(cdn|fastly)\.jsdelivr\.net\/.*/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'jsdelivr-cdn-cache',
               expiration: {
                 maxEntries: 1000,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/penguin-stats\.(io|cn)\/.*/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'penguin-stats-cache',
+              expiration: {
+                maxEntries: 100,
                 maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
               },
               cacheableResponse: {
@@ -124,6 +153,46 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    target: 'esnext',
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 700,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('@supabase')) {
+              return 'vendor-supabase';
+            }
+            if (id.includes('dexie')) {
+              return 'vendor-dexie';
+            }
+            if (id.includes('lucide-vue-next')) {
+              return 'vendor-icons';
+            }
+            if (id.includes('vue-virtual-scroller')) {
+              return 'vendor-scroller';
+            }
+            if (id.includes('vue') || id.includes('pinia')) {
+              return 'vendor-core';
+            }
+          }
+          if (id.includes('cnSkillsDatabase')) {
+            return 'data-cn-skills';
+          }
+          if (id.includes('ruDatabase') || id.includes('arknightsGlossary')) {
+            return 'data-translations';
+          }
+          if (id.includes('eventsData')) {
+            return 'data-events';
+          }
+          if (id.includes('benchmarkData')) {
+            return 'data-penguin';
+          }
+        }
+      }
+    }
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src')
