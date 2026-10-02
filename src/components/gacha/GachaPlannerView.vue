@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useLocaleStore } from '@/stores/locale';
 import { useInventoryStore } from '@/stores/inventory';
 import { ARKNIGHTS_EVENTS, type ArknightsEvent } from '@/data/eventsData';
@@ -30,12 +30,67 @@ import {
 const locale = useLocaleStore();
 const inventory = useInventoryStore();
 
-// ─── Current Pull Currency Inputs ─────────────────────────────────────────
-const orundum = ref<number>(18000);
-const originiumPrime = ref<number>(35);
-const singleTickets = ref<number>(5);
-const tenTickets = ref<number>(1);
-const currentPity = ref<number>(0);
+// ─── Current Pull Currency Inputs & Persistence ───────────────────────────
+const LS_CURRENCY_KEY = 'ark_gacha_currencies_v1';
+
+interface SavedGachaCurrencies {
+  orundum?: number;
+  originiumPrime?: number;
+  singleTickets?: number;
+  tenTickets?: number;
+  pity?: number;
+}
+
+function loadSavedCurrencies(): SavedGachaCurrencies | null {
+  try {
+    const raw = localStorage.getItem(LS_CURRENCY_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveCurrenciesToStorage(c: SavedGachaCurrencies) {
+  try {
+    localStorage.setItem(LS_CURRENCY_KEY, JSON.stringify(c));
+  } catch (e) {
+    console.warn('Cannot save gacha currencies to storage:', e);
+  }
+}
+
+const savedCurrencies = loadSavedCurrencies();
+const depotOrundum = inventory.getStock('4003');
+const depotOp = inventory.getStock('4002');
+const depotSingle = inventory.getStock('7001');
+const depotTen = inventory.getStock('7002');
+const hasDepotStock = depotOrundum > 0 || depotOp > 0 || depotSingle > 0 || depotTen > 0;
+
+// Default to saved, else depot stock, else strictly 0
+const orundum = ref<number>(
+  savedCurrencies?.orundum !== undefined
+    ? savedCurrencies.orundum
+    : (hasDepotStock ? depotOrundum : 0),
+);
+const originiumPrime = ref<number>(
+  savedCurrencies?.originiumPrime !== undefined
+    ? savedCurrencies.originiumPrime
+    : (hasDepotStock ? depotOp : 0),
+);
+const singleTickets = ref<number>(
+  savedCurrencies?.singleTickets !== undefined
+    ? savedCurrencies.singleTickets
+    : (hasDepotStock ? depotSingle : 0),
+);
+const tenTickets = ref<number>(
+  savedCurrencies?.tenTickets !== undefined
+    ? savedCurrencies.tenTickets
+    : (hasDepotStock ? depotTen : 0),
+);
+const currentPity = ref<number>(
+  savedCurrencies?.pity !== undefined ? savedCurrencies.pity : 0,
+);
+
+const depotNotification = ref<string | null>(null);
 
 // Auto-fill from inventory if available
 function fillFromDepot() {
@@ -44,18 +99,78 @@ function fillFromDepot() {
   const stockSingle = inventory.getStock('7001');
   const stockTen = inventory.getStock('7002');
 
-  if (stockOrundum > 0) orundum.value = stockOrundum;
-  if (stockOp > 0) originiumPrime.value = stockOp;
-  if (stockSingle > 0) singleTickets.value = stockSingle;
-  if (stockTen > 0) tenTickets.value = stockTen;
+  orundum.value = stockOrundum || 0;
+  originiumPrime.value = stockOp || 0;
+  singleTickets.value = stockSingle || 0;
+  tenTickets.value = stockTen || 0;
+
+  if (stockOrundum === 0 && stockOp === 0 && stockSingle === 0 && stockTen === 0) {
+    depotNotification.value =
+      locale.currentLang === 'ru'
+        ? 'На Складе 0 валюты призыва. Введите количество вручную или импортируйте данные аккаунта.'
+        : 'Depot has 0 recruitment currency. Enter manually or import your account data.';
+  } else {
+    depotNotification.value =
+      locale.currentLang === 'ru'
+        ? 'Ресурсы успешно загружены из вашего Склада!'
+        : 'Resources loaded from your Depot!';
+  }
+  setTimeout(() => {
+    depotNotification.value = null;
+  }, 4000);
 }
+
+function resetCurrencies() {
+  orundum.value = 0;
+  originiumPrime.value = 0;
+  singleTickets.value = 0;
+  tenTickets.value = 0;
+  currentPity.value = 0;
+  saveCurrenciesToStorage({
+    orundum: 0,
+    originiumPrime: 0,
+    singleTickets: 0,
+    tenTickets: 0,
+    pity: 0,
+  });
+}
+
+// Automatically populate from depot on startup if user has depot stock and no previous manual save
+watch(
+  () => inventory.isLoaded,
+  (loaded) => {
+    if (loaded && !savedCurrencies) {
+      const stockOrundum = inventory.getStock('4003');
+      const stockOp = inventory.getStock('4002');
+      const stockSingle = inventory.getStock('7001');
+      const stockTen = inventory.getStock('7002');
+      if (stockOrundum > 0 || stockOp > 0 || stockSingle > 0 || stockTen > 0) {
+        orundum.value = stockOrundum;
+        originiumPrime.value = stockOp;
+        singleTickets.value = stockSingle;
+        tenTickets.value = stockTen;
+      }
+    }
+  },
+);
+
+// Persist user's manual inputs to localStorage
+watch([orundum, originiumPrime, singleTickets, tenTickets, currentPity], () => {
+  saveCurrenciesToStorage({
+    orundum: orundum.value || 0,
+    originiumPrime: originiumPrime.value || 0,
+    singleTickets: singleTickets.value || 0,
+    tenTickets: tenTickets.value || 0,
+    pity: currentPity.value || 0,
+  });
+});
 
 const convertedPulls = computed(() =>
   convertResourcesToPulls({
-    orundum: orundum.value,
-    originiumPrime: originiumPrime.value,
-    singleTickets: singleTickets.value,
-    tenTickets: tenTickets.value,
+    orundum: orundum.value || 0,
+    originiumPrime: originiumPrime.value || 0,
+    singleTickets: singleTickets.value || 0,
+    tenTickets: tenTickets.value || 0,
   }),
 );
 
@@ -383,16 +498,28 @@ const isFaqOpen = ref<boolean>(false);
         </div>
       </div>
 
-      <!-- Quick Fill from Depot button & Current Pity Counter -->
+      <!-- Quick Fill from Depot button, Reset to 0 & Current Pity Counter -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 text-xs">
-        <button
-          type="button"
-          class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-semibold border border-slate-700 transition-all flex items-center gap-2 self-start"
-          @click="fillFromDepot"
-        >
-          <Wallet class="w-3.5 h-3.5 text-cyan-400" />
-          <span>{{ locale.currentLang === 'ru' ? 'Заполнить из моего Склада' : 'Load from My Depot' }}</span>
-        </button>
+        <div class="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 font-semibold border border-slate-700 transition-all flex items-center gap-2"
+            @click="fillFromDepot"
+          >
+            <Wallet class="w-3.5 h-3.5 text-cyan-400" />
+            <span>{{ locale.currentLang === 'ru' ? 'Загрузить из моего Склада' : 'Load from My Depot' }}</span>
+          </button>
+
+          <button
+            type="button"
+            class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 font-semibold border border-slate-800 transition-all flex items-center gap-1.5"
+            :title="locale.currentLang === 'ru' ? 'Обнулить все значения' : 'Clear all values'"
+            @click="resetCurrencies"
+          >
+            <RotateCcw class="w-3.5 h-3.5 text-slate-400" />
+            <span>{{ locale.currentLang === 'ru' ? 'Сбросить в 0' : 'Reset to 0' }}</span>
+          </button>
+        </div>
 
         <!-- Current Pity Slider -->
         <div class="flex items-center gap-3 bg-slate-900 px-3 py-1.5 rounded-xl border border-ark-border">
@@ -409,6 +536,15 @@ const isFaqOpen = ref<boolean>(false);
             class="w-24 sm:w-32 accent-cyan-500 cursor-pointer"
           />
         </div>
+      </div>
+
+      <!-- Depot Notification Toast -->
+      <div
+        v-if="depotNotification"
+        class="text-xs font-mono text-cyan-300 bg-cyan-950/80 border border-cyan-700/80 px-3.5 py-2 rounded-xl flex items-center justify-between shadow-sm animate-fade-in"
+      >
+        <span>{{ depotNotification }}</span>
+        <button type="button" class="text-slate-400 hover:text-white ml-2 text-xs" @click="depotNotification = null">✕</button>
       </div>
     </div>
 
