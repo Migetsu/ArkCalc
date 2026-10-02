@@ -5,7 +5,7 @@ import { supabase } from '@/services/supabaseClient';
 import { useInventoryStore } from '@/stores/inventory';
 import { usePlannerStore } from '@/stores/planner';
 import { useRosterStore } from '@/stores/roster';
-import { useGameDataStore } from '@/stores/gamedata';
+import { useLocaleStore } from '@/stores/locale';
 
 const LAST_SYNC_KEY = 'ark_last_cloud_sync_time';
 
@@ -22,7 +22,7 @@ export const useAuthStore = defineStore('auth', () => {
   const inventory = useInventoryStore();
   const planner = usePlannerStore();
   const roster = useRosterStore();
-  const gameData = useGameDataStore();
+  const locale = useLocaleStore();
 
   const isAuthenticated = computed(() => !!user.value);
   const userEmail = computed(() => user.value?.email || '');
@@ -138,10 +138,45 @@ export const useAuthStore = defineStore('auth', () => {
       session.value = null;
       syncMessage.value = null;
       syncError.value = null;
+      // Reset language back to default English upon sign out
+      locale.setLanguage('en', false);
     } catch (err: any) {
       console.warn('Sign out failed:', err);
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  // Explicitly persist user's language choice to Supabase cloud profile & auth metadata
+  async function saveLanguagePreference(lang: 'en' | 'ru'): Promise<void> {
+    if (!user.value) return;
+    try {
+      // 1. Update user metadata in Supabase Auth
+      await supabase.auth.updateUser({
+        data: { language: lang },
+      });
+
+      // 2. Fetch existing settings_data to merge or update in user_profiles
+      const { data: existing } = await supabase
+        .from('user_profiles')
+        .select('settings_data')
+        .eq('id', user.value.id)
+        .maybeSingle();
+
+      const newSettings = {
+        ...(existing?.settings_data || {}),
+        language: lang,
+        itemLanguage: lang,
+      };
+
+      await supabase.from('user_profiles').upsert({
+        id: user.value.id,
+        email: user.value.email,
+        settings_data: newSettings,
+        updated_at: new Date().toISOString(),
+      });
+    } catch (e) {
+      console.warn('Failed to save language preference to Supabase:', e);
     }
   }
 
@@ -163,7 +198,8 @@ export const useAuthStore = defineStore('auth', () => {
         plans_data: planner.plans,
         roster_data: roster.rosterList,
         settings_data: {
-          itemLanguage: gameData.itemLanguage,
+          language: locale.currentLang,
+          itemLanguage: locale.currentLang,
         },
         updated_at: new Date().toISOString(),
       };
@@ -174,6 +210,11 @@ export const useAuthStore = defineStore('auth', () => {
         syncError.value = error.message;
         return { success: false, error: error.message };
       }
+
+      // Also ensure auth user metadata has the language
+      supabase.auth.updateUser({
+        data: { language: locale.currentLang },
+      }).catch(() => {});
 
       const now = new Date().toISOString();
       lastSyncTime.value = now;
@@ -237,8 +278,14 @@ export const useAuthStore = defineStore('auth', () => {
           await roster.saveRoster(data.roster_data);
         }
 
-        if (data.settings_data?.itemLanguage) {
-          gameData.setItemLanguage(data.settings_data.itemLanguage);
+        // Restore language preference from Supabase cloud
+        const cloudLang =
+          data.settings_data?.language ||
+          data.settings_data?.itemLanguage ||
+          user.value?.user_metadata?.language;
+
+        if (cloudLang === 'en' || cloudLang === 'ru') {
+          locale.setLanguage(cloudLang, false);
         }
 
         const now = data.updated_at || new Date().toISOString();
@@ -285,6 +332,7 @@ export const useAuthStore = defineStore('auth', () => {
     signUp,
     signIn,
     signOut,
+    saveLanguagePreference,
     syncToCloud,
     pullFromCloud,
     triggerAutoSync,

@@ -1,6 +1,7 @@
 // src/stores/locale.ts
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
+import { useAuthStore } from './auth';
 
 export type AppLanguage = 'en' | 'ru';
 
@@ -740,10 +741,17 @@ const TRANSLATIONS = {
 export const useLocaleStore = defineStore('locale', () => {
   function getInitialLang(): AppLanguage {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored === 'en' || stored === 'ru') {
-        return stored;
+      // Check if there is an active logged-in Supabase session in localStorage
+      const hasSupabaseSession = Object.keys(localStorage).some(
+        (k) => k.startsWith('sb-') && k.endsWith('-auth-token')
+      );
+      if (hasSupabaseSession) {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored === 'en' || stored === 'ru') {
+          return stored;
+        }
       }
+      // If anonymous / not authenticated, default is strictly English!
       localStorage.setItem(STORAGE_KEY, 'en');
       localStorage.setItem('ark_item_language', 'en');
     } catch {
@@ -755,7 +763,7 @@ export const useLocaleStore = defineStore('locale', () => {
 
   const currentLang = ref<AppLanguage>(getInitialLang());
 
-  function setLanguage(lang: AppLanguage) {
+  function setLanguage(lang: AppLanguage, syncCloud = true) {
     if (lang !== 'en' && lang !== 'ru') return;
     currentLang.value = lang;
     try {
@@ -763,6 +771,18 @@ export const useLocaleStore = defineStore('locale', () => {
       localStorage.setItem('ark_item_language', lang);
     } catch {
       // ignore
+    }
+
+    // If user is authenticated with Supabase, persist their preference to cloud
+    if (syncCloud) {
+      try {
+        const auth = useAuthStore();
+        if (auth.isAuthenticated) {
+          auth.saveLanguagePreference(lang);
+        }
+      } catch {
+        // ignore
+      }
     }
   }
 

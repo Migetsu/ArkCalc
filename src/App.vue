@@ -713,8 +713,15 @@ onUnmounted(() => {
                     <Globe class="w-4.5 h-4.5 text-cyan-400" />
                   </div>
                   <div>
-                    <div class="font-bold text-xs text-slate-100">
-                      {{ locale.currentLang === 'ru' ? 'Язык интерфейса' : 'Interface Language' }}
+                    <div class="font-bold text-xs text-slate-100 flex items-center gap-1.5">
+                      <span>{{ locale.currentLang === 'ru' ? 'Язык интерфейса' : 'Interface Language' }}</span>
+                      <span
+                        v-if="auth.isAuthenticated"
+                        class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-cyan-950/80 text-cyan-300 border border-cyan-800/80"
+                        :title="locale.currentLang === 'ru' ? 'Синхронизируется с облаком Supabase' : 'Synchronized with Supabase Cloud'"
+                      >
+                        Cloud
+                      </span>
                     </div>
                     <div class="text-[11px] text-slate-400 font-mono">
                       {{ locale.currentLang === 'en' ? 'English (Default)' : 'Русский (RU)' }}
