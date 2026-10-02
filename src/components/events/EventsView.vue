@@ -70,19 +70,16 @@ const filteredEvents = computed(() => {
 
 function getHeaderTag(e: ArknightsEvent): string {
   if (locale.currentLang === 'ru') return e.headerTagRu;
-  if (locale.currentLang === 'cn') return e.headerTagCn;
   return e.headerTagEn;
 }
 
 function getPrompt6(e: ArknightsEvent): string {
   if (locale.currentLang === 'ru') return e.prompt6Ru || locale.t('events.defaultPrompt6');
-  if (locale.currentLang === 'cn') return e.prompt6Cn || locale.t('events.defaultPrompt6');
   return e.prompt6En || locale.t('events.defaultPrompt6');
 }
 
 function getPrompt5(e: ArknightsEvent): string {
   if (locale.currentLang === 'ru') return e.prompt5Ru || locale.t('events.defaultPrompt5');
-  if (locale.currentLang === 'cn') return e.prompt5Cn || locale.t('events.defaultPrompt5');
   return e.prompt5En || locale.t('events.defaultPrompt5');
 }
 
@@ -108,7 +105,7 @@ function handleAvatarError(e: Event) {
             {{ locale.t('events.subtitle') }}
           </h2>
           <p class="text-xs text-slate-400 mt-1 max-w-2xl">
-            CN server runs ~5.5 months ahead of Global (EN/JP/KR). Preview active CN banners, upcoming Global events, and retrospective timelines with full shop rewards and optimal stage farming rates.
+            {{ locale.currentLang === 'ru' ? 'CN сервер опережает Global (EN/JP/KR) примерно на 5.5 месяцев. Просматривайте активные CN баннеры, предстоящие Global события и хронологию с наградами магазина и оптимальными картами для фарма.' : 'CN server runs ~5.5 months ahead of Global (EN/JP/KR). Preview active CN banners, upcoming Global events, and retrospective timelines with full shop rewards and optimal stage farming rates.' }}
           </p>
         </div>
 
@@ -132,7 +129,7 @@ function handleAvatarError(e: Event) {
           @click="categoryFilter = 'all'"
         >
           <Flame class="w-3.5 h-3.5 text-amber-300" />
-          <span>{{ locale.currentLang === 'ru' ? 'Все' : locale.currentLang === 'cn' ? '全部' : 'All' }}</span>
+          <span>{{ locale.currentLang === 'ru' ? 'Все' : 'All' }}</span>
           <span class="bg-slate-950/60 font-mono text-[10px] px-1.5 py-0.2 rounded">
             {{ ARKNIGHTS_EVENTS.length }}
           </span>
@@ -145,7 +142,7 @@ function handleAvatarError(e: Event) {
           @click="categoryFilter = 'events'"
         >
           <ShoppingBag class="w-3.5 h-3.5 text-cyan-300" />
-          <span>{{ locale.currentLang === 'ru' ? 'Ивенты с магазином' : locale.currentLang === 'cn' ? '活动商店与掉落' : 'Events & Shops' }}</span>
+          <span>{{ locale.currentLang === 'ru' ? 'Ивенты с магазином' : 'Events & Shops' }}</span>
           <span class="bg-slate-950/60 font-mono text-[10px] px-1.5 py-0.2 rounded">
             {{ ARKNIGHTS_EVENTS.filter(e => e.shopItems.length > 0).length }}
           </span>
@@ -158,7 +155,7 @@ function handleAvatarError(e: Event) {
           @click="categoryFilter = 'banners'"
         >
           <Radio class="w-3.5 h-3.5 text-amber-300" />
-          <span>{{ locale.currentLang === 'ru' ? 'Баннеры хедхантинга' : locale.currentLang === 'cn' ? '寻访卡池' : 'Headhunting Banners' }}</span>
+          <span>{{ locale.currentLang === 'ru' ? 'Баннеры хедхантинга' : 'Headhunting Banners' }}</span>
           <span class="bg-slate-950/60 font-mono text-[10px] px-1.5 py-0.2 rounded">
             {{ ARKNIGHTS_EVENTS.filter(e => e.type === 'headhunting' && e.shopItems.length === 0).length }}
           </span>

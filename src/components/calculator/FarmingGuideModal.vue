@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue';
 import { useGameDataStore } from '@/stores/gamedata';
 import { useInventoryStore } from '@/stores/inventory';
+import { useLocaleStore } from '@/stores/locale';
 import ItemIcon from '@/components/common/ItemIcon.vue';
 import {
   getAllStagesForMaterial,
@@ -22,6 +23,7 @@ const emit = defineEmits<{
 
 const gameData = useGameDataStore();
 const inventory = useInventoryStore();
+const locale = useLocaleStore();
 
 const currentItemId = ref<string | null>(props.itemId);
 const currentNeededCount = ref<number>(props.neededCount || 0);
@@ -115,7 +117,7 @@ function goBack() {
             v-if="history.length > 0"
             type="button"
             class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors"
-            title="Назад"
+            :title="locale.t('common.back')"
             @click="goBack"
           >
             <ArrowLeft class="w-4 h-4" />
@@ -126,7 +128,7 @@ function goBack() {
               {{ item.name }}
             </h3>
             <p class="text-xs text-slate-400 font-mono flex items-center gap-1.5 mt-0.5">
-              <span>Рекомендации по фарму и крафту</span>
+              <span>{{ locale.t('farming.guideTitle') }}</span>
               &bull;
               <span class="text-cyan-400 font-bold">Penguin Statistics</span>
             </p>
@@ -147,11 +149,11 @@ function goBack() {
         v-if="currentNeededCount > 0"
         class="px-5 py-2.5 bg-gradient-to-r from-cyan-950/40 via-slate-900 to-slate-900 border-b border-ark-border flex items-center justify-between text-xs"
       >
-        <span class="text-slate-300">Требуется для вашего плана:</span>
+        <span class="text-slate-300">{{ locale.t('farming.requiredForPlan') }}</span>
         <div class="flex items-center gap-2">
-          <span class="font-mono text-slate-400">Склад: {{ inventory.getStock(currentItemId) }}</span>
+          <span class="font-mono text-slate-400">{{ locale.t('farming.inStock') }} {{ inventory.getStock(currentItemId) }}</span>
           <span class="font-mono font-bold text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/80">
-            {{ currentNeededCount }} шт.
+            {{ currentNeededCount }} {{ locale.t('craft.pieces') }}
           </span>
         </div>
       </div>
@@ -164,15 +166,15 @@ function goBack() {
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-2 text-cyan-400 font-bold text-xs uppercase tracking-wider">
               <Hammer class="w-4 h-4" />
-              <span>Синтез в Мастерской (Крафт)</span>
+              <span>{{ locale.t('farming.synthesisTitle') }}</span>
             </div>
             <span class="text-[10px] font-mono font-bold bg-cyan-950 text-cyan-300 px-2 py-0.5 rounded border border-cyan-800">
-              Выход: {{ recipe.count || 1 }} шт.
+              {{ locale.t('farming.yield') }} {{ recipe.count || 1 }} {{ locale.t('craft.pieces') }}
             </span>
           </div>
 
           <p class="text-slate-300 leading-relaxed text-[11px]">
-            Высокоуровневые материалы в Arknights создаются в Мастерской. Фармите базовые компоненты на лучших стадиях ниже:
+            {{ locale.t('farming.synthesisHint') }}
           </p>
 
           <!-- Ingredients list -->
@@ -189,11 +191,11 @@ function goBack() {
                     {{ gameData.getItem(cost.id)?.name || cost.id }}
                   </div>
                   <div class="text-[10px] font-mono text-slate-400 flex items-center gap-2 mt-0.5">
-                    <span>На 1 крафт: <strong class="text-slate-200">{{ cost.count }}</strong></span>
+                    <span>{{ locale.t('farming.perCraft') }} <strong class="text-slate-200">{{ cost.count }}</strong></span>
                     <span v-if="currentNeededCount > 0" class="text-amber-300">
-                      Всего: <strong>{{ Math.ceil((cost.count * currentNeededCount) / (recipe.count || 1)) }} шт.</strong>
+                      {{ locale.t('farming.totalRequired') }} <strong>{{ Math.ceil((cost.count * currentNeededCount) / (recipe.count || 1)) }} {{ locale.t('craft.pieces') }}</strong>
                     </span>
-                    <span class="text-slate-500">(склад: {{ inventory.getStock(cost.id) }})</span>
+                    <span class="text-slate-500">({{ locale.t('common.inStock').toLowerCase() }}: {{ inventory.getStock(cost.id) }})</span>
                   </div>
                 </div>
               </div>
@@ -204,10 +206,10 @@ function goBack() {
                   <button
                     type="button"
                     class="px-2.5 py-1 rounded-md bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-800 text-cyan-300 hover:text-white font-mono font-bold text-xs flex items-center gap-1.5 transition-colors"
-                    title="Посмотреть статистику этой карты"
+                    :title="locale.currentLang === 'ru' ? 'Посмотреть статистику этой карты' : 'View stage statistics'"
                     @click="navigateToIngredient(cost.id, Math.ceil((cost.count * (currentNeededCount || 1)) / (recipe.count || 1)))"
                   >
-                    <span>Фарм: {{ getRecommendedStage(cost.id)?.stageCode }}</span>
+                    <span>{{ locale.currentLang === 'ru' ? 'Фарм:' : 'Farm:' }} {{ getRecommendedStage(cost.id)?.stageCode }}</span>
                     <span class="text-[10px] text-amber-400">~{{ getRecommendedStage(cost.id)?.sanityPerItem }}⚡</span>
                   </button>
                 </div>
@@ -217,7 +219,7 @@ function goBack() {
                     class="px-2 py-0.5 rounded bg-purple-950/80 border border-purple-800 text-purple-300 text-[10px] font-semibold"
                     @click="navigateToIngredient(cost.id, Math.ceil((cost.count * (currentNeededCount || 1)) / (recipe.count || 1)))"
                   >
-                    Крафт из T3
+                    {{ locale.currentLang === 'ru' ? 'Крафт из T3' : 'Craft from T3' }}
                   </button>
                 </div>
               </div>
@@ -229,7 +231,7 @@ function goBack() {
         <div v-if="stages.filter(s => !s.isCraft).length > 0" class="space-y-3">
           <div class="text-xs font-bold text-slate-300 flex items-center gap-2">
             <Zap class="w-4 h-4 text-amber-400" />
-            <span>Прямой фарм на картах (Penguin Statistics):</span>
+            <span>{{ locale.currentLang === 'ru' ? 'Прямой фарм на картах (Penguin Statistics):' : 'Direct Stage Farming (Penguin Statistics):' }}</span>
           </div>
 
           <div
@@ -247,36 +249,36 @@ function goBack() {
                   class="text-[10px] font-mono font-bold px-2 py-0.5 rounded border uppercase tracking-wider"
                   :class="getTagBadgeClass(st.tag)"
                 >
-                  {{ st.tagRu || st.tag }}
+                  {{ locale.currentLang === 'ru' ? (st.tagRu || st.tag) : st.tag }}
                 </span>
               </div>
 
               <!-- AP Cost Badge -->
               <div class="flex items-center gap-1.5 text-xs font-mono font-bold text-amber-300 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-800/40">
                 <Zap class="w-3.5 h-3.5 text-amber-400" />
-                {{ st.apCost }} Sanity / заход
+                {{ st.apCost }} {{ locale.currentLang === 'ru' ? 'Sanity / заход' : 'Sanity / run' }}
               </div>
             </div>
 
             <!-- Stats Grid -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
               <div class="p-2 rounded-lg bg-slate-900/90 border border-slate-800">
-                <span class="text-[10px] text-slate-500 block">Шанс дропа</span>
+                <span class="text-[10px] text-slate-500 block">{{ locale.t('farming.dropRate') }}</span>
                 <span class="font-bold text-slate-200">{{ st.dropRate }}%</span>
               </div>
 
               <div class="p-2 rounded-lg bg-slate-900/90 border border-slate-800">
-                <span class="text-[10px] text-slate-500 block">Затраты на 1 шт.</span>
+                <span class="text-[10px] text-slate-500 block">{{ locale.t('farming.sanityPerItem') }}</span>
                 <span class="font-bold text-emerald-400">~{{ st.sanityPerItem }} ⚡</span>
               </div>
 
               <div v-if="currentNeededCount > 0" class="p-2 rounded-lg bg-slate-900/90 border border-slate-800">
-                <span class="text-[10px] text-slate-500 block">Заходов для плана</span>
+                <span class="text-[10px] text-slate-500 block">{{ locale.currentLang === 'ru' ? 'Заходов для плана' : 'Runs needed' }}</span>
                 <span class="font-bold text-cyan-300">~{{ calculateRuns(st.dropRate) }}</span>
               </div>
 
               <div v-if="currentNeededCount > 0" class="p-2 rounded-lg bg-slate-900/90 border border-slate-800">
-                <span class="text-[10px] text-slate-500 block">Sanity для плана</span>
+                <span class="text-[10px] text-slate-500 block">{{ locale.currentLang === 'ru' ? 'Sanity для плана' : 'Plan Sanity' }}</span>
                 <span class="font-bold text-amber-400">
                   ~{{ calculateTotalSanity(calculateRuns(st.dropRate), st.apCost) }} ⚡
                 </span>
@@ -293,9 +295,9 @@ function goBack() {
         <!-- If no direct stages and no recipe -->
         <div v-else-if="!recipe" class="p-8 text-center text-slate-400 bg-ark-card rounded-xl border border-ark-border">
           <AlertCircle class="w-10 h-10 mx-auto text-amber-400 mb-2 opacity-80" />
-          <p class="text-sm font-semibold text-slate-200">Прямой фарм на обычных картах отсутствует</p>
+          <p class="text-sm font-semibold text-slate-200">{{ locale.t('farming.noStages') }}</p>
           <p class="text-xs mt-1 text-slate-400">
-            Этот ресурс можно получить в магазине за сертификаты или в качестве наград за временные события.
+            {{ locale.currentLang === 'ru' ? 'Этот ресурс можно получить в магазине за сертификаты или в качестве наград за временные события.' : 'This material can be obtained from Certificate Shops or as rewards during limited events.' }}
           </p>
         </div>
       </div>
@@ -308,7 +310,7 @@ function goBack() {
           rel="noopener noreferrer"
           class="inline-flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 font-semibold transition-colors"
         >
-          <span>Статистика на Penguin Stats</span>
+          <span>{{ locale.currentLang === 'ru' ? 'Статистика на Penguin Stats' : 'View on Penguin Stats' }}</span>
           <ExternalLink class="w-3.5 h-3.5" />
         </a>
 
@@ -317,7 +319,7 @@ function goBack() {
           class="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold transition-colors"
           @click="emit('close')"
         >
-          Закрыть
+          {{ locale.t('common.close') }}
         </button>
       </div>
     </div>

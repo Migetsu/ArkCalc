@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import type { OperatorSummary } from '@/types/game';
 import { usePlannerStore } from '@/stores/planner';
 import { useGameDataStore } from '@/stores/gamedata';
+import { useLocaleStore } from '@/stores/locale';
 import { getAvatarUrl, PLACEHOLDER_AVATAR } from '@/utils/imageUrl';
 import { Edit3, Trash2, Plus, BookOpen } from 'lucide-vue-next';
 
@@ -17,6 +18,7 @@ const emit = defineEmits<{
 
 const planner = usePlannerStore();
 const gameData = useGameDataStore();
+const locale = useLocaleStore();
 const plan = computed(() => planner.plans[props.operator.id]);
 const hasPlan = computed(() => !!plan.value);
 
@@ -148,7 +150,7 @@ function getModuleInfo(modId: string) {
         </div>
 
         <div v-else class="mt-2 text-[11px] text-slate-500 italic">
-          План не настроен
+          {{ locale.t('op.filterUnplanned') }}
         </div>
       </div>
     </div>
@@ -158,7 +160,7 @@ function getModuleInfo(modId: string) {
       <button
         type="button"
         class="p-1.5 text-slate-400 hover:text-cyan-300 hover:bg-cyan-950/40 rounded-md border border-transparent hover:border-cyan-800/60 transition-colors"
-        title="Посмотреть характеристики и досье"
+        :title="locale.t('op.dossier')"
         @click="emit('dossier', operator)"
       >
         <BookOpen class="w-3.5 h-3.5" />
@@ -171,12 +173,12 @@ function getModuleInfo(modId: string) {
           @click="handleEdit"
         >
           <Edit3 class="w-3.5 h-3.5" />
-          Редактировать
+          {{ locale.t('common.edit') }}
         </button>
         <button
           type="button"
           class="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-950/30 rounded-md border border-transparent hover:border-red-900/40 transition-colors"
-          title="Удалить из плана"
+          :title="locale.t('plan.deletePlan')"
           @click="handleRemove"
         >
           <Trash2 class="w-3.5 h-3.5" />
@@ -190,7 +192,7 @@ function getModuleInfo(modId: string) {
           @click="handleEdit"
         >
           <Plus class="w-3.5 h-3.5 text-cyan-400" />
-          Добавить в план
+          {{ locale.t('op.addPlan') }}
         </button>
       </template>
     </div>

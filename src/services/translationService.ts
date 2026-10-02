@@ -80,8 +80,6 @@ export function needsTranslation(
     if (hasChinese(s)) return true;
     if (!hasCyrillic(s) && /[a-zA-Z]{2,}/.test(s)) return true;
     return false;
-  } else if (targetLang === 'cn') {
-    return !hasChinese(s);
   } else {
     return hasChinese(s);
   }
@@ -133,24 +131,7 @@ export async function translateText(
   if (!text) return '';
   const trimmed = text.trim();
 
-  // 1. Target: Chinese (CN)
-  if (targetLang === 'cn') {
-    if (hasChinese(trimmed)) return text;
-    const cacheKey = `cn:${trimmed}`;
-    if (memoryCache[cacheKey]) return memoryCache[cacheKey];
-
-    const { maskedText, tokens } = maskTextForTranslation(trimmed);
-    const cnRes = await fetchGoogleTranslateSafe(maskedText, 'en', 'zh-CN');
-    if (cnRes) {
-      const finalCn = unmaskTextAfterTranslation(cnRes, tokens);
-      memoryCache[cacheKey] = finalCn;
-      saveCacheToStorage();
-      return finalCn;
-    }
-    return text;
-  }
-
-  // 2. Target: Russian (RU)
+  // Target: Russian (RU)
   if (targetLang === 'ru') {
     // Check skin brand dictionary
     if (RU_SKIN_BRANDS[trimmed]) {
@@ -241,17 +222,10 @@ export async function getTranslatedSkillInfo(
   skillId: string,
   rawName: string,
   rawDesc: string,
-  rawNameCn?: string,
-  rawDescCn?: string,
+  _rawNameCn?: string,
+  _rawDescCn?: string,
   targetLang: AppLanguage = 'en'
 ): Promise<{ name: string; description: string }> {
-  if (targetLang === 'cn') {
-    return {
-      name: rawNameCn || rawName,
-      description: rawDescCn || rawDesc,
-    };
-  }
-
   if (targetLang === 'ru') {
     // 1. Check comprehensive Arknights RU database
     const localSkill = getSkillLocalizationRu(charId, skillId, rawName);
@@ -296,17 +270,6 @@ export async function getTranslatedTalents(
   talents: any[],
   targetLang: AppLanguage = 'en'
 ): Promise<any[]> {
-  if (targetLang === 'cn') {
-    return talents.map((t) => ({
-      ...t,
-      candidates: (t.candidates || []).map((cand: any) => ({
-        ...cand,
-        name: cand.nameCn || cand.name,
-        description: cand.descriptionCn || cand.description,
-      })),
-    }));
-  }
-
   if (targetLang === 'ru') {
     const canonicalId = OPERATOR_ID_ALIASES[charId] || charId;
     const opDb = getOperatorLocalizationRu(charId) || getOperatorLocalizationRu(canonicalId);
@@ -423,13 +386,9 @@ export async function getTranslatedTalents(
 export async function getTranslatedQuote(
   charId: string,
   quote: string,
-  quoteCn?: string,
+  _quoteCn?: string,
   targetLang: AppLanguage = 'en'
 ): Promise<string> {
-  if (targetLang === 'cn') {
-    return quoteCn || quote || '';
-  }
-
   if (targetLang === 'ru') {
     const dbOp = getOperatorLocalizationRu(charId);
     if (dbOp?.quote) return dbOp.quote;
@@ -458,15 +417,6 @@ export async function getTranslatedSkinInfo(
   rawDialog: string,
   targetLang: AppLanguage = 'en'
 ): Promise<{ skinName: string; skinGroupName: string; content: string; dialog: string }> {
-  if (targetLang === 'cn') {
-    return {
-      skinName: rawName,
-      skinGroupName: rawGroupName,
-      content: rawContent,
-      dialog: rawDialog,
-    };
-  }
-
   if (targetLang === 'ru') {
     const dbSkin = getSkinLocalizationRu(charId, skinId, rawGroupName);
     const skinName = dbSkin?.skinName || (needsTranslation(rawName, 'ru') ? await translateText(rawName, 'ru') : rawName);
@@ -500,14 +450,6 @@ export async function getTranslatedModules(
   modules: any[],
   targetLang: AppLanguage = 'en'
 ): Promise<any[]> {
-  if (targetLang === 'cn') {
-    return modules.map((mod) => ({
-      ...mod,
-      name: mod.nameCn || mod.name,
-      desc: mod.descCn || mod.desc,
-    }));
-  }
-
   return Promise.all(
     modules.map(async (mod) => {
       let name = mod.name;

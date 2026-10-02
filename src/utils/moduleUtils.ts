@@ -2,21 +2,7 @@
  * Utilities for formatting and localizing Arknights operator module data.
  */
 
-export function formatModuleAttributeName(key: string, lang: 'ru' | 'en' | 'cn' = 'en'): string {
-  if (lang === 'cn') {
-    const cnMap: Record<string, string> = {
-      max_hp: '最大生命',
-      atk: '攻击力',
-      def: '防御力',
-      attack_speed: '攻击速度',
-      magic_resistance: '法术抗性',
-      cost: '部署费用',
-      respawn_time: '再部署时间',
-      block_cnt: '阻挡数',
-    };
-    return cnMap[key] || key.toUpperCase();
-  }
-
+export function formatModuleAttributeName(key: string, lang: 'ru' | 'en' | string = 'en'): string {
   const ruMap: Record<string, string> = {
     max_hp: 'Макс. HP',
     atk: 'Сила атаки (ATK)',
@@ -45,9 +31,9 @@ export function formatModuleAttributeName(key: string, lang: 'ru' | 'en' | 'cn' 
   return enMap[key] || key.toUpperCase();
 }
 
-export function formatModuleAttributeValue(key: string, value: number, lang: 'ru' | 'en' | 'cn' = 'en'): string {
+export function formatModuleAttributeValue(key: string, value: number, lang: 'ru' | 'en' | string = 'en'): string {
   if (key === 'respawn_time') {
-    const secSuffix = lang === 'ru' ? 'с' : (lang === 'cn' ? '秒' : 's');
+    const secSuffix = lang === 'ru' ? 'с' : 's';
     return value > 0 ? `+${value}${secSuffix}` : `${value}${secSuffix}`;
   }
   if (key === 'cost') {
@@ -56,10 +42,7 @@ export function formatModuleAttributeValue(key: string, value: number, lang: 'ru
   return value > 0 ? `+${value}` : `${value}`;
 }
 
-export function getModuleStageLabel(stage: number, lang: 'ru' | 'en' | 'cn' = 'en'): string {
-  if (lang === 'cn') {
-    return `阶段 ${stage}`;
-  }
+export function getModuleStageLabel(stage: number, lang: 'ru' | 'en' | string = 'en'): string {
   if (lang === 'ru') {
     return `Уровень ${stage}`;
   }

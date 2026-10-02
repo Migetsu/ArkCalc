@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useRosterStore } from '@/stores/roster';
 import { usePlannerStore } from '@/stores/planner';
 import { useGameDataStore } from '@/stores/gamedata';
+import { useLocaleStore } from '@/stores/locale';
 import type { Profession, OperatorSummary } from '@/types/game';
 import PlanEditorModal from '@/components/operator/PlanEditorModal.vue';
 import OperatorDossierModal from '@/components/operator/OperatorDossierModal.vue';
@@ -34,6 +35,7 @@ const emit = defineEmits<{
 const rosterStore = useRosterStore();
 const plannerStore = usePlannerStore();
 const gameData = useGameDataStore();
+const locale = useLocaleStore();
 
 const searchQuery = ref('');
 const selectedRarity = ref<number | null>(null);
@@ -181,12 +183,14 @@ async function handleAddAllUnmaxed6Star() {
     .map((i) => i.charId);
 
   if (unmaxed6.length === 0) {
-    alert('Все 6★ оперативники уже добавлены в план или прокачаны до максимума!');
+    alert(locale.currentLang === 'ru' ? 'Все 6★ оперативники уже добавлены в план или прокачаны до максимума!' : 'All 6★ operators are already in your plan or maxed out!');
     return;
   }
 
-  const presetLabel = batchPreset.value === 'comfort' ? '«Комфорт: E2 Lv60 M3»' : '«Полный максимум: E2 Lv90 M9»';
-  if (confirm(`Добавить ${unmaxed6.length} шт. 6★ оперативников в план с целью ${presetLabel}?`)) {
+  const presetLabel = batchPreset.value === 'comfort'
+    ? (locale.currentLang === 'ru' ? '«Комфорт: E2 Lv60 M3»' : '"Comfort: E2 Lv60 M3"')
+    : (locale.currentLang === 'ru' ? '«Полный максимум: E2 Lv90 M9»' : '"Full Max: E2 Lv90 M9"');
+  if (confirm(locale.currentLang === 'ru' ? `Добавить ${unmaxed6.length} шт. 6★ оперативников в план с целью ${presetLabel}?` : `Add ${unmaxed6.length} 6★ operator(s) to plan with target ${presetLabel}?`)) {
     await rosterStore.addBatchToPlan(unmaxed6, batchPreset.value);
   }
 }
@@ -197,12 +201,14 @@ async function handleAddFilteredToPlan() {
     .map((i) => i.charId);
 
   if (toAdd.length === 0) {
-    alert('Нет новых оперативников для добавления среди отфильтрованных.');
+    alert(locale.currentLang === 'ru' ? 'Нет новых оперативников для добавления среди отфильтрованных.' : 'No new unlisted operators to add among filtered results.');
     return;
   }
 
-  const presetLabel = batchPreset.value === 'comfort' ? '«Комфорт: E2 Lv60 M3»' : '«Полный максимум: E2 Lv90 M9»';
-  if (confirm(`Добавить ${toAdd.length} выбранных оперативников в план с целью ${presetLabel}?`)) {
+  const presetLabel = batchPreset.value === 'comfort'
+    ? (locale.currentLang === 'ru' ? '«Комфорт: E2 Lv60 M3»' : '"Comfort: E2 Lv60 M3"')
+    : (locale.currentLang === 'ru' ? '«Полный максимум: E2 Lv90 M9»' : '"Full Max: E2 Lv90 M9"');
+  if (confirm(locale.currentLang === 'ru' ? `Добавить ${toAdd.length} выбранных оперативников в план с целью ${presetLabel}?` : `Add ${toAdd.length} selected operator(s) to plan with target ${presetLabel}?`)) {
     await rosterStore.addBatchToPlan(toAdd, batchPreset.value);
   }
 }
@@ -229,13 +235,13 @@ function getRarityBadgeBorder(rarity?: number): string {
           </div>
           <div>
             <h2 class="text-base sm:text-lg font-black text-slate-100 flex items-center gap-2">
-              <span>Мой ростер</span>
+              <span>{{ locale.currentLang === 'ru' ? 'Мой ростер' : 'My Roster' }}</span>
               <span class="text-xs font-mono font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-800 px-2 py-0.5 rounded">
-                {{ stats.total }} оперативников
+                {{ stats.total }} {{ locale.currentLang === 'ru' ? 'оперативников' : 'operators' }}
               </span>
             </h2>
             <p class="text-xs text-slate-400">
-              Персонажи с вашего игрового аккаунта (ArkPRTS). Добавляйте их в план прокачки в 1 клик с расчетом ресурсов до полного максимума!
+              {{ locale.currentLang === 'ru' ? 'Персонажи с вашего игрового аккаунта (ArkPRTS). Добавляйте их в план прокачки в 1 клик с расчетом ресурсов до полного максимума!' : 'Characters from your game account (ArkPRTS). Add them to your upgrade plan in 1 click with full resource calculations!' }}
             </p>
           </div>
         </div>
@@ -250,18 +256,18 @@ function getRarityBadgeBorder(rarity?: number): string {
             class="px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1"
             :class="batchPreset === 'comfort' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
             @click="batchPreset = 'comfort'"
-            title="Цель: E2 Lv60 M3 Mod1 (оптимально для большинства)"
+            :title="locale.currentLang === 'ru' ? 'Цель: E2 Lv60 M3 Mod1 (оптимально для большинства)' : 'Target: E2 Lv60 M3 Mod1 (optimal for most)'"
           >
-            <span>Комфорт (E2-60)</span>
+            <span>{{ locale.currentLang === 'ru' ? 'Комфорт (E2-60)' : 'Comfort (E2-60)' }}</span>
           </button>
           <button
             type="button"
             class="px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1"
             :class="batchPreset === 'full' ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
             @click="batchPreset = 'full'"
-            title="Цель: E2 Lv90 M9 Mod3 (абсолютный максимум)"
+            :title="locale.currentLang === 'ru' ? 'Цель: E2 Lv90 M9 Mod3 (абсолютный максимум)' : 'Target: E2 Lv90 M9 Mod3 (absolute maximum)'"
           >
-            <span>Фулл (E2-90)</span>
+            <span>{{ locale.currentLang === 'ru' ? 'Фулл (E2-90)' : 'Full Max (E2-90)' }}</span>
           </button>
         </div>
 
@@ -271,7 +277,7 @@ function getRarityBadgeBorder(rarity?: number): string {
           @click="handleAddAllUnmaxed6Star"
         >
           <Sparkles class="w-4 h-4 text-amber-400" />
-          <span>Все 6★ в план</span>
+          <span>{{ locale.currentLang === 'ru' ? 'Все 6★ в план' : 'All 6★ to Plan' }}</span>
         </button>
 
         <button
@@ -281,7 +287,7 @@ function getRarityBadgeBorder(rarity?: number): string {
           @click="handleAddFilteredToPlan"
         >
           <Plus class="w-4 h-4" />
-          <span>Добавить отфильтрованных ({{ filteredRoster.filter(i => !i.isPlanned).length }})</span>
+          <span>{{ locale.currentLang === 'ru' ? 'Добавить отфильтрованных' : 'Add Filtered' }} ({{ filteredRoster.filter(i => !i.isPlanned).length }})</span>
         </button>
       </div>
     </div>
@@ -295,9 +301,11 @@ function getRarityBadgeBorder(rarity?: number): string {
         <UploadCloud class="w-8 h-8" />
       </div>
       <div>
-        <h3 class="text-base font-bold text-slate-200">Ростер вашего аккаунта пуст</h3>
+        <h3 class="text-base font-bold text-slate-200">
+          {{ locale.currentLang === 'ru' ? 'Ростер вашего аккаунта пуст' : 'Your operator roster is empty' }}
+        </h3>
         <p class="text-xs text-slate-400 mt-1 max-w-md mx-auto leading-relaxed">
-          Импортируйте сырые данные (Full Raw Data) из перехватчика <b>ArkPRTS</b> в Настройках. Ваши персонажи и склад сохранятся офлайн, и вы сможете планировать их прокачку!
+          {{ locale.currentLang === 'ru' ? 'Импортируйте сырые данные (Full Raw Data) из перехватчика ArkPRTS в Настройках. Ваши персонажи и склад сохранятся офлайн, и вы сможете планировать их прокачку!' : 'Import raw account data from ArkPRTS in Settings. Your operators and depot will be stored offline!' }}
         </p>
       </div>
       <div>
@@ -307,7 +315,7 @@ function getRarityBadgeBorder(rarity?: number): string {
           @click="emit('open-settings')"
         >
           <SlidersHorizontal class="w-4 h-4" />
-          <span>Открыть настройки импорта</span>
+          <span>{{ locale.currentLang === 'ru' ? 'Открыть настройки импорта' : 'Open Import Settings' }}</span>
         </button>
       </div>
     </div>
@@ -322,7 +330,7 @@ function getRarityBadgeBorder(rarity?: number): string {
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Поиск по имени или позывному (SilverAsh, Серебряный пепел, Eyja, Эйя...)"
+            :placeholder="locale.currentLang === 'ru' ? 'Поиск по имени или позывному (SilverAsh, Серебряный пепел, Eyja, Эйя...)' : 'Search by operator name or alias (SilverAsh, Eyja, Thorns...)'"
             class="w-full pl-10 pr-4 py-2 bg-slate-900 border border-ark-border rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/60"
           />
         </div>
@@ -337,7 +345,7 @@ function getRarityBadgeBorder(rarity?: number): string {
               :class="selectedStatus === 'all' ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-slate-200'"
               @click="selectedStatus = 'all'"
             >
-              Все ({{ stats.total }})
+              {{ locale.currentLang === 'ru' ? 'Все' : 'All' }} ({{ stats.total }})
             </button>
             <button
               type="button"
@@ -345,7 +353,7 @@ function getRarityBadgeBorder(rarity?: number): string {
               :class="selectedStatus === 'unmaxed' ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-slate-200'"
               @click="selectedStatus = 'unmaxed'"
             >
-              Не докачаны ({{ stats.unmaxed }})
+              {{ locale.currentLang === 'ru' ? 'Не докачаны' : 'Unmaxed' }} ({{ stats.unmaxed }})
             </button>
             <button
               type="button"
@@ -353,7 +361,7 @@ function getRarityBadgeBorder(rarity?: number): string {
               :class="selectedStatus === 'planned' ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-slate-200'"
               @click="selectedStatus = 'planned'"
             >
-              В плане ({{ stats.planned }})
+              {{ locale.currentLang === 'ru' ? 'В плане' : 'Planned' }} ({{ stats.planned }})
             </button>
             <button
               type="button"
@@ -361,7 +369,7 @@ function getRarityBadgeBorder(rarity?: number): string {
               :class="selectedStatus === 'unplanned' ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-slate-200'"
               @click="selectedStatus = 'unplanned'"
             >
-              Не в плане ({{ stats.total - stats.planned }})
+              {{ locale.currentLang === 'ru' ? 'Не в плане' : 'Unplanned' }} ({{ stats.total - stats.planned }})
             </button>
             <button
               type="button"
@@ -369,7 +377,7 @@ function getRarityBadgeBorder(rarity?: number): string {
               :class="selectedStatus === 'maxed' ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-slate-200'"
               @click="selectedStatus = 'maxed'"
             >
-              Фулл ({{ stats.maxed }})
+              {{ locale.currentLang === 'ru' ? 'Фулл' : 'Maxed' }} ({{ stats.maxed }})
             </button>
           </div>
 
@@ -381,7 +389,7 @@ function getRarityBadgeBorder(rarity?: number): string {
               :class="selectedRarity === null ? 'bg-cyan-950 text-cyan-300 border border-cyan-800' : 'text-slate-400 hover:text-white'"
               @click="selectedRarity = null"
             >
-              Все ★
+              {{ locale.currentLang === 'ru' ? 'Все ★' : 'All ★' }}
             </button>
             <button
               v-for="r in [6, 5, 4, 3, 1]"
@@ -398,14 +406,14 @@ function getRarityBadgeBorder(rarity?: number): string {
 
         <!-- Class filter row -->
         <div class="flex flex-wrap items-center gap-1.5 pt-1 border-t border-ark-border/60 text-xs">
-          <span class="text-slate-500 text-[11px] mr-1">Класс:</span>
+          <span class="text-slate-500 text-[11px] mr-1">{{ locale.currentLang === 'ru' ? 'Класс:' : 'Class:' }}</span>
           <button
             type="button"
             class="px-2.5 py-0.5 rounded text-[11px] font-semibold transition-colors"
             :class="selectedProfession === null ? 'bg-cyan-950 text-cyan-300 border border-cyan-800' : 'text-slate-400 hover:text-slate-200'"
             @click="selectedProfession = null"
           >
-            Все
+            {{ locale.currentLang === 'ru' ? 'Все' : 'All' }}
           </button>
           <button
             v-for="p in professions"
@@ -423,8 +431,12 @@ function getRarityBadgeBorder(rarity?: number): string {
       <!-- Roster Grid -->
       <div v-if="filteredRoster.length === 0" class="p-12 text-center bg-ark-card rounded-2xl border border-ark-border text-slate-400">
         <Users class="w-10 h-10 mx-auto text-slate-600 mb-2" />
-        <h4 class="font-bold text-slate-200 text-sm">Оперативники не найдены</h4>
-        <p class="text-xs mt-1 text-slate-400">Попробуйте изменить параметры поиска или фильтры статуса/редкости.</p>
+        <h4 class="font-bold text-slate-200 text-sm">
+          {{ locale.currentLang === 'ru' ? 'Оперативники не найдены' : 'No operators found' }}
+        </h4>
+        <p class="text-xs mt-1 text-slate-400">
+          {{ locale.currentLang === 'ru' ? 'Попробуйте изменить параметры поиска или фильтры статуса/редкости.' : 'Try adjusting search query or status/rarity filters.' }}
+        </p>
       </div>
 
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
@@ -473,10 +485,10 @@ function getRarityBadgeBorder(rarity?: number): string {
               </div>
 
               <div class="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center gap-1.5">
-                <span>{{ item.opData?.profession || 'Оперативник' }}</span>
+                <span>{{ item.opData?.profession || (locale.currentLang === 'ru' ? 'Оперативник' : 'Operator') }}</span>
                 &bull;
-                <span v-if="item.isMaxed" class="text-emerald-400 font-semibold">Фулл</span>
-                <span v-else class="text-amber-400">Требует кача</span>
+                <span v-if="item.isMaxed" class="text-emerald-400 font-semibold">{{ locale.currentLang === 'ru' ? 'Фулл' : 'Maxed' }}</span>
+                <span v-else class="text-amber-400">{{ locale.currentLang === 'ru' ? 'Требует кача' : 'Unmaxed' }}</span>
               </div>
 
               <!-- Skills & Masteries summary -->
@@ -491,7 +503,7 @@ function getRarityBadgeBorder(rarity?: number): string {
                   v-if="item.modules && Object.keys(item.modules).length > 0"
                   class="px-1.5 py-0.2 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-800/80 font-bold"
                 >
-                  Модули: {{ Object.values(item.modules).join(', ') }} ур.
+                  {{ (locale.currentLang === 'ru' ? 'Модули: ' : 'Modules: ') + Object.values(item.modules).join(', ') + (locale.currentLang === 'ru' ? ' ур.' : ' st.') }}
                 </span>
               </div>
             </div>
@@ -504,18 +516,18 @@ function getRarityBadgeBorder(rarity?: number): string {
               <button
                 type="button"
                 class="flex-1 py-1.5 px-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-1.5 active:scale-95"
-                :title="batchPreset === 'comfort' ? 'Добавить в план с целью: Комфорт (E2 Lv60 M3)' : 'Добавить в план с целью: Фулл (E2 Lv90 M9)'"
+                :title="batchPreset === 'comfort' ? (locale.currentLang === 'ru' ? 'Добавить в план с целью: Комфорт (E2 Lv60 M3)' : 'Add to plan with target: Comfort (E2 Lv60 M3)') : (locale.currentLang === 'ru' ? 'Добавить в план с целью: Фулл (E2 Lv90 M9)' : 'Add to plan with target: Full Max (E2 Lv90 M9)')"
                 @click="handleAddSingleToPlan(item.charId)"
               >
                 <Plus class="w-3.5 h-3.5" />
-                <span>{{ batchPreset === 'comfort' ? 'В план (E2-60)' : 'В план (Фулл)' }}</span>
+                <span>{{ batchPreset === 'comfort' ? (locale.currentLang === 'ru' ? 'В план (E2-60)' : 'Plan (E2-60)') : (locale.currentLang === 'ru' ? 'В план (Фулл)' : 'Plan (Full)') }}</span>
               </button>
 
               <button
                 v-if="item.opData"
                 type="button"
                 class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
-                title="Настроить цель вручную"
+                :title="locale.currentLang === 'ru' ? 'Настроить цель вручную' : 'Configure custom target'"
                 @click="openEditModal(item.opData)"
               >
                 <Settings2 class="w-3.5 h-3.5" />
@@ -526,7 +538,7 @@ function getRarityBadgeBorder(rarity?: number): string {
             <template v-else>
               <span class="text-[11px] font-mono font-bold text-cyan-400 bg-cyan-950/70 border border-cyan-800 px-2 py-1 rounded flex items-center gap-1">
                 <CheckCircle class="w-3.5 h-3.5 text-cyan-400" />
-                <span>В плане</span>
+                <span>{{ locale.currentLang === 'ru' ? 'В плане' : 'Planned' }}</span>
               </span>
 
               <div class="flex items-center gap-1.5">
@@ -534,15 +546,15 @@ function getRarityBadgeBorder(rarity?: number): string {
                   v-if="item.opData"
                   type="button"
                   class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs transition-colors"
-                  title="Изменить цель прокачки"
+                  :title="locale.currentLang === 'ru' ? 'Изменить цель прокачки' : 'Edit target'"
                   @click="openEditModal(item.opData)"
                 >
-                  Цель
+                  {{ locale.currentLang === 'ru' ? 'Цель' : 'Target' }}
                 </button>
                 <button
                   type="button"
                   class="p-1.5 rounded-lg bg-red-950/50 hover:bg-red-900/60 text-red-300 border border-red-800/60 transition-colors"
-                  title="Убрать из плана"
+                  :title="locale.currentLang === 'ru' ? 'Убрать из плана' : 'Remove from plan'"
                   @click="handleRemoveFromPlan(item.charId)"
                 >
                   <Trash2 class="w-3.5 h-3.5" />

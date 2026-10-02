@@ -336,10 +336,10 @@ onUnmounted(() => {
           <!-- Desktop Language Quick Selector -->
           <div class="hidden lg:flex items-center bg-slate-950/90 border border-slate-800 p-0.5 rounded-xl text-[10px] font-mono font-bold shadow-inner">
             <button
-              v-for="lang in (['en', 'ru', 'cn'] as AppLanguage[])"
+              v-for="lang in (['en', 'ru'] as AppLanguage[])"
               :key="lang"
               type="button"
-              class="px-2 py-1 rounded-lg transition-all uppercase"
+              class="px-2.5 py-1 rounded-lg transition-all uppercase"
               :class="locale.currentLang === lang ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200 border border-transparent'"
               @click="locale.setLanguage(lang)"
             >
@@ -601,10 +601,10 @@ onUnmounted(() => {
           </div>
           <div class="flex items-center bg-slate-950 border border-slate-800 p-0.5 rounded-lg text-[10px] font-mono font-bold">
             <button
-              v-for="lang in (['en', 'ru', 'cn'] as AppLanguage[])"
+              v-for="lang in (['en', 'ru'] as AppLanguage[])"
               :key="lang"
               type="button"
-              class="px-2.5 py-1 rounded transition-all uppercase"
+              class="px-3 py-1 rounded transition-all uppercase"
               :class="locale.currentLang === lang ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/40' : 'text-slate-400'"
               @click="locale.setLanguage(lang)"
             >

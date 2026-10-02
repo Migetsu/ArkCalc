@@ -30,21 +30,18 @@ const locale = useLocaleStore();
 const eventName = computed(() => {
   if (!props.event) return '';
   if (locale.currentLang === 'ru') return props.event.nameRu;
-  if (locale.currentLang === 'cn') return props.event.nameCn;
   return props.event.nameEn;
 });
 
 const eventSummary = computed(() => {
   if (!props.event) return '';
   if (locale.currentLang === 'ru') return props.event.summaryRu;
-  if (locale.currentLang === 'cn') return props.event.summaryCn;
   return props.event.summaryEn;
 });
 
 const headerTag = computed(() => {
   if (!props.event) return '';
   if (locale.currentLang === 'ru') return props.event.headerTagRu;
-  if (locale.currentLang === 'cn') return props.event.headerTagCn;
   return props.event.headerTagEn;
 });
 
@@ -131,7 +128,7 @@ function handleToggleApply() {
             <div class="bg-slate-900/70 p-3 rounded-xl border border-amber-500/20">
               <div class="text-[11px] font-bold text-amber-400 mb-2 flex items-center justify-between">
                 <span>6★ OPERATORS</span>
-                <span class="text-[10px] text-amber-300/70 font-mono">{{ event.sixStarOps.length }}干员</span>
+              <span>{{ event.sixStarOps.length }} {{ locale.currentLang === 'ru' ? 'опер.' : 'ops' }}</span>
               </div>
               <div class="flex flex-wrap gap-2">
                 <div
@@ -158,7 +155,7 @@ function handleToggleApply() {
             <div class="bg-slate-900/70 p-3 rounded-xl border border-yellow-500/20">
               <div class="text-[11px] font-bold text-yellow-300 mb-2 flex items-center justify-between">
                 <span>5★ OPERATORS</span>
-                <span class="text-[10px] text-yellow-300/70 font-mono">{{ event.fiveStarOps.length }}干员</span>
+                <span class="text-[10px] text-yellow-300/70 font-mono">{{ event.fiveStarOps.length }} {{ locale.currentLang === 'ru' ? 'опер.' : 'ops' }}</span>
               </div>
               <div class="flex flex-wrap gap-2">
                 <div
@@ -193,13 +190,11 @@ function handleToggleApply() {
           </div>
           <div class="space-y-1">
             <h5 class="text-xs font-bold text-slate-200 uppercase tracking-wide">
-              {{ locale.currentLang === 'ru' ? 'Баннер призыва (Хедхантинг)' : locale.currentLang === 'cn' ? '定向/常规寻访卡池' : 'Headhunting Recruitment Banner' }}
+              {{ locale.currentLang === 'ru' ? 'Баннер призыва (Хедхантинг)' : 'Headhunting Recruitment Banner' }}
             </h5>
             <p class="text-[11px] text-slate-400 leading-relaxed">
               {{ locale.currentLang === 'ru'
                 ? 'Этот баннер является ротацией призыва оперативников (гача) и не содержит отдельного ивентового магазина с ресурсами или стадий фарминга.'
-                : locale.currentLang === 'cn'
-                ? '该卡池为常驻/定向干员寻访，不包含独立的活动代币商店或专属材料掉落关卡。'
                 : 'This banner is an operator recruitment rotation (gacha) and does not feature a dedicated event token shop or farmable stages.'
               }}
             </p>
@@ -241,7 +236,7 @@ function handleToggleApply() {
               <ItemIcon :item-id="item.itemId" size="sm" :count="item.count" />
               <div class="min-w-0 flex-1">
                 <div class="text-[11px] font-bold text-slate-200 truncate">
-                  {{ locale.currentLang === 'ru' ? item.nameRu : locale.currentLang === 'cn' ? item.nameCn : item.nameEn }}
+                  {{ locale.currentLang === 'ru' ? item.nameRu : item.nameEn }}
                 </div>
                 <div class="text-[10px] text-cyan-400 font-bold">
                   x{{ item.count.toLocaleString() }}

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useLocaleStore } from '@/stores/locale';
 import { useAuthStore } from '@/stores/auth';
 import {
   X,
@@ -23,6 +24,7 @@ const emit = defineEmits<{
 }>();
 
 const auth = useAuthStore();
+const locale = useLocaleStore();
 
 const activeTab = ref<'signin' | 'signup'>('signin');
 const email = ref('');
@@ -32,24 +34,24 @@ const localError = ref<string | null>(null);
 async function handleSubmit() {
   localError.value = null;
   if (!email.value || !password.value) {
-    localError.value = 'Заполните email и пароль';
+    localError.value = locale.t('auth.fillEmailPass');
     return;
   }
 
   if (password.value.length < 6) {
-    localError.value = 'Пароль должен быть не менее 6 символов';
+    localError.value = locale.t('auth.passTooShort');
     return;
   }
 
   if (activeTab.value === 'signup') {
     const res = await auth.signUp(email.value, password.value);
     if (!res.success) {
-      localError.value = res.error || 'Ошибка при регистрации';
+      localError.value = res.error || locale.t('auth.regFailed');
     }
   } else {
     const res = await auth.signIn(email.value, password.value);
     if (!res.success) {
-      localError.value = res.error || 'Неверный email или пароль';
+      localError.value = res.error || locale.t('auth.loginFailed');
     }
   }
 }
@@ -61,10 +63,10 @@ function handleSignOut() {
 }
 
 function formatSyncTime(isoString: string | null): string {
-  if (!isoString) return 'Еще не синхронизировано';
+  if (!isoString) return locale.t('auth.neverSaved');
   try {
     const d = new Date(isoString);
-    return d.toLocaleString('ru-RU', {
+    return d.toLocaleString(locale.currentLang === 'ru' ? 'ru-RU' : 'en-US', {
       day: 'numeric',
       month: 'short',
       hour: '2-digit',
@@ -95,10 +97,10 @@ function formatSyncTime(isoString: string | null): string {
           </div>
           <div>
             <h3 class="font-bold text-slate-100 text-sm sm:text-base">
-              {{ auth.isAuthenticated ? 'Облачный аккаунт' : 'Вход в аккаунт' }}
+              {{ auth.isAuthenticated ? locale.t('auth.title') : locale.t('auth.login') }}
             </h3>
             <p class="text-[11px] text-slate-400 font-mono">
-              {{ auth.isAuthenticated ? 'Синхронизация Supabase Cloud' : 'Синхронизация между устройствами' }}
+              {{ auth.isAuthenticated ? locale.t('auth.subtitle') : locale.t('auth.crossPlatformDesc') }}
             </p>
           </div>
         </div>
@@ -116,20 +118,20 @@ function formatSyncTime(isoString: string | null): string {
         <!-- User info box -->
         <div class="bg-slate-900/90 border border-ark-border rounded-xl p-4 space-y-3">
           <div class="flex items-center justify-between">
-            <span class="text-xs text-slate-400 font-medium">Статус аккаунта:</span>
+            <span class="text-xs text-slate-400 font-medium">{{ locale.t('auth.accountStatus') }}</span>
             <span
               v-if="auth.isSyncing"
               class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800 flex items-center gap-1.5"
             >
               <RefreshCw class="w-3 h-3 animate-spin text-cyan-400" />
-              Синхронизация...
+              {{ locale.t('auth.syncing') }}
             </span>
             <span
               v-else
               class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center gap-1.5"
             >
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              Автосинхронизация активна
+              {{ locale.t('auth.statusActive') }}
             </span>
           </div>
 
@@ -141,7 +143,7 @@ function formatSyncTime(isoString: string | null): string {
           </div>
 
           <div class="text-[11px] text-slate-400 font-mono flex items-center justify-between pt-2 border-t border-slate-800/80">
-            <span>Последнее автосохранение:</span>
+            <span>{{ locale.t('auth.lastSaved') }}</span>
             <strong class="text-slate-200">{{ formatSyncTime(auth.lastSyncTime) }}</strong>
           </div>
         </div>
@@ -166,16 +168,16 @@ function formatSyncTime(isoString: string | null): string {
         <div class="p-3.5 bg-slate-900/60 rounded-xl border border-slate-800 text-[11px] text-slate-300 space-y-2">
           <div class="font-bold text-slate-200 flex items-center gap-1.5 text-xs">
             <ShieldCheck class="w-4 h-4 text-emerald-400" />
-            Полностью автоматический режим:
+            {{ locale.t('auth.autoModeTitle') }}
           </div>
           <div class="space-y-1.5 text-slate-400 pl-1 leading-relaxed">
             <div class="flex items-start gap-2">
               <span class="text-cyan-400 font-bold">&bull;</span>
-              <span><strong>Мгновенное сохранение:</strong> любые изменения склада, планов и ростера сразу фоном отправляются в облако.</span>
+              <span><strong>{{ locale.t('auth.instantSaveBold') }}</strong> {{ locale.t('auth.instantSaveDesc') }}</span>
             </div>
             <div class="flex items-start gap-2">
               <span class="text-cyan-400 font-bold">&bull;</span>
-              <span><strong>Кроссплатформенность:</strong> откройте сайт на смартфоне или планшете — актуальные данные подтянутся автоматически без нажатия кнопок.</span>
+              <span><strong>{{ locale.t('auth.crossPlatformBold') }}</strong> {{ locale.t('auth.crossPlatformSubDesc') }}</span>
             </div>
           </div>
         </div>
@@ -186,11 +188,11 @@ function formatSyncTime(isoString: string | null): string {
             type="button"
             :disabled="auth.isSyncing"
             class="text-slate-400 hover:text-cyan-300 font-mono text-[11px] flex items-center gap-1.5 transition-colors disabled:opacity-50"
-            title="Принудительно запросить актуальные данные из облака"
+            :title="locale.t('auth.forcePullTitle')"
             @click="auth.pullFromCloud"
           >
             <RefreshCw class="w-3.5 h-3.5" :class="{ 'animate-spin': auth.isSyncing }" />
-            <span>Проверить обновления сейчас</span>
+            <span>{{ locale.t('auth.forcePull') }}</span>
           </button>
 
           <button
@@ -199,7 +201,7 @@ function formatSyncTime(isoString: string | null): string {
             @click="handleSignOut"
           >
             <LogOut class="w-3.5 h-3.5" />
-            <span>Выйти</span>
+            <span>{{ locale.t('auth.logout') }}</span>
           </button>
         </div>
       </div>
@@ -214,7 +216,7 @@ function formatSyncTime(isoString: string | null): string {
             :class="activeTab === 'signin' ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200'"
             @click="activeTab = 'signin'"
           >
-            Вход
+            {{ locale.t('auth.login') }}
           </button>
           <button
             type="button"
@@ -222,7 +224,7 @@ function formatSyncTime(isoString: string | null): string {
             :class="activeTab === 'signup' ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200'"
             @click="activeTab = 'signup'"
           >
-            Регистрация
+            {{ locale.t('auth.register') }}
           </button>
         </div>
 
@@ -230,7 +232,7 @@ function formatSyncTime(isoString: string | null): string {
         <form class="space-y-3" @submit.prevent="handleSubmit">
           <div class="space-y-1">
             <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
-              Электронная почта
+              {{ locale.t('auth.email') }}
             </label>
             <div class="relative">
               <Mail class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
@@ -246,7 +248,7 @@ function formatSyncTime(isoString: string | null): string {
 
           <div class="space-y-1">
             <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
-              Пароль
+              {{ locale.t('auth.password') }}
             </label>
             <div class="relative">
               <Lock class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
@@ -259,7 +261,7 @@ function formatSyncTime(isoString: string | null): string {
               />
             </div>
             <p v-if="activeTab === 'signup'" class="text-[10px] text-slate-500">
-              Минимум 6 символов
+              {{ locale.t('auth.minPassword') }}
             </p>
           </div>
 
@@ -279,12 +281,12 @@ function formatSyncTime(isoString: string | null): string {
             class="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg disabled:opacity-50 mt-2"
           >
             <RefreshCw v-if="auth.isLoading" class="w-4 h-4 animate-spin" />
-            <span>{{ activeTab === 'signin' ? 'Войти в аккаунт' : 'Создать аккаунт' }}</span>
+            <span>{{ activeTab === 'signin' ? locale.t('auth.signInBtn') : locale.t('auth.createAccount') }}</span>
           </button>
         </form>
 
         <div class="pt-2 text-center text-[10px] text-slate-500 leading-relaxed">
-          Облачный аккаунт позволяет синхронизировать склад, планы прокачки и ростер между ПК и смартфоном.
+          {{ locale.t('auth.cloudFooterHint') }}
         </div>
       </div>
     </div>

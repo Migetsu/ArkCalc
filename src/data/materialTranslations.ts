@@ -163,12 +163,9 @@ export const MATERIAL_TRANSLATIONS: Record<string, MaterialTranslation> = {
   '31114': { en: 'Energy Dynamic Unit', ru: 'Энергетический силовой блок' },
 };
 
-export function getLocalizedItemName(itemId: string, lang: 'ru' | 'en' | 'cn' = 'ru'): string | null {
+export function getLocalizedItemName(itemId: string, lang: 'ru' | 'en' | string = 'en'): string | null {
   const item = MATERIAL_TRANSLATIONS[itemId];
   if (!item) return null;
-  if (lang === 'cn') {
-    return (item as any).cn || item.en;
-  }
   return lang === 'ru' ? item.ru : item.en;
 }
 
@@ -641,7 +638,7 @@ export const ARCHETYPE_NAMES: Record<string, string> = Object.fromEntries(
   Object.entries(ARCHETYPE_DETAILS).map(([k, v]) => [k, v.en])
 );
 
-export function getArchetypeName(subProfId: string, lang: 'ru' | 'en' | 'cn' = 'en'): string {
+export function getArchetypeName(subProfId: string, lang: 'ru' | 'en' | string = 'en'): string {
   if (!subProfId) return '';
   const detail = ARCHETYPE_DETAILS[subProfId.toLowerCase()];
   if (detail) {
@@ -666,10 +663,9 @@ export const PROFESSION_NAMES: Record<string, { en: string; ru: string; cn: stri
   SPECIAL: { en: 'Specialist', ru: 'Специалист', cn: '特种' },
 };
 
-export function getProfessionName(profession: string, lang: 'ru' | 'en' | 'cn' = 'en'): string {
+export function getProfessionName(profession: string, lang: 'ru' | 'en' | string = 'en'): string {
   const p = PROFESSION_NAMES[profession];
   if (!p) return profession;
-  if (lang === 'cn') return p.cn;
   return lang === 'ru' ? p.ru : p.en;
 }
 
@@ -806,7 +802,7 @@ export function getArchetypeTraitEn(subProfId: string): string {
   return ARCHETYPE_TRAITS_EN[subProfId.toLowerCase()] || '';
 }
 
-export function getOperatorTag(tag: string, lang: 'ru' | 'en' | 'cn' = 'en'): string {
+export function getOperatorTag(tag: string, lang: 'ru' | 'en' | string = 'en'): string {
   const enTag = translateTagToEn(tag);
   const t = TAG_TRANSLATIONS[enTag] || TAG_TRANSLATIONS[tag];
   if (!t) return enTag;

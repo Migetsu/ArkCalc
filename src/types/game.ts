@@ -35,7 +35,7 @@ export interface SkillMasteryCost {
   costs: MaterialCost[];
 }
 
-export type AppLanguage = 'ru' | 'en' | 'cn';
+export type AppLanguage = 'ru' | 'en';
 
 export interface SkillLevelDetail {
   level: number; // 1 to 10 (1-7: Rank 1-7, 8: M1, 9: M2, 10: M3)

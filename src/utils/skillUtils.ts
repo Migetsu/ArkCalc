@@ -60,23 +60,7 @@ export function formatSkillDescription(desc: string, blackboard?: any[]): string
 /**
  * Human-readable SP recovery type
  */
-export function getSpTypeName(spType: string, lang: 'ru' | 'en' | 'cn' = 'en'): string {
-  if (lang === 'cn') {
-    switch (spType) {
-      case 'INCREASE_WITH_TIME':
-        return '自然回复';
-      case 'INCREASE_WHEN_ATTACK':
-        return '攻击回复';
-      case 'INCREASE_WHEN_TAKEN_DAMAGE':
-        return '受击回复';
-      case 'NONE':
-      case '8':
-        return '被动';
-      default:
-        return spType;
-    }
-  }
-
+export function getSpTypeName(spType: string, lang: 'ru' | 'en' | string = 'en'): string {
   const isRu = lang === 'ru';
   switch (spType) {
     case 'INCREASE_WITH_TIME':
@@ -96,20 +80,7 @@ export function getSpTypeName(spType: string, lang: 'ru' | 'en' | 'cn' = 'en'): 
 /**
  * Human-readable skill activation/trigger type
  */
-export function getSkillTypeName(skillType: string, lang: 'ru' | 'en' | 'cn' = 'en'): string {
-  if (lang === 'cn') {
-    switch (skillType) {
-      case 'MANUAL':
-        return '手动触发';
-      case 'AUTO':
-        return '自动触发';
-      case 'PASSIVE':
-        return '被动';
-      default:
-        return skillType;
-    }
-  }
-
+export function getSkillTypeName(skillType: string, lang: 'ru' | 'en' | string = 'en'): string {
   const isRu = lang === 'ru';
   switch (skillType) {
     case 'MANUAL':
@@ -126,9 +97,8 @@ export function getSkillTypeName(skillType: string, lang: 'ru' | 'en' | 'cn' = '
 /**
  * Human-readable skill rank/mastery label
  */
-export function getSkillRankLabel(level: number, lang: 'ru' | 'en' | 'cn' = 'en'): string {
+export function getSkillRankLabel(level: number, lang: 'ru' | 'en' | string = 'en'): string {
   if (level <= 7) {
-    if (lang === 'cn') return `等级 ${level}`;
     return lang === 'ru' ? `Ранг ${level}` : `Rank ${level}`;
   }
   const m = level - 7;
@@ -143,10 +113,9 @@ export function formatSkillDuration(
   skillType?: string,
   desc?: string,
   isInfinite?: boolean,
-  lang: 'ru' | 'en' | 'cn' = 'en'
+  lang: 'ru' | 'en' | string = 'en'
 ): string {
   if (skillType === 'PASSIVE') {
-    if (lang === 'cn') return '被动';
     return lang === 'ru' ? 'Пассивно' : 'Passive';
   }
 
@@ -163,16 +132,13 @@ export function formatSkillDuration(
     descLower.includes('бесконечн');
 
   if (isInfinite || textIndicatesInfinite) {
-    if (lang === 'cn') return '持续时间无限';
     return lang === 'ru' ? 'Бесконечно' : 'Infinite';
   }
 
   if (duration > 0) {
-    if (lang === 'cn') return `${duration}秒`;
     return lang === 'ru' ? `${duration}с` : `${duration}s`;
   }
 
-  if (lang === 'cn') return '瞬发';
   return lang === 'ru' ? 'Мгновенно' : 'Instant';
 }
 

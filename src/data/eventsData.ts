@@ -219,7 +219,7 @@ export const ARKNIGHTS_EVENTS: ArknightsEvent[] = [
         "tokenType": "p3_token"
       },
       {
-        "itemId": "30093",
+        "itemId": "30073",
         "nameEn": "Loxic Kohl",
         "nameRu": "Локсиковый коль",
         "nameCn": "轻锰矿",
@@ -240,7 +240,7 @@ export const ARKNIGHTS_EVENTS: ArknightsEvent[] = [
     "farmingStages": [
       {
         "stageCode": "P3-8",
-        "itemId": "30093",
+        "itemId": "30073",
         "itemNameEn": "Loxic Kohl",
         "itemNameRu": "Локсиковый коль",
         "dropRatePercent": 78.5,
@@ -705,16 +705,16 @@ export const ARKNIGHTS_EVENTS: ArknightsEvent[] = [
         "tokenType": "mh_token"
       },
       {
-        "itemId": "30043",
-        "nameEn": "Polyketon Pack",
-        "nameRu": "Кетоновый набор",
+        "itemId": "30053",
+        "nameEn": "Aketon",
+        "nameRu": "Акетон",
         "nameCn": "酮凝集组",
         "count": 20,
         "costPerItem": 15,
         "tokenType": "mh_token"
       },
       {
-        "itemId": "30073",
+        "itemId": "31013",
         "nameEn": "Coagulating Gel",
         "nameRu": "Коагулирующий гель",
         "nameCn": "凝胶",
@@ -726,18 +726,18 @@ export const ARKNIGHTS_EVENTS: ArknightsEvent[] = [
     "farmingStages": [
       {
         "stageCode": "CF-8",
-        "itemId": "30043",
-        "itemNameEn": "Polyketon",
-        "itemNameRu": "Кетон",
+        "itemId": "30053",
+        "itemNameEn": "Aketon",
+        "itemNameRu": "Акетон",
         "dropRatePercent": 78,
         "apCost": 21,
         "sanityPerItem": 26.9
       },
       {
         "stageCode": "CF-7",
-        "itemId": "30073",
-        "itemNameEn": "Gel",
-        "itemNameRu": "Гель",
+        "itemId": "31013",
+        "itemNameEn": "Coagulating Gel",
+        "itemNameRu": "Коагулирующий гель",
         "dropRatePercent": 75,
         "apCost": 21,
         "sanityPerItem": 28
@@ -988,7 +988,7 @@ export const ARKNIGHTS_EVENTS: ArknightsEvent[] = [
         "tokenType": "anniv_token"
       },
       {
-        "itemId": "30073",
+        "itemId": "30023",
         "nameEn": "Sugar Pack",
         "nameRu": "Пачка сахара",
         "nameCn": "糖组",
@@ -997,7 +997,7 @@ export const ARKNIGHTS_EVENTS: ArknightsEvent[] = [
         "tokenType": "anniv_token"
       },
       {
-        "itemId": "30093",
+        "itemId": "30073",
         "nameEn": "Loxic Kohl",
         "nameRu": "Локсиковый коль",
         "nameCn": "轻锰矿",
@@ -1009,7 +1009,7 @@ export const ARKNIGHTS_EVENTS: ArknightsEvent[] = [
     "farmingStages": [
       {
         "stageCode": "ST-8",
-        "itemId": "30073",
+        "itemId": "30023",
         "itemNameEn": "Sugar Pack",
         "itemNameRu": "Пачка сахара",
         "dropRatePercent": 82,
@@ -1018,7 +1018,7 @@ export const ARKNIGHTS_EVENTS: ArknightsEvent[] = [
       },
       {
         "stageCode": "ST-7",
-        "itemId": "30093",
+        "itemId": "30073",
         "itemNameEn": "Loxic Kohl",
         "itemNameRu": "Локсиковый коль",
         "dropRatePercent": 80.5,

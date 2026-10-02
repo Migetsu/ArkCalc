@@ -50,7 +50,7 @@ const gameData = useGameDataStore();
 const auth = useAuthStore();
 const locale = useLocaleStore();
 
-function changeLanguage(lang: 'en' | 'ru' | 'cn') {
+function changeLanguage(lang: 'en' | 'ru') {
   locale.setLanguage(lang);
   gameData.setItemLanguage(lang);
 }
@@ -87,7 +87,10 @@ function startCooldown() {
 
 async function handleSendYostarCode() {
   if (!yostarEmail.value || !yostarEmail.value.includes('@')) {
-    statusMessage.value = { type: 'error', text: 'Пожалуйста, введите корректный адрес электронной почты Yostar.' };
+    statusMessage.value = {
+      type: 'error',
+      text: locale.currentLang === 'ru' ? 'Пожалуйста, введите корректный адрес электронной почты Yostar.' : 'Please enter a valid Yostar account email address.',
+    };
     return;
   }
   isSendingCode.value = true;
@@ -95,10 +98,16 @@ async function handleSendYostarCode() {
   try {
     const res = await requestVerificationCode(yostarEmail.value, yostarServer.value);
     if (res.success) {
-      statusMessage.value = { type: 'success', text: res.message || 'Код подтверждения отправлен на почту!' };
+      statusMessage.value = {
+        type: 'success',
+        text: res.message || (locale.currentLang === 'ru' ? 'Код подтверждения отправлен на почту!' : 'Verification code sent to your email!'),
+      };
       startCooldown();
     } else {
-      statusMessage.value = { type: 'error', text: res.error || 'Ошибка отправки кода' };
+      statusMessage.value = {
+        type: 'error',
+        text: res.error || (locale.currentLang === 'ru' ? 'Ошибка отправки кода' : 'Failed to send verification code'),
+      };
     }
   } finally {
     isSendingCode.value = false;
@@ -107,7 +116,10 @@ async function handleSendYostarCode() {
 
 async function handleLinkAndSyncYostar() {
   if (!yostarEmail.value || !yostarCode.value) {
-    statusMessage.value = { type: 'error', text: 'Заполните email и 6-значный код из письма.' };
+    statusMessage.value = {
+      type: 'error',
+      text: locale.currentLang === 'ru' ? 'Заполните email и 6-значный код из письма.' : 'Please enter email and the 6-digit code from the email.',
+    };
     return;
   }
   isLinking.value = true;
@@ -119,10 +131,15 @@ async function handleLinkAndSyncYostar() {
       yostarCode.value = '';
       statusMessage.value = {
         type: 'success',
-        text: `Игровой аккаунт ${res.account.nickName || res.account.email} успешно привязан и синхронизирован! Склад и ростер обновлены.`,
+        text: locale.currentLang === 'ru'
+          ? `Игровой аккаунт ${res.account.nickName || res.account.email} успешно привязан и синхронизирован! Склад и ростер обновлены.`
+          : `Account ${res.account.nickName || res.account.email} successfully linked and synchronized! Depot and roster updated.`,
       };
     } else {
-      statusMessage.value = { type: 'error', text: res.error || 'Не удалось привязать аккаунт Yostar' };
+      statusMessage.value = {
+        type: 'error',
+        text: res.error || (locale.currentLang === 'ru' ? 'Не удалось привязать аккаунт Yostar' : 'Failed to link Yostar account'),
+      };
     }
   } finally {
     isLinking.value = false;
@@ -138,10 +155,15 @@ async function handleDirectSyncYostar() {
       yostarAccount.value = res.account;
       statusMessage.value = {
         type: 'success',
-        text: `Данные с игрового сервера успешно обновлены в 1 клик! Загружено предметов: ${res.inventoryCount || 0}, оперативников: ${res.rosterCount || 0}.`,
+        text: locale.currentLang === 'ru'
+          ? `Данные с игрового сервера успешно обновлены в 1 клик! Загружено предметов: ${res.inventoryCount || 0}, оперативников: ${res.rosterCount || 0}.`
+          : `Live server data refreshed in 1 click! Loaded items: ${res.inventoryCount || 0}, operators: ${res.rosterCount || 0}.`,
       };
     } else {
-      statusMessage.value = { type: 'error', text: res.error || 'Ошибка синхронизации с аккаунтом' };
+      statusMessage.value = {
+        type: 'error',
+        text: res.error || (locale.currentLang === 'ru' ? 'Ошибка синхронизации с аккаунтом' : 'Account synchronization error'),
+      };
     }
   } finally {
     isDirectSyncing.value = false;
@@ -149,18 +171,24 @@ async function handleDirectSyncYostar() {
 }
 
 function handleUnlinkYostar() {
-  if (confirm('Вы действительно хотите отвязать аккаунт Yostar? Токен будет удален с этого устройства.')) {
+  const confirmMsg = locale.currentLang === 'ru'
+    ? 'Вы действительно хотите отвязать аккаунт Yostar? Токен будет удален с этого устройства.'
+    : 'Are you sure you want to unlink your Yostar account? Stored session token will be removed.';
+  if (confirm(confirmMsg)) {
     unlinkAccount();
     yostarAccount.value = null;
-    statusMessage.value = { type: 'info', text: 'Аккаунт Yostar успешно отвязан.' };
+    statusMessage.value = {
+      type: 'info',
+      text: locale.currentLang === 'ru' ? 'Аккаунт Yostar успешно отвязан.' : 'Yostar account successfully unlinked.',
+    };
   }
 }
 
 function formatSyncTime(isoString?: string): string {
-  if (!isoString) return 'Еще не синхронизировано';
+  if (!isoString) return locale.currentLang === 'ru' ? 'Еще не синхронизировано' : 'Not synced yet';
   try {
     const d = new Date(isoString);
-    return d.toLocaleString('ru-RU', {
+    return d.toLocaleString(locale.currentLang === 'ru' ? 'ru-RU' : 'en-US', {
       day: 'numeric',
       month: 'short',
       hour: '2-digit',
@@ -174,9 +202,17 @@ function formatSyncTime(isoString?: string): string {
 async function handleExportJson() {
   try {
     await exportDatabaseToJson();
-    statusMessage.value = { type: 'success', text: 'Файл резервной копии ark_calc_backup.json успешно скачан!' };
+    statusMessage.value = {
+      type: 'success',
+      text: locale.currentLang === 'ru'
+        ? 'Файл резервной копии ark_calc_backup.json успешно скачан!'
+        : 'Backup file ark_calc_backup.json successfully downloaded!',
+    };
   } catch (err: any) {
-    statusMessage.value = { type: 'error', text: `Ошибка экспорта: ${err.message || err}` };
+    statusMessage.value = {
+      type: 'error',
+      text: `${locale.currentLang === 'ru' ? 'Ошибка экспорта:' : 'Export error:'} ${err.message || err}`,
+    };
   }
 }
 
@@ -189,13 +225,17 @@ async function handlePasteFromClipboard() {
     } else {
       statusMessage.value = {
         type: 'info',
-        text: 'Буфер обмена пуст. Скопируйте Full Raw Data из ArkPRTS и нажмите кнопку снова.',
+        text: locale.currentLang === 'ru'
+          ? 'Буфер обмена пуст. Скопируйте Full Raw Data из ArkPRTS и нажмите кнопку снова.'
+          : 'Clipboard is empty. Copy Full Raw Data from ArkPRTS and click again.',
       };
     }
   } catch {
     statusMessage.value = {
       type: 'info',
-      text: 'Вставьте скопированный текст из ArkPRTS в текстовое поле вручную (Ctrl+V) и нажмите «Импортировать».',
+      text: locale.currentLang === 'ru'
+        ? 'Вставьте скопированный текст из ArkPRTS в текстовое поле вручную (Ctrl+V) и нажмите «Импортировать».'
+        : 'Paste copied text from ArkPRTS into the text area below manually (Ctrl+V) and click Import.',
     };
   }
 }
@@ -214,7 +254,9 @@ async function handleImportFromPaste() {
       let extraMsg = '';
       if (auth.isAuthenticated) {
         const syncRes = await auth.syncToCloud();
-        extraMsg = syncRes.success ? ' И автоматически сохранено в облако!' : ' (Локально сохранено, ошибка синхронизации с облаком)';
+        extraMsg = syncRes.success
+          ? (locale.currentLang === 'ru' ? ' И автоматически сохранено в облако!' : ' And automatically synced to cloud!')
+          : (locale.currentLang === 'ru' ? ' (Локально сохранено, ошибка синхронизации с облаком)' : ' (Saved locally, cloud sync error)');
       }
 
       statusMessage.value = { type: 'success', text: res.message + extraMsg };
@@ -223,36 +265,57 @@ async function handleImportFromPaste() {
       statusMessage.value = { type: 'error', text: res.message };
     }
   } catch (err: any) {
-    statusMessage.value = { type: 'error', text: `Ошибка импорта: ${err.message || err}` };
+    statusMessage.value = {
+      type: 'error',
+      text: `${locale.currentLang === 'ru' ? 'Ошибка импорта:' : 'Import error:'} ${err.message || err}`,
+    };
   } finally {
     isOperating.value = false;
   }
 }
 
 async function handleClearWarehouse() {
-  if (confirm('Вы уверены, что хотите стереть все ресурсы со склада?')) {
+  const confirmMsg = locale.currentLang === 'ru'
+    ? 'Вы уверены, что хотите стереть все ресурсы со склада?'
+    : 'Are you sure you want to clear all depot materials?';
+  if (confirm(confirmMsg)) {
     await inventory.clearAll();
     if (auth.isAuthenticated) {
       await auth.syncToCloud();
     }
-    statusMessage.value = { type: 'info', text: 'Данные склада успешно очищены.' };
+    statusMessage.value = {
+      type: 'info',
+      text: locale.currentLang === 'ru' ? 'Данные склада успешно очищены.' : 'Depot materials successfully cleared.',
+    };
   }
 }
 
 async function handleClearRoster() {
-  if (confirm('Вы уверены, что хотите очистить ростер импортированных оперативников?')) {
+  const confirmMsg = locale.currentLang === 'ru'
+    ? 'Вы уверены, что хотите очистить ростер импортированных оперативников?'
+    : 'Are you sure you want to clear your imported operator roster?';
+  if (confirm(confirmMsg)) {
     await rosterStore.clearAllRoster();
     if (auth.isAuthenticated) {
       await auth.syncToCloud();
     }
-    statusMessage.value = { type: 'info', text: 'Ростер оперативников успешно очищен.' };
+    statusMessage.value = {
+      type: 'info',
+      text: locale.currentLang === 'ru' ? 'Ростер оперативников успешно очищен.' : 'Operator roster successfully cleared.',
+    };
   }
 }
 
 async function handleClearAllPlans() {
-  if (confirm('Вы уверены, что хотите удалить все добавленные планы оперативников?')) {
+  const confirmMsg = locale.currentLang === 'ru'
+    ? 'Вы уверены, что хотите удалить все добавленные планы оперативников?'
+    : 'Are you sure you want to delete all upgrade plans?';
+  if (confirm(confirmMsg)) {
     await planner.clearAllPlans();
-    statusMessage.value = { type: 'info', text: 'Все планы оперативников удалены.' };
+    statusMessage.value = {
+      type: 'info',
+      text: locale.currentLang === 'ru' ? 'Все планы оперативников удалены.' : 'All operator plans successfully deleted.',
+    };
   }
 }
 
@@ -261,9 +324,15 @@ async function handleRefreshGameData() {
   statusMessage.value = null;
   try {
     await gameData.loadGameData(true);
-    statusMessage.value = { type: 'success', text: 'Игровые данные успешно обновлены!' };
+    statusMessage.value = {
+      type: 'success',
+      text: locale.currentLang === 'ru' ? 'Игровые данные успешно обновлены!' : 'Game database successfully refreshed!',
+    };
   } catch (err: any) {
-    statusMessage.value = { type: 'error', text: `Ошибка обновления: ${err.message || err}` };
+    statusMessage.value = {
+      type: 'error',
+      text: `${locale.currentLang === 'ru' ? 'Ошибка обновления:' : 'Update error:'} ${err.message || err}`,
+    };
   } finally {
     isRefreshing.value = false;
   }
@@ -276,12 +345,16 @@ async function handleSyncPenguin() {
     const count = await syncPenguinStatsOnline();
     statusMessage.value = {
       type: 'success',
-      text: `Penguin Stats успешно обновлён онлайн! Синхронизировано ${count} записей выпадения материалов.`,
+      text: locale.currentLang === 'ru'
+        ? `Penguin Stats успешно обновлён онлайн! Синхронизировано ${count} записей выпадения материалов.`
+        : `Penguin Stats successfully updated online! Synchronized ${count} drop rate records.`,
     };
   } catch (err: any) {
     statusMessage.value = {
       type: 'error',
-      text: `Не удалось загрузить данные Penguin Stats (${err.message || err}). Продолжает использоваться локальная база.`,
+      text: locale.currentLang === 'ru'
+        ? `Не удалось загрузить данные Penguin Stats (${err.message || err}). Продолжает использоваться локальная база.`
+        : `Failed to download Penguin Stats data (${err.message || err}). Falling back to local benchmark data.`,
     };
   } finally {
     isSyncingPenguin.value = false;
@@ -295,7 +368,9 @@ async function handleSyncPenguin() {
     <div class="bg-ark-darker border border-ark-border rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
       <!-- Header -->
       <div class="px-5 py-4 bg-ark-card border-b border-ark-border flex items-center justify-between">
-        <h3 class="font-bold text-base text-slate-100 flex items-center gap-2">Настройки и синхронизация</h3>
+        <h3 class="font-bold text-base text-slate-100 flex items-center gap-2">
+          {{ locale.currentLang === 'ru' ? 'Настройки и синхронизация' : 'Settings & Synchronization' }}
+        </h3>
         <button type="button" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors" @click="emit('close')">
           <X class="w-5 h-5" />
         </button>
@@ -320,14 +395,14 @@ async function handleSyncPenguin() {
           <div class="flex items-center justify-between">
             <h4 class="font-bold text-slate-200 text-sm flex items-center gap-2">
               <Globe class="w-4 h-4 text-cyan-400" />
-              Игровые данные и локализация
+              {{ locale.currentLang === 'ru' ? 'Игровые данные и локализация' : 'Game Data & Localization' }}
             </h4>
             <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-800 font-bold">
-              {{ Object.keys(gameData.operators).length || 429 }} Оперативников &bull; Все модули
+              {{ Object.keys(gameData.operators).length || 429 }} {{ locale.currentLang === 'ru' ? 'Оперативников • Все модули' : 'Operators • All Modules' }}
             </span>
           </div>
           <p class="text-slate-400">
-            Подключена полная база данных Arknights со всеми актуальными оперативниками, альтернативными модулями (X/Y/D) и крафтами. Имена персонажей отображаются на английском.
+            {{ locale.currentLang === 'ru' ? 'Подключена полная база данных Arknights со всеми актуальными оперативниками, альтернативными модулями (X/Y/D) и крафтами. Имена персонажей отображаются на английском.' : 'Authoritative Arknights game database with all operators, alternative module trees (X/Y/D), and crafting formulas. 100% offline.' }}
           </p>
 
           <!-- Language selector for interface & game data -->
@@ -354,14 +429,6 @@ async function handleSyncPenguin() {
               >
                 Русский (RU)
               </button>
-              <button
-                type="button"
-                class="px-3 py-1.5 rounded-md text-xs font-bold transition-all"
-                :class="locale.currentLang === 'cn' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
-                @click="changeLanguage('cn')"
-              >
-                简体中文 (CN)
-              </button>
             </div>
           </div>
 
@@ -373,7 +440,7 @@ async function handleSyncPenguin() {
               @click="handleRefreshGameData"
             >
               <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': isRefreshing }" />
-              {{ isRefreshing ? 'Обновление данных...' : 'Обновить данные игры' }}
+              {{ isRefreshing ? (locale.currentLang === 'ru' ? 'Обновление данных...' : 'Updating data...') : (locale.currentLang === 'ru' ? 'Обновить данные игры' : 'Refresh Game Data') }}
             </button>
 
             <button
@@ -383,11 +450,11 @@ async function handleSyncPenguin() {
               @click="handleSyncPenguin"
             >
               <Zap class="w-4 h-4" :class="{ 'animate-spin': isSyncingPenguin }" />
-              {{ isSyncingPenguin ? 'Синхронизация дропов...' : 'Синхронизировать Penguin Stats' }}
+              {{ isSyncingPenguin ? (locale.currentLang === 'ru' ? 'Синхронизация дропов...' : 'Syncing drops...') : (locale.currentLang === 'ru' ? 'Синхронизировать Penguin Stats' : 'Sync Penguin Stats') }}
             </button>
           </div>
           <p class="text-slate-500 mt-1.5">
-            Обновление базы персонажей с GitHub и актуальной матрицы дропа стадий с penguin-stats.io.
+            {{ locale.currentLang === 'ru' ? 'Обновление базы персонажей с GitHub и актуальной матрицы дропа стадий с penguin-stats.io.' : 'Updates operator database from GitHub and stage drop rates from penguin-stats.io.' }}
           </p>
         </div>
 
@@ -396,25 +463,25 @@ async function handleSyncPenguin() {
           <div class="flex items-center justify-between flex-wrap gap-2">
             <h4 class="font-bold text-slate-200 text-sm flex items-center gap-2">
               <Gamepad2 class="w-4 h-4 text-cyan-400" />
-              Прямая синхронизация с игрой (Yostar)
+              {{ locale.currentLang === 'ru' ? 'Прямая синхронизация с игрой (Yostar)' : 'Direct Game Sync (Yostar)' }}
             </h4>
             <span
               v-if="yostarAccount"
               class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center gap-1"
             >
               <ShieldCheck class="w-3 h-3" />
-              Привязан ({{ yostarAccount.server.toUpperCase() }})
+              {{ locale.currentLang === 'ru' ? 'Привязан' : 'Linked' }} ({{ yostarAccount.server.toUpperCase() }})
             </span>
             <span
               v-else
               class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-800"
             >
-              В 1 клик &bull; Без сторонних сайтов
+              {{ locale.currentLang === 'ru' ? 'В 1 клик • Без сторонних сайтов' : '1-Click • No third-party tools' }}
             </span>
           </div>
 
           <p class="text-slate-400 leading-relaxed">
-            Прямое подключение к игровому серверу Arknights. Загружает ваш актуальный склад, всех имеющихся оперативников, уровни прокачки, навыков и модулей без необходимости заходить на сторонние ресурсы или копировать JSON вручную.
+            {{ locale.currentLang === 'ru' ? 'Прямое подключение к игровому серверу Arknights. Загружает ваш актуальный склад, всех имеющихся оперативников, уровни прокачки, навыков и модулей без необходимости заходить на сторонние ресурсы или копировать JSON вручную.' : 'Direct connection to Arknights game servers. Loads live depot materials, all owned operators, promotion levels, skill masteries, and module stages in 1 click.' }}
           </p>
 
           <!-- STATE 1: Account already linked -->
@@ -428,7 +495,7 @@ async function handleSyncPenguin() {
                   </div>
                   <div>
                     <div class="font-bold text-slate-100 text-xs flex items-center gap-1.5">
-                      <span>{{ yostarAccount.nickName || 'Доктор' }}</span>
+                      <span>{{ yostarAccount.nickName || (locale.currentLang === 'ru' ? 'Доктор' : 'Doctor') }}</span>
                       <span v-if="yostarAccount.nickNumber" class="text-slate-500 font-mono text-[10px]">#{{ yostarAccount.nickNumber }}</span>
                       <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-cyan-300 border border-slate-700">
                         {{ yostarAccount.server.toUpperCase() }}
@@ -446,12 +513,12 @@ async function handleSyncPenguin() {
                   @click="handleUnlinkYostar"
                 >
                   <Unlink class="w-3.5 h-3.5" />
-                  <span>Отвязать</span>
+                  <span>{{ locale.currentLang === 'ru' ? 'Отвязать' : 'Unlink' }}</span>
                 </button>
               </div>
 
               <div class="text-[10px] text-slate-500 font-mono flex items-center justify-between pt-2 border-t border-slate-800/80">
-                <span>Последняя синхронизация:</span>
+                <span>{{ locale.currentLang === 'ru' ? 'Последняя синхронизация:' : 'Last synchronized:' }}</span>
                 <strong class="text-slate-300">{{ formatSyncTime(yostarAccount.lastSyncAt) }}</strong>
               </div>
             </div>
@@ -466,13 +533,13 @@ async function handleSyncPenguin() {
               <RefreshCw v-if="isDirectSyncing" class="w-4 h-4 animate-spin text-cyan-200" />
               <Zap v-else class="w-4 h-4 text-cyan-200" />
               <span>
-                {{ isDirectSyncing ? 'Скачивание данных с сервера Arknights...' : 'Синхронизировать аккаунт прямо сейчас (В 1 клик)' }}
+                {{ isDirectSyncing ? (locale.currentLang === 'ru' ? 'Скачивание данных с сервера Arknights...' : 'Fetching data from Arknights server...') : (locale.currentLang === 'ru' ? 'Синхронизировать аккаунт прямо сейчас (В 1 клик)' : 'Sync Account Right Now (1-Click)') }}
               </span>
             </button>
 
             <p class="text-[11px] text-slate-500 flex items-center gap-1.5 pt-0.5">
               <span>💡</span>
-              <span>Перед нажатием сверните или закройте игру на телефоне, чтобы сервер не выдал сообщение о входе с другого устройства.</span>
+              <span>{{ locale.currentLang === 'ru' ? 'Перед нажатием сверните или закройте игру на телефоне, чтобы сервер не выдал сообщение о входе с другого устройства.' : 'Before syncing, minimize or close the game on your device to prevent simultaneous login warnings.' }}</span>
             </p>
           </div>
 
@@ -481,7 +548,7 @@ async function handleSyncPenguin() {
             <!-- Server Selector -->
             <div class="space-y-1.5">
               <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
-                Регион сервера игры
+                {{ locale.currentLang === 'ru' ? 'Регион сервера игры' : 'Game Server Region' }}
               </label>
               <div class="grid grid-cols-3 gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
                 <button
@@ -514,7 +581,7 @@ async function handleSyncPenguin() {
             <!-- Email & Send Code Row -->
             <div class="space-y-1.5">
               <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
-                Почта аккаунта Yostar
+                {{ locale.currentLang === 'ru' ? 'Почта аккаунта Yostar' : 'Yostar Account Email' }}
               </label>
               <div class="flex items-center gap-2">
                 <div class="relative flex-1">
@@ -534,7 +601,7 @@ async function handleSyncPenguin() {
                 >
                   <RefreshCw v-if="isSendingCode" class="w-3.5 h-3.5 animate-spin" />
                   <Send v-else class="w-3.5 h-3.5" />
-                  <span>{{ codeCooldown > 0 ? `${codeCooldown} сек.` : 'Получить код' }}</span>
+                  <span>{{ codeCooldown > 0 ? (locale.currentLang === 'ru' ? `${codeCooldown} сек.` : `${codeCooldown}s`) : (locale.currentLang === 'ru' ? 'Получить код' : 'Send Code') }}</span>
                 </button>
               </div>
             </div>
@@ -542,7 +609,7 @@ async function handleSyncPenguin() {
             <!-- Code & Link Row -->
             <div class="space-y-1.5">
               <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">
-                6-значный код из письма
+                {{ locale.currentLang === 'ru' ? '6-значный код из письма' : '6-digit Verification Code' }}
               </label>
               <div class="flex items-center gap-2">
                 <div class="relative flex-1">
@@ -562,7 +629,7 @@ async function handleSyncPenguin() {
                   @click="handleLinkAndSyncYostar"
                 >
                   <RefreshCw v-if="isLinking" class="w-3.5 h-3.5 animate-spin" />
-                  <span>{{ isLinking ? 'Подключение...' : 'Подключить и синхронизировать' }}</span>
+                  <span>{{ isLinking ? (locale.currentLang === 'ru' ? 'Подключение...' : 'Linking...') : (locale.currentLang === 'ru' ? 'Подключить и синхронизировать' : 'Link & Sync Account') }}</span>
                 </button>
               </div>
             </div>
@@ -570,13 +637,13 @@ async function handleSyncPenguin() {
             <!-- Information note -->
             <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1 leading-relaxed">
               <p>
-                &bull; Код подтверждения отправляется официальным шлюзом Yostar на вашу почту.
+                &bull; {{ locale.currentLang === 'ru' ? 'Код подтверждения отправляется официальным шлюзом Yostar на вашу почту.' : 'Verification code is sent directly from the official Yostar login gateway.' }}
               </p>
               <p>
-                &bull; После первого ввода сервис сохраняет токен сессии на этом устройстве, и в дальнейшем данные будут обновляться в <strong>1 клик</strong> без писем на почту.
+                &bull; {{ locale.currentLang === 'ru' ? 'После первого ввода сервис сохраняет токен сессии на этом устройстве, и в дальнейшем данные будут обновляться в 1 клик без писем на почту.' : 'After initial linking, session credentials stay stored locally on this device for instant 1-click updates without new emails.' }}
               </p>
               <p>
-                &bull; Перед нажатием сверните игру на телефоне, чтобы не выбило активную сессию.
+                &bull; {{ locale.currentLang === 'ru' ? 'Перед нажатием сверните игру на телефоне, чтобы не выбило активную сессию.' : 'Minimize the game on your mobile device before syncing to prevent session conflicts.' }}
               </p>
             </div>
           </div>
@@ -587,14 +654,14 @@ async function handleSyncPenguin() {
           <div class="flex items-center justify-between">
             <h4 class="font-bold text-slate-200 text-sm flex items-center gap-2">
               <Clipboard class="w-4 h-4 text-cyan-400" />
-              Импорт склада из ArkPRTS
+              {{ locale.currentLang === 'ru' ? 'Импорт склада из ArkPRTS' : 'Import Depot from ArkPRTS' }}
             </h4>
             <span class="text-[10px] text-cyan-400 font-mono font-bold bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-800">
               Full Raw Data
             </span>
           </div>
           <p class="text-slate-400 leading-relaxed">
-            Скопируйте данные в перехватчике <span class="text-slate-200 font-medium">ArkPRTS</span> (кнопка <i>Copy full raw data</i>) и нажмите кнопку быстрой вставки из буфера или вставьте текст в поле ниже вручную:
+            {{ locale.currentLang === 'ru' ? 'Скопируйте данные в перехватчике ArkPRTS (кнопка Copy full raw data) и нажмите кнопку быстрой вставки из буфера или вставьте текст в поле ниже вручную:' : 'Copy depot dump in ArkPRTS network interceptor (click Copy full raw data) and use quick paste or paste manually below:' }}
           </p>
 
           <div class="space-y-2.5 pt-1">
@@ -606,7 +673,7 @@ async function handleSyncPenguin() {
                 @click="handlePasteFromClipboard"
               >
                 <Clipboard class="w-4 h-4" />
-                Вставить из буфера обмена
+                {{ locale.currentLang === 'ru' ? 'Вставить из буфера обмена' : 'Paste from Clipboard' }}
               </button>
               <button
                 v-if="pasteInputText.trim()"
@@ -614,14 +681,14 @@ async function handleSyncPenguin() {
                 class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition-colors"
                 @click="pasteInputText = ''"
               >
-                Очистить поле
+                {{ locale.currentLang === 'ru' ? 'Очистить поле' : 'Clear' }}
               </button>
             </div>
 
             <textarea
               v-model="pasteInputText"
               rows="4"
-              placeholder="Или вставьте сюда скопированный JSON текст из ArkPRTS вручную (Ctrl+V)..."
+              :placeholder="locale.currentLang === 'ru' ? 'Или вставьте сюда скопированный JSON текст из ArkPRTS вручную (Ctrl+V)...' : 'Or paste copied JSON text from ArkPRTS manually here (Ctrl+V)...'"
               class="w-full bg-slate-900 border border-ark-border rounded-xl p-3 font-mono text-[11px] text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-500"
             ></textarea>
 
@@ -632,10 +699,10 @@ async function handleSyncPenguin() {
                 :disabled="!pasteInputText.trim() || isOperating"
                 @click="handleImportFromPaste"
               >
-                Импортировать введённый текст
+                {{ locale.currentLang === 'ru' ? 'Импортировать введённый текст' : 'Import Entered JSON' }}
               </button>
               <span v-if="pasteInputText.trim()" class="text-[10px] text-slate-500 font-mono">
-                Длина: {{ pasteInputText.length }} символов
+                {{ locale.currentLang === 'ru' ? 'Длина' : 'Length' }}: {{ pasteInputText.length }} {{ locale.currentLang === 'ru' ? 'символов' : 'characters' }}
               </span>
             </div>
           </div>
@@ -643,8 +710,12 @@ async function handleSyncPenguin() {
           <!-- Backup Export -->
           <div class="pt-3 border-t border-slate-800 flex items-center justify-between flex-wrap gap-2">
             <div>
-              <span class="text-xs font-semibold text-slate-300 block">Резервная копия планов и склада</span>
-              <span class="text-[11px] text-slate-500 block">Сохранить файл ark_calc_backup.json на диск</span>
+              <span class="text-xs font-semibold text-slate-300 block">
+                {{ locale.currentLang === 'ru' ? 'Резервная копия планов и склада' : 'Backup Plans & Depot' }}
+              </span>
+              <span class="text-[11px] text-slate-500 block">
+                {{ locale.currentLang === 'ru' ? 'Сохранить файл ark_calc_backup.json на диск' : 'Save ark_calc_backup.json file locally' }}
+              </span>
             </div>
             <button
               type="button"
@@ -653,7 +724,7 @@ async function handleSyncPenguin() {
               @click="handleExportJson"
             >
               <Download class="w-3.5 h-3.5 text-cyan-400" />
-              Скачать бэкап (.json)
+              {{ locale.currentLang === 'ru' ? 'Скачать бэкап (.json)' : 'Download Backup (.json)' }}
             </button>
           </div>
         </div>
@@ -663,10 +734,12 @@ async function handleSyncPenguin() {
           <div class="flex items-center justify-between">
             <h4 class="font-bold text-red-300 text-sm flex items-center gap-2">
               <Trash2 class="w-4 h-4 text-red-400" />
-              Управление данными и сброс
+              {{ locale.currentLang === 'ru' ? 'Управление данными и сброс' : 'Data Management & Reset' }}
             </h4>
           </div>
-          <p class="text-slate-400">Здесь можно быстро стереть данные склада после тестирования или очистить все планы оперативников.</p>
+          <p class="text-slate-400 text-xs">
+            {{ locale.currentLang === 'ru' ? 'Здесь можно быстро стереть данные склада после тестирования или очистить все планы оперативников.' : 'Quickly clear warehouse inventory after testing or purge all operator upgrade plans.' }}
+          </p>
           <div class="flex flex-wrap items-center gap-3 pt-1">
             <button
               type="button"
@@ -674,7 +747,7 @@ async function handleSyncPenguin() {
               @click="handleClearWarehouse"
             >
               <Trash2 class="w-3.5 h-3.5 text-red-400" />
-              Очистить склад (Склад)
+              {{ locale.currentLang === 'ru' ? 'Очистить склад' : 'Clear Depot' }}
             </button>
             <button
               type="button"
@@ -682,7 +755,7 @@ async function handleSyncPenguin() {
               @click="handleClearRoster"
             >
               <Trash2 class="w-3.5 h-3.5 text-red-400" />
-              Очистить мой ростер
+              {{ locale.currentLang === 'ru' ? 'Очистить мой ростер' : 'Clear My Roster' }}
             </button>
             <button
               type="button"
@@ -690,7 +763,7 @@ async function handleSyncPenguin() {
               @click="handleClearAllPlans"
             >
               <Trash2 class="w-3.5 h-3.5" />
-              Сбросить все планы
+              {{ locale.currentLang === 'ru' ? 'Сбросить все планы' : 'Reset All Plans' }}
             </button>
           </div>
         </div>
@@ -699,7 +772,7 @@ async function handleSyncPenguin() {
       <!-- Footer -->
       <div class="px-5 py-3.5 bg-ark-card border-t border-ark-border flex justify-end">
         <button type="button" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors" @click="emit('close')">
-          Закрыть
+          {{ locale.currentLang === 'ru' ? 'Закрыть' : 'Close' }}
         </button>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useGameDataStore } from '@/stores/gamedata';
 import { useInventoryStore } from '@/stores/inventory';
 import { usePlannerStore } from '@/stores/planner';
+import { useLocaleStore } from '@/stores/locale';
 import type { ItemSummary } from '@/types/game';
 import ItemIcon from '@/components/common/ItemIcon.vue';
 import QuantityInput from '@/components/common/QuantityInput.vue';
@@ -12,24 +13,25 @@ import { getLocalizedItemName, isCraftResource } from '@/data/materialTranslatio
 const gameData = useGameDataStore();
 const inventory = useInventoryStore();
 const planner = usePlannerStore();
+const locale = useLocaleStore();
 
 const searchQuery = ref('');
 const activeCategory = ref<string>('all');
 const onlyNeeded = ref<boolean>(false);
 const onlyDeficit = ref<boolean>(false);
 
-const categories = [
-  { id: 'all', label: 'Все' },
+const categories = computed(() => [
+  { id: 'all', label: locale.t('common.all') || (locale.currentLang === 'ru' ? 'Все' : 'All') },
   { id: 't5', label: 'T5' },
   { id: 't4', label: 'T4' },
   { id: 't3', label: 'T3' },
   { id: 't2', label: 'T2' },
   { id: 't1', label: 'T1' },
-  { id: 'chip', label: 'Чипы' },
-  { id: 'book', label: 'Книги навыков' },
-  { id: 'module', label: 'Модули' },
+  { id: 'chip', label: locale.currentLang === 'ru' ? 'Чипы' : 'Chips' },
+  { id: 'book', label: locale.currentLang === 'ru' ? 'Книги навыков' : 'Skill Summaries' },
+  { id: 'module', label: locale.currentLang === 'ru' ? 'Модули' : 'Modules' },
   { id: 'currency', label: 'LMD & EXP' },
-];
+]);
 
 function isChip(item: ItemSummary): boolean {
   return (
@@ -194,7 +196,7 @@ function handleFillNeeded() {
 }
 
 function handleClearStock() {
-  if (confirm('Вы уверены, что хотите полностью очистить склад?')) {
+  if (confirm(locale.currentLang === 'ru' ? 'Вы уверены, что хотите полностью очистить склад?' : 'Are you sure you want to clear your entire depot inventory?')) {
     inventory.clearAll();
   }
 }
@@ -211,7 +213,7 @@ function handleClearStock() {
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Поиск по названию предмета..."
+            :placeholder="locale.t('depot.searchPlaceholder') || (locale.currentLang === 'ru' ? 'Поиск по названию предмета...' : 'Search items...')"
             class="w-full bg-slate-900 border border-ark-border rounded-xl pl-10 pr-9 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/60"
           />
           <button
@@ -228,20 +230,20 @@ function handleClearStock() {
           <button
             type="button"
             class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
-            title="Заполнить склад требуемым количеством из планов"
+            :title="locale.currentLang === 'ru' ? 'Заполнить склад требуемым количеством из планов' : 'Fill depot with required quantities from plans'"
             @click="handleFillNeeded"
           >
             <CheckCircle2 class="w-3.5 h-3.5 text-cyan-400" />
-            Заполнить по планам
+            {{ locale.currentLang === 'ru' ? 'Заполнить по планам' : 'Fill from Plans' }}
           </button>
           <button
             type="button"
             class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-red-950/30 hover:bg-red-900/50 text-red-300 border border-red-800/60 transition-colors shadow-sm"
-            title="Очистить все предметы на складе"
+            :title="locale.currentLang === 'ru' ? 'Очистить все предметы на складе' : 'Clear all items in depot'"
             @click="handleClearStock"
           >
             <Trash2 class="w-3.5 h-3.5" />
-            Очистить склад
+            {{ locale.currentLang === 'ru' ? 'Очистить склад' : 'Clear Depot' }}
           </button>
         </div>
       </div>
@@ -272,7 +274,7 @@ function handleClearStock() {
             type="checkbox"
             class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-cyan-500 focus:ring-cyan-500/50"
           />
-          <span class="text-slate-300 font-medium">Только нужные в планах</span>
+          <span class="text-slate-300 font-medium">{{ locale.currentLang === 'ru' ? 'Только нужные в планах' : 'Only needed in plans' }}</span>
         </label>
 
         <label class="inline-flex items-center gap-2 cursor-pointer select-none">
@@ -283,12 +285,12 @@ function handleClearStock() {
           />
           <span class="text-red-400 font-medium flex items-center gap-1">
             <AlertCircle class="w-3.5 h-3.5 text-red-500" />
-            Только в дефиците
+            {{ locale.currentLang === 'ru' ? 'Только в дефиците' : 'Only deficit' }}
           </span>
         </label>
 
         <span class="text-slate-500 ml-auto font-mono text-[11px]">
-          Показано: {{ filteredItems.length }} предметов
+          {{ locale.currentLang === 'ru' ? `Показано: ${filteredItems.length} предметов` : `Showing: ${filteredItems.length} items` }}
         </span>
       </div>
     </div>
@@ -325,7 +327,7 @@ function handleClearStock() {
             <div class="mt-1 space-y-0.5 text-[11px] font-mono">
               <!-- Needed row -->
               <div class="flex items-center justify-between text-slate-400">
-                <span>Нужно:</span>
+                <span>{{ locale.currentLang === 'ru' ? 'Нужно:' : 'Needed:' }}</span>
                 <span class="font-bold text-slate-200">
                   {{ getItemNeeded(item.itemId).toLocaleString() }}
                 </span>
@@ -336,14 +338,14 @@ function handleClearStock() {
                 v-if="getItemDeficit(item.itemId) > 0"
                 class="flex items-center justify-between text-red-400 font-bold"
               >
-                <span>Дефицит:</span>
+                <span>{{ locale.currentLang === 'ru' ? 'Дефицит:' : 'Deficit:' }}</span>
                 <span>
                   -{{ getItemDeficit(item.itemId).toLocaleString() }}
                 </span>
               </div>
               <div v-else class="flex items-center justify-between text-emerald-400">
-                <span>Дефицит:</span>
-                <span class="text-[10px]">В достатке</span>
+                <span>{{ locale.currentLang === 'ru' ? 'Дефицит:' : 'Deficit:' }}</span>
+                <span class="text-[10px]">{{ locale.currentLang === 'ru' ? 'В достатке' : 'In stock' }}</span>
               </div>
             </div>
           </div>
@@ -351,7 +353,7 @@ function handleClearStock() {
 
         <!-- Stock Input -->
         <div class="mt-3 pt-2.5 border-t border-ark-border/60 flex items-center justify-between gap-2">
-          <span class="text-[11px] text-slate-400 font-medium">На складе:</span>
+          <span class="text-[11px] text-slate-400 font-medium">{{ locale.currentLang === 'ru' ? 'На складе:' : 'In depot:' }}</span>
           <QuantityInput
             :model-value="inventory.getStock(item.itemId)"
             @change="(val) => handleStockChange(item.itemId, val)"
@@ -366,7 +368,7 @@ function handleClearStock() {
       class="p-12 text-center bg-ark-card rounded-2xl border border-ark-border text-slate-400"
     >
       <Filter class="w-10 h-10 mx-auto text-slate-600 mb-2" />
-      <p class="text-sm font-medium">Нет предметов, соответствующих критериям фильтрации.</p>
+      <p class="text-sm font-medium">{{ locale.currentLang === 'ru' ? 'Нет предметов, соответствующих критериям фильтрации.' : 'No items match the filter criteria.' }}</p>
     </div>
   </div>
 </template>

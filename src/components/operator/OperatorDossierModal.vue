@@ -261,11 +261,6 @@ async function resolveSkillTranslations() {
   }
 
   const lang = gameData.itemLanguage;
-  if (lang === 'cn') {
-    dynamicSkillName.value = detail.nameCn || detail.name || '';
-    dynamicSkillDesc.value = detail.descriptionCn || detail.description || '';
-    return;
-  }
 
   try {
     const res = await getTranslatedSkillInfo(
@@ -296,13 +291,6 @@ async function resolveSkinTranslations() {
   }
 
   const lang = gameData.itemLanguage;
-  if (lang === 'cn') {
-    dynamicSkinName.value = skin.skinName;
-    dynamicSkinBrand.value = skin.skinGroupName;
-    dynamicSkinContent.value = skin.content || '';
-    dynamicSkinDialog.value = skin.dialog || '';
-    return;
-  }
 
   try {
     const res = await getTranslatedSkinInfo(
@@ -330,25 +318,6 @@ async function resolveDynamicTranslations() {
   if (!props.operator) return;
   const op = props.operator;
   const lang = gameData.itemLanguage;
-
-  if (lang === 'cn') {
-    dynamicTalents.value = (op.talents || []).map((t) => ({
-      ...t,
-      candidates: (t.candidates || []).map((c: any) => ({
-        ...c,
-        name: c.nameCn || c.name,
-        description: c.descriptionCn || c.description,
-      })),
-    }));
-    dynamicQuote.value = op.itemDescCn || op.itemDesc || '';
-    dynamicTrait.value = op.descriptionCn || op.description || '';
-    dynamicModules.value = (op.modules || []).map((m) => ({
-      ...m,
-      name: m.nameCn || m.name,
-      desc: m.descCn || m.desc,
-    }));
-    return;
-  }
 
   dynamicTalents.value = op.talents || [];
   dynamicQuote.value = op.itemDesc || '';
@@ -510,14 +479,6 @@ watch(
               @click="gameData.setItemLanguage('en')"
             >
               EN
-            </button>
-            <button
-              type="button"
-              class="px-2 py-0.5 rounded text-[11px] font-bold transition-all"
-              :class="gameData.itemLanguage === 'cn' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
-              @click="gameData.setItemLanguage('cn')"
-            >
-              CN
             </button>
           </div>
 
@@ -848,7 +809,7 @@ watch(
                   <!-- SP Cost & Initial SP -->
                   <div class="p-2.5 bg-slate-900/90 rounded-xl border border-slate-800 space-y-0.5">
                     <span class="text-[10px] text-slate-500 font-mono block">
-                      {{ gameData.itemLanguage === 'ru' ? 'SP (Старт / Стоимость)' : (gameData.itemLanguage === 'cn' ? '技力 (初始 / 消耗)' : 'SP (Init / Cost)') }}
+                      {{ gameData.itemLanguage === 'ru' ? 'SP (Старт / Стоимость)' : 'SP (Init / Cost)' }}
                     </span>
                     <span class="font-mono font-bold text-cyan-300">
                       {{ currentSkillLevelDetail.initSp }} / {{ currentSkillLevelDetail.spCost }}
@@ -858,7 +819,7 @@ watch(
                   <!-- SP Recovery Type -->
                   <div class="p-2.5 bg-slate-900/90 rounded-xl border border-slate-800 space-y-0.5">
                     <span class="text-[10px] text-slate-500 font-mono block">
-                      {{ gameData.itemLanguage === 'ru' ? 'Зарядка SP' : (gameData.itemLanguage === 'cn' ? '技力回复' : 'SP Recovery') }}
+                      {{ gameData.itemLanguage === 'ru' ? 'Зарядка SP' : 'SP Recovery' }}
                     </span>
                     <span class="font-mono font-bold text-slate-200 truncate block">
                       {{ getSpTypeName(currentSkillLevelDetail.spType, gameData.itemLanguage) }}
@@ -868,7 +829,7 @@ watch(
                   <!-- Trigger / Activation Type -->
                   <div class="p-2.5 bg-slate-900/90 rounded-xl border border-slate-800 space-y-0.5">
                     <span class="text-[10px] text-slate-500 font-mono block">
-                      {{ gameData.itemLanguage === 'ru' ? 'Активация' : (gameData.itemLanguage === 'cn' ? '触发方式' : 'Activation') }}
+                      {{ gameData.itemLanguage === 'ru' ? 'Активация' : 'Activation' }}
                     </span>
                     <span class="font-mono font-bold text-slate-200 truncate block">
                       {{ getSkillTypeName(currentSkillLevelDetail.skillType, gameData.itemLanguage) }}
@@ -878,7 +839,7 @@ watch(
                   <!-- Duration -->
                   <div class="p-2.5 bg-slate-900/90 rounded-xl border border-slate-800 space-y-0.5">
                     <span class="text-[10px] text-slate-500 font-mono block">
-                      {{ gameData.itemLanguage === 'ru' ? 'Длительность' : (gameData.itemLanguage === 'cn' ? '持续时间' : 'Duration') }}
+                      {{ gameData.itemLanguage === 'ru' ? 'Длительность' : 'Duration' }}
                     </span>
                     <span class="font-mono font-bold text-amber-300">
                       {{ formatSkillDuration(currentSkillLevelDetail.duration, currentSkillLevelDetail.skillType, dynamicSkillDesc || currentSkillLevelDetail.description, currentSkillLevelDetail.isInfinite, gameData.itemLanguage) }}

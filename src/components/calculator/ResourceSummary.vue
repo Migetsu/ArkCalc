@@ -245,7 +245,7 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
               type="checkbox"
               class="w-4 h-4 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-500"
             />
-            <span>Магазин ивента</span>
+            <span>{{ locale.t('calc.eventShop') }}</span>
           </label>
 
           <label class="flex items-center gap-2 text-xs font-semibold text-slate-300 cursor-pointer select-none">
@@ -254,7 +254,7 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
               type="checkbox"
               class="w-4 h-4 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-500"
             />
-            <span>База Родоса</span>
+            <span>{{ locale.t('calc.rhodesBase') }}</span>
           </label>
         </div>
       </div>
@@ -263,11 +263,11 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
       <div v-if="includeBaseIncome && (lmdDeficit > 0 || expDeficit > 0)" class="pt-2 border-t border-ark-border/60 flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-slate-400">
         <div class="flex items-center gap-2">
           <Home class="w-3.5 h-3.5 text-amber-400" />
-          <span>{{ locale.t('calc.baseIncomeTitle') }}: ~50,000 LMD &bull; ~40,000 EXP в день</span>
+          <span>{{ locale.t('calc.baseIncomeTitle') }}: ~50,000 LMD &bull; ~40,000 EXP {{ locale.currentLang === 'ru' ? 'в день' : 'daily' }}</span>
         </div>
         <div class="flex items-center gap-3 text-cyan-300 font-bold">
-          <span v-if="lmdDeficit > 0">LMD покроется базой за ~{{ baseLmdDays }} дн.</span>
-          <span v-if="expDeficit > 0">EXP за ~{{ baseExpDays }} дн.</span>
+          <span v-if="lmdDeficit > 0">{{ locale.t('calc.baseDaysLmd', { days: baseLmdDays }) }}</span>
+          <span v-if="expDeficit > 0">{{ locale.t('calc.baseDaysExp', { days: baseExpDays }) }}</span>
         </div>
       </div>
     </div>
@@ -281,7 +281,7 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
             <div class="w-8 h-8 rounded-lg bg-cyan-950/60 border border-cyan-800 flex items-center justify-center text-cyan-400">
               <Coins class="w-4 h-4" />
             </div>
-            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Всего LMD</span>
+            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">{{ locale.t('calc.totalLmd') }}</span>
           </div>
           <span
             class="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border"
@@ -312,15 +312,15 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
 
           <!-- LMD breakdown -->
           <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-400 font-mono">
-            <span>Уровни: <strong class="text-slate-200">{{ calc.totalLmdLevel.toLocaleString() }}</strong></span>
-            <span>Элита: <strong class="text-slate-200">{{ calc.totalLmdEvolve.toLocaleString() }}</strong></span>
-            <span>Крафт: <strong class="text-slate-200">{{ calc.totalLmdCraft.toLocaleString() }}</strong></span>
+            <span>{{ locale.t('calc.levels') }}: <strong class="text-slate-200">{{ calc.totalLmdLevel.toLocaleString() }}</strong></span>
+            <span>{{ locale.t('calc.elite') }}: <strong class="text-slate-200">{{ calc.totalLmdEvolve.toLocaleString() }}</strong></span>
+            <span>{{ locale.t('calc.craft') }}: <strong class="text-slate-200">{{ calc.totalLmdCraft.toLocaleString() }}</strong></span>
           </div>
         </div>
 
         <!-- Deficit indicator for LMD -->
         <div class="pt-2 border-t border-ark-border/60 text-xs flex justify-between items-center">
-          <span class="text-slate-400">Осталось накопить:</span>
+          <span class="text-slate-400">{{ locale.t('calc.leftToFarm') }}:</span>
           <span
             v-if="lmdDeficit > 0"
             class="font-mono font-bold text-red-400"
@@ -328,7 +328,7 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
             -{{ lmdDeficit.toLocaleString() }}
           </span>
           <span v-else class="font-mono font-bold text-emerald-400 flex items-center gap-1">
-            <CheckCircle class="w-3.5 h-3.5" /> В наличии
+            <CheckCircle class="w-3.5 h-3.5" /> {{ locale.currentLang === 'ru' ? 'В наличии' : 'In Stock' }}
           </span>
         </div>
       </div>
@@ -340,7 +340,7 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
             <div class="w-8 h-8 rounded-lg bg-amber-950/60 border border-amber-800 flex items-center justify-center text-amber-400">
               <Sparkles class="w-4 h-4" />
             </div>
-            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Всего EXP</span>
+            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">{{ locale.currentLang === 'ru' ? 'Всего EXP' : 'Total EXP' }}</span>
           </div>
           <span
             class="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border"
@@ -371,16 +371,16 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
 
           <!-- Battle records breakdown -->
           <div class="mt-2 flex flex-wrap gap-x-2.5 gap-y-1 text-[11px] text-slate-400 font-mono">
-            <span>T4: <strong class="text-amber-300">{{ cardStockT4 }} шт.</strong></span>
-            <span>T3: <strong class="text-sky-300">{{ cardStockT3 }} шт.</strong></span>
-            <span>T2: <strong class="text-emerald-300">{{ cardStockT2 }} шт.</strong></span>
-            <span>T1: <strong class="text-slate-300">{{ cardStockT1 }} шт.</strong></span>
+            <span>T4: <strong class="text-amber-300">{{ cardStockT4 }} {{ locale.currentLang === 'ru' ? 'шт.' : 'pcs' }}</strong></span>
+            <span>T3: <strong class="text-sky-300">{{ cardStockT3 }} {{ locale.currentLang === 'ru' ? 'шт.' : 'pcs' }}</strong></span>
+            <span>T2: <strong class="text-emerald-300">{{ cardStockT2 }} {{ locale.currentLang === 'ru' ? 'шт.' : 'pcs' }}</strong></span>
+            <span>T1: <strong class="text-slate-300">{{ cardStockT1 }} {{ locale.currentLang === 'ru' ? 'шт.' : 'pcs' }}</strong></span>
           </div>
         </div>
 
         <!-- Deficit indicator for EXP -->
         <div class="pt-2 border-t border-ark-border/60 text-xs flex justify-between items-center text-slate-400">
-          <span>Осталось накопить:</span>
+          <span>{{ locale.currentLang === 'ru' ? 'Осталось накопить:' : 'Remaining:' }}</span>
           <span
             v-if="expDeficit > 0"
             class="font-mono font-bold text-red-400"
@@ -388,7 +388,7 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
             -{{ expDeficit.toLocaleString() }} (~{{ expDeficitT4 }} T4)
           </span>
           <span v-else class="font-mono font-bold text-emerald-400 flex items-center gap-1">
-            <CheckCircle class="w-3.5 h-3.5" /> В наличии
+            <CheckCircle class="w-3.5 h-3.5" /> {{ locale.currentLang === 'ru' ? 'В наличии' : 'In Stock' }}
           </span>
         </div>
       </div>
@@ -400,26 +400,26 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
             <div class="w-8 h-8 rounded-lg bg-purple-950/60 border border-purple-800 flex items-center justify-center text-purple-400">
               <Layers class="w-4 h-4" />
             </div>
-            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Материалы</span>
+            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">{{ locale.currentLang === 'ru' ? 'Материалы' : 'Materials' }}</span>
           </div>
           <span class="text-xs font-mono text-slate-400">
-            Видов: {{ calc.directDeficit.length }}
+            {{ locale.currentLang === 'ru' ? 'Видов:' : 'Types:' }} {{ calc.directDeficit.length }}
           </span>
         </div>
 
         <div class="my-3 flex items-baseline gap-3">
           <div class="text-2xl font-black font-mono tracking-tight text-red-400">
             {{ totalDeficitItemsCount }}
-            <span class="text-xs font-normal text-slate-400 ml-1">в дефиците</span>
+            <span class="text-xs font-normal text-slate-400 ml-1">{{ locale.currentLang === 'ru' ? 'в дефиците' : 'deficit' }}</span>
           </div>
           <div class="text-sm font-bold font-mono text-emerald-400">
             {{ totalItemsReadyCount }}
-            <span class="text-xs font-normal text-slate-400 ml-0.5">готово</span>
+            <span class="text-xs font-normal text-slate-400 ml-0.5">{{ locale.currentLang === 'ru' ? 'готово' : 'ready' }}</span>
           </div>
         </div>
 
         <div class="pt-2 border-t border-ark-border/60 text-xs flex justify-between items-center text-slate-400">
-          <span>Оперативников в плане:</span>
+          <span>{{ locale.currentLang === 'ru' ? 'Оперативников в плане:' : 'Operators planned:' }}</span>
           <span class="text-cyan-400 font-mono font-bold">{{ planner.planCount }}</span>
         </div>
       </div>
@@ -431,7 +431,7 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
             <div class="w-8 h-8 rounded-lg bg-amber-950/60 border border-amber-800 flex items-center justify-center text-amber-400">
               <Zap class="w-4 h-4" />
             </div>
-            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Оценка Sanity</span>
+            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">{{ locale.currentLang === 'ru' ? 'Оценка Sanity' : 'Sanity Estimate' }}</span>
           </div>
           <span class="text-[10px] font-mono text-cyan-400 font-bold bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-800">
             Penguin Stats
@@ -444,14 +444,14 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
             <span class="text-sm font-bold text-amber-400/80">⚡</span>
           </div>
           <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-400 font-mono">
-            <span>Ресурсы: <strong class="text-purple-300">~{{ planSanityEstimate.materialsSanity.toLocaleString() }}⚡</strong></span>
+            <span>{{ locale.currentLang === 'ru' ? 'Ресурсы:' : 'Materials:' }} <strong class="text-purple-300">~{{ planSanityEstimate.materialsSanity.toLocaleString() }}⚡</strong></span>
             <span v-if="planSanityEstimate.lmdSanity > 0">LMD: <strong class="text-cyan-300">~{{ planSanityEstimate.lmdSanity.toLocaleString() }}⚡</strong></span>
             <span v-if="planSanityEstimate.expSanity > 0">EXP: <strong class="text-amber-300">~{{ planSanityEstimate.expSanity.toLocaleString() }}⚡</strong></span>
           </div>
         </div>
 
         <div class="pt-2 border-t border-ark-border/60 text-xs flex justify-between items-center text-slate-400">
-          <span>~{{ planSanityEstimate.totalRuns.toLocaleString() }} зах. &bull; ~{{ planSanityEstimate.naturalDays }} дн.</span>
+          <span>~{{ planSanityEstimate.totalRuns.toLocaleString() }} {{ locale.currentLang === 'ru' ? 'зах.' : 'runs' }} &bull; ~{{ planSanityEstimate.naturalDays }} {{ locale.currentLang === 'ru' ? 'дн.' : 'days' }}</span>
           <span class="text-amber-400 font-mono font-bold">~{{ planSanityEstimate.opEquivalent }} OP</span>
         </div>
       </div>
@@ -467,7 +467,7 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
           @click="activeTab = 'direct'"
         >
           <TrendingDown class="w-4 h-4" />
-          <span>Дефицит ({{ totalDeficitItemsCount }})</span>
+          <span>{{ locale.t('calculator.deficit') }} ({{ totalDeficitItemsCount }})</span>
         </button>
 
         <button
@@ -477,9 +477,9 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
           @click="activeTab = 'farm'"
         >
           <Layers class="w-4 h-4" />
-          <span>План фарма карт</span>
+          <span>{{ locale.t('calculator.farming') }}</span>
           <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-400 text-slate-950 font-black uppercase">
-            Топ
+            {{ locale.currentLang === 'ru' ? 'Топ' : 'Top' }}
           </span>
         </button>
 
@@ -490,13 +490,13 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
           @click="activeTab = 'craftingTree'"
         >
           <Hammer class="w-4 h-4" />
-          <span>Дерево крафта ({{ calc.craftingSteps.length }})</span>
+          <span>{{ locale.t('calculator.crafting') }} ({{ calc.craftingSteps.length }})</span>
         </button>
       </div>
 
       <div class="text-xs text-slate-400 flex items-center gap-2">
         <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block animate-pulse"></span>
-        Красный цвет: требуется получить/скрафтить
+        {{ locale.currentLang === 'ru' ? 'Красный цвет: требуется получить/скрафтить' : 'Red color: needed to farm/craft' }}
       </div>
     </div>
 
@@ -509,10 +509,11 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
             <Wrench class="w-4 h-4" />
           </div>
           <div>
-            <div class="font-bold text-slate-100 text-xs">Прямой дефицит и синтез в Мастерской</div>
+            <div class="font-bold text-slate-100 text-xs">
+              {{ locale.currentLang === 'ru' ? 'Прямой дефицит и синтез в Мастерской' : 'Direct Deficit and Workshop Synthesis' }}
+            </div>
             <div class="text-[11px] text-slate-400 mt-0.5">
-              Сложные ресурсы (T4, T5, двойные фишки) крафтятся в Мастерской из базовых материалов T3.
-              Перейдите во вкладку <b>«План фарма»</b>, чтобы сразу увидеть готовый список лучших карт и число заходов!
+              {{ locale.currentLang === 'ru' ? 'Сложные ресурсы (T4, T5, двойные фишки) крафтятся в Мастерской из базовых материалов T3. Перейдите во вкладку «План фарма», чтобы сразу увидеть готовый список лучших карт и число заходов!' : 'Advanced materials (T4, T5, dual chips) are crafted in the Workshop from T3 materials. Switch to the Farming Plan tab to see the best stages and estimated runs directly!' }}
             </div>
           </div>
         </div>
@@ -521,7 +522,7 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
           class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex items-center gap-1.5 flex-shrink-0 transition-all shadow-md self-start sm:self-auto"
           @click="activeTab = 'farm'"
         >
-          <span>План фарма карт</span>
+          <span>{{ locale.t('calculator.farming') }}</span>
           <span>&rarr;</span>
         </button>
       </div>
@@ -532,11 +533,11 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
           <div class="flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
             <h3 class="font-bold text-xs sm:text-sm text-slate-100 uppercase tracking-wide">
-              Основные ресурсы (LMD и опыт)
+              {{ locale.currentLang === 'ru' ? 'Основные ресурсы (LMD и опыт)' : 'Primary Resources (LMD & EXP)' }}
             </h3>
           </div>
           <span class="text-xs text-slate-400 font-mono">
-            Баланс склада и остаток по планам
+            {{ locale.currentLang === 'ru' ? 'Баланс склада и остаток по планам' : 'Depot balance & plan requirements' }}
           </span>
         </div>
 
@@ -550,7 +551,9 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
               <ItemIcon item-id="4001" size="lg" :deficit="lmdDeficit > 0 ? lmdDeficit : undefined" />
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between">
-                  <h4 class="font-bold text-xs text-slate-100">LMD (Юани Лунмэня)</h4>
+                  <h4 class="font-bold text-xs text-slate-100">
+                    {{ locale.currentLang === 'ru' ? 'LMD (Юани Лунмэня)' : 'LMD (Lungmen Dollars)' }}
+                  </h4>
                   <span
                     class="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border"
                     :class="lmdDeficit > 0 ? 'bg-red-950/80 text-red-300 border-red-800' : 'bg-emerald-950/80 text-emerald-300 border-emerald-800'"
@@ -561,20 +564,20 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
 
                 <div class="mt-2 space-y-1 text-xs font-mono">
                   <div class="flex items-center justify-between text-slate-400">
-                    <span>Накоплено на складе:</span>
+                    <span>{{ locale.currentLang === 'ru' ? 'Накоплено на складе:' : 'In Depot:' }}</span>
                     <span class="font-bold text-slate-200">{{ lmdStock.toLocaleString() }}</span>
                   </div>
                   <div class="flex items-center justify-between text-slate-400">
-                    <span>Всего надо по плану:</span>
+                    <span>{{ locale.currentLang === 'ru' ? 'Всего надо по плану:' : 'Total Planned:' }}</span>
                     <span class="font-semibold text-cyan-300">{{ lmdTotalNeeded.toLocaleString() }}</span>
                   </div>
                   <div class="flex items-center justify-between pt-1 border-t border-ark-border/60">
-                    <span class="text-slate-400">Осталось накопить:</span>
+                    <span class="text-slate-400">{{ locale.currentLang === 'ru' ? 'Осталось накопить:' : 'Remaining:' }}</span>
                     <span v-if="lmdDeficit > 0" class="font-bold text-red-400">
                       -{{ lmdDeficit.toLocaleString() }} LMD
                     </span>
                     <span v-else class="font-bold text-emerald-400 flex items-center gap-1">
-                      <CheckCircle class="w-3.5 h-3.5" /> В наличии
+                      <CheckCircle class="w-3.5 h-3.5" /> {{ locale.currentLang === 'ru' ? 'В наличии' : 'In Stock' }}
                     </span>
                   </div>
                 </div>
@@ -600,7 +603,9 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
               <ItemIcon item-id="2004" size="lg" :deficit="expDeficit > 0 ? expDeficit : undefined" />
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between">
-                  <h4 class="font-bold text-xs text-slate-100">Боевые записи (EXP)</h4>
+                  <h4 class="font-bold text-xs text-slate-100">
+                    {{ locale.currentLang === 'ru' ? 'Боевые записи (EXP)' : 'Battle Records (EXP)' }}
+                  </h4>
                   <span
                     class="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border"
                     :class="expDeficit > 0 ? 'bg-amber-950/80 text-amber-300 border-amber-800' : 'bg-emerald-950/80 text-emerald-300 border-emerald-800'"
@@ -611,22 +616,22 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
 
                 <div class="mt-2 space-y-1 text-xs font-mono">
                   <div class="flex items-center justify-between text-slate-400">
-                    <span>Накоплено на складе:</span>
+                    <span>{{ locale.currentLang === 'ru' ? 'Накоплено на складе:' : 'In Depot:' }}</span>
                     <span class="font-bold text-slate-200">{{ expStock.toLocaleString() }} EXP</span>
                   </div>
                   <div class="flex items-center justify-between text-slate-400">
-                    <span>Всего надо по плану:</span>
+                    <span>{{ locale.currentLang === 'ru' ? 'Всего надо по плану:' : 'Total Planned:' }}</span>
                     <span class="font-semibold text-amber-300">
-                      {{ expTotalNeeded.toLocaleString() }} EXP (~{{ expStrategicRecords }} шт. T4 / ~{{ expTacticalRecords }} шт. T3)
+                      {{ expTotalNeeded.toLocaleString() }} EXP (~{{ expStrategicRecords }} {{ locale.currentLang === 'ru' ? 'шт.' : 'pcs' }} T4 / ~{{ expTacticalRecords }} {{ locale.currentLang === 'ru' ? 'шт.' : 'pcs' }} T3)
                     </span>
                   </div>
                   <div class="flex items-center justify-between pt-1 border-t border-ark-border/60">
-                    <span class="text-slate-400">Осталось накопить:</span>
+                    <span class="text-slate-400">{{ locale.currentLang === 'ru' ? 'Осталось накопить:' : 'Remaining:' }}</span>
                     <span v-if="expDeficit > 0" class="font-bold text-red-400">
                       -{{ expDeficit.toLocaleString() }} EXP (~{{ expDeficitT4 }} T4 / ~{{ expDeficitT3 }} T3)
                     </span>
                     <span v-else class="font-bold text-emerald-400 flex items-center gap-1">
-                      <CheckCircle class="w-3.5 h-3.5" /> В наличии
+                      <CheckCircle class="w-3.5 h-3.5" /> {{ locale.currentLang === 'ru' ? 'В наличии' : 'In Stock' }}
                     </span>
                   </div>
                 </div>
@@ -643,16 +648,16 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
                 <!-- Stocked cards badges -->
                 <div class="mt-2 flex flex-wrap gap-1.5 text-[10px] font-mono">
                   <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-amber-300">
-                    T4 (2k): {{ cardStockT4 }} шт.
+                    T4 (2k): {{ cardStockT4 }} {{ locale.currentLang === 'ru' ? 'шт.' : 'pcs' }}
                   </span>
                   <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-sky-300">
-                    T3 (1k): {{ cardStockT3 }} шт.
+                    T3 (1k): {{ cardStockT3 }} {{ locale.currentLang === 'ru' ? 'шт.' : 'pcs' }}
                   </span>
                   <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-emerald-300">
-                    T2 (400): {{ cardStockT2 }} шт.
+                    T2 (400): {{ cardStockT2 }} {{ locale.currentLang === 'ru' ? 'шт.' : 'pcs' }}
                   </span>
                   <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300">
-                    T1 (200): {{ cardStockT1 }} шт.
+                    T1 (200): {{ cardStockT1 }} {{ locale.currentLang === 'ru' ? 'шт.' : 'pcs' }}
                   </span>
                 </div>
               </div>
@@ -665,17 +670,21 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
       <div v-if="calc.directDeficit.length > 0" class="flex items-center justify-between pt-2">
         <h3 class="font-bold text-xs sm:text-sm text-slate-100 uppercase tracking-wide flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
-          <span>Материалы улучшения ({{ calc.directDeficit.length }})</span>
+          <span>{{ locale.currentLang === 'ru' ? 'Материалы улучшения' : 'Upgrade Materials' }} ({{ calc.directDeficit.length }})</span>
         </h3>
         <span class="text-xs text-slate-400 font-mono">
-          Дефицит: {{ calc.directDeficit.filter(d => d.deficit > 0).length }} шт.
+          {{ locale.currentLang === 'ru' ? 'Дефицит:' : 'Deficit:' }} {{ calc.directDeficit.filter(d => d.deficit > 0).length }} {{ locale.currentLang === 'ru' ? 'шт.' : 'pcs' }}
         </span>
       </div>
 
       <div v-if="calc.directDeficit.length === 0 && lmdDeficit === 0 && expDeficit === 0" class="p-12 text-center bg-ark-card rounded-2xl border border-ark-border text-slate-400">
         <CheckCircle class="w-12 h-12 mx-auto text-emerald-400 mb-2" />
-        <h4 class="font-bold text-slate-200 text-base">Планы не настроены или все ресурсы собраны!</h4>
-        <p class="text-xs mt-1">Добавьте оперативников во вкладке «Оперативники» для расчета необходимых ресурсов.</p>
+        <h4 class="font-bold text-slate-200 text-base">
+          {{ locale.currentLang === 'ru' ? 'Планы не настроены или все ресурсы собраны!' : 'No plans configured or all materials collected!' }}
+        </h4>
+        <p class="text-xs mt-1">
+          {{ locale.currentLang === 'ru' ? 'Добавьте оперативников во вкладке «Оперативники» для расчета необходимых ресурсов.' : 'Add operators in the "Operators" tab to calculate required materials.' }}
+        </p>
       </div>
 
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -703,18 +712,18 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
 
               <div class="mt-1 space-y-0.5 text-[11px] font-mono">
                 <div class="flex items-center justify-between text-slate-400">
-                  <span>Нужно:</span>
+                  <span>{{ locale.currentLang === 'ru' ? 'Нужно:' : 'Needed:' }}</span>
                   <span class="font-semibold text-slate-200">{{ item.needed }}</span>
                 </div>
                 <div class="flex items-center justify-between text-slate-400">
-                  <span>Склад:</span>
+                  <span>{{ locale.currentLang === 'ru' ? 'Склад:' : 'Stock:' }}</span>
                   <span class="font-semibold text-slate-300">{{ item.stock }}</span>
                 </div>
                 <div
                   class="flex items-center justify-between pt-0.5 border-t border-ark-border/60"
                   :class="item.deficit > 0 ? 'text-red-400 font-bold' : 'text-emerald-400 font-semibold'"
                 >
-                  <span>Дефицит:</span>
+                  <span>{{ locale.currentLang === 'ru' ? 'Дефицит:' : 'Deficit:' }}</span>
                   <span>{{ item.deficit > 0 ? `-${item.deficit}` : '0' }}</span>
                 </div>
               </div>
@@ -732,10 +741,10 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
             >
               <span class="flex items-center gap-1.5 font-sans font-medium">
                 <Hammer class="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
-                <span>Крафт из T3 (Мастерская)</span>
+                <span>{{ locale.currentLang === 'ru' ? 'Крафт из T3 (Мастерская)' : 'Workshop Crafting (T3)' }}</span>
               </span>
               <span class="text-amber-300 text-[10px] font-mono font-semibold">
-                {{ getRecommendedStage(item.itemId)?.sanityPerItem ? `~${getRecommendedStage(item.itemId)?.sanityPerItem} ⚡` : 'Рецепт →' }}
+                {{ getRecommendedStage(item.itemId)?.sanityPerItem ? `~${getRecommendedStage(item.itemId)?.sanityPerItem} ⚡` : (locale.currentLang === 'ru' ? 'Рецепт →' : 'Recipe →') }}
               </span>
             </button>
 
@@ -748,9 +757,9 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
             >
               <span class="flex items-center gap-1.5">
                 <Zap class="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                <span>Фарм: {{ getRecommendedStage(item.itemId)?.stageCode }}</span>
+                <span>{{ locale.currentLang === 'ru' ? 'Фарм:' : 'Farm:' }} {{ getRecommendedStage(item.itemId)?.stageCode }}</span>
               </span>
-              <span class="text-slate-300 text-[9px]">~{{ getRecommendedStage(item.itemId)?.sanityPerItem }} ⚡/шт</span>
+              <span class="text-slate-300 text-[9px]">~{{ getRecommendedStage(item.itemId)?.sanityPerItem }} ⚡/{{ locale.currentLang === 'ru' ? 'шт' : 'ea' }}</span>
             </button>
           </div>
         </div>
@@ -762,8 +771,8 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
       <div class="p-4 bg-slate-900/80 rounded-xl border border-ark-border text-xs text-slate-300 flex items-start gap-3">
         <Wrench class="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
         <div>
-          <strong class="text-cyan-300">План фарма базовых компонентов и лучшие карты:</strong>
-          Калькулятор разложил сложные материалы на составляющие и подобрал лучшие карты на основе данных <b>Penguin Statistics</b> с расчетом требуемых заходов и затрат Sanity.
+          <strong class="text-cyan-300">{{ locale.currentLang === 'ru' ? 'План фарма базовых компонентов и лучшие карты:' : 'Base Material Farming Plan & Best Stages:' }}</strong>
+          {{ locale.currentLang === 'ru' ? 'Калькулятор разложил сложные материалы на составляющие и подобрал лучшие карты на основе данных Penguin Statistics с расчетом требуемых заходов и затрат Sanity.' : 'The calculator broke down advanced materials into base components and selected optimal stages based on Penguin Statistics with estimated runs and Sanity costs.' }}
         </div>
       </div>
 
@@ -774,13 +783,15 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
           <div class="flex items-start gap-3">
             <ItemIcon item-id="4001" size="lg" :count="lmdDeficit" />
             <div class="flex-1 min-w-0">
-              <h4 class="font-bold text-xs text-slate-200 truncate">LMD (Юани Лунмэня)</h4>
+              <h4 class="font-bold text-xs text-slate-200 truncate">
+                {{ locale.currentLang === 'ru' ? 'LMD (Юани Лунмэня)' : 'LMD (Lungmen Dollars)' }}
+              </h4>
               <div class="mt-1 text-xs font-mono">
-                <span class="text-slate-400">Дефицит: </span>
+                <span class="text-slate-400">{{ locale.currentLang === 'ru' ? 'Дефицит:' : 'Deficit:' }} </span>
                 <strong class="text-cyan-400 text-sm font-bold">{{ lmdDeficit.toLocaleString() }} LMD</strong>
               </div>
               <div class="text-[10px] text-slate-400 font-mono">
-                Склад: {{ lmdStock.toLocaleString() }}
+                {{ locale.currentLang === 'ru' ? 'Склад:' : 'Stock:' }} {{ lmdStock.toLocaleString() }}
               </div>
             </div>
           </div>
@@ -790,7 +801,7 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
               <span class="font-mono font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-800 px-2 py-0.5 rounded text-xs">
                 CE-6
               </span>
-              <span class="text-[11px] text-slate-300 font-mono">~{{ planSanityEstimate.lmdRuns }} заходов</span>
+              <span class="text-[11px] text-slate-300 font-mono">~{{ planSanityEstimate.lmdRuns }} {{ locale.currentLang === 'ru' ? 'заходов' : 'runs' }}</span>
             </div>
             <span class="text-amber-300 font-mono font-bold text-xs">~{{ planSanityEstimate.lmdSanity }} ⚡</span>
           </div>
@@ -801,13 +812,15 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
           <div class="flex items-start gap-3">
             <ItemIcon item-id="2004" size="lg" :count="expDeficit" />
             <div class="flex-1 min-w-0">
-              <h4 class="font-bold text-xs text-slate-200 truncate">Опыт оперативников (EXP)</h4>
+              <h4 class="font-bold text-xs text-slate-200 truncate">
+                {{ locale.currentLang === 'ru' ? 'Опыт оперативников (EXP)' : 'Operator EXP' }}
+              </h4>
               <div class="mt-1 text-xs font-mono">
-                <span class="text-slate-400">Дефицит: </span>
+                <span class="text-slate-400">{{ locale.currentLang === 'ru' ? 'Дефицит:' : 'Deficit:' }} </span>
                 <strong class="text-amber-400 text-sm font-bold">{{ expDeficit.toLocaleString() }} EXP</strong>
               </div>
               <div class="text-[10px] text-slate-400 font-mono">
-                ~{{ expDeficitT4 }} шт. T4 книг &bull; Склад: {{ expStock.toLocaleString() }} EXP
+                ~{{ expDeficitT4 }} {{ locale.currentLang === 'ru' ? 'шт. T4 книг' : 'T4 books' }} &bull; {{ locale.currentLang === 'ru' ? 'Склад:' : 'Stock:' }} {{ expStock.toLocaleString() }} EXP
               </div>
             </div>
           </div>
@@ -817,7 +830,7 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
               <span class="font-mono font-bold text-amber-300 bg-amber-950/80 border border-amber-800 px-2 py-0.5 rounded text-xs">
                 LS-6
               </span>
-              <span class="text-[11px] text-slate-300 font-mono">~{{ planSanityEstimate.expRuns }} заходов</span>
+              <span class="text-[11px] text-slate-300 font-mono">~{{ planSanityEstimate.expRuns }} {{ locale.currentLang === 'ru' ? 'заходов' : 'runs' }}</span>
             </div>
             <span class="text-amber-300 font-mono font-bold text-xs">~{{ planSanityEstimate.expSanity }} ⚡</span>
           </div>
@@ -828,19 +841,25 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
       <div v-if="calc.farmRequirements.length > 0" class="flex items-center justify-between pt-1">
         <h3 class="font-bold text-xs sm:text-sm text-slate-100 uppercase tracking-wide flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
-          <span>Базовые материалы к фарму ({{ calc.farmRequirements.length }})</span>
+          <span>{{ locale.currentLang === 'ru' ? 'Базовые материалы к фарму' : 'Base Materials to Farm' }} ({{ calc.farmRequirements.length }})</span>
         </h3>
       </div>
 
       <div v-if="calc.farmRequirements.length === 0 && lmdDeficit === 0 && expDeficit === 0" class="p-12 text-center bg-ark-card rounded-2xl border border-ark-border text-slate-400">
         <CheckCircle class="w-12 h-12 mx-auto text-emerald-400 mb-2" />
-        <h4 class="font-bold text-slate-200 text-base">Фарм базовых компонентов не требуется!</h4>
+        <h4 class="font-bold text-slate-200 text-base">
+          {{ locale.currentLang === 'ru' ? 'Фарм базовых компонентов не требуется!' : 'No base components need farming!' }}
+        </h4>
       </div>
 
       <div v-else-if="calc.farmRequirements.length === 0" class="p-8 text-center bg-ark-card rounded-2xl border border-ark-border text-slate-400">
         <CheckCircle class="w-10 h-10 mx-auto text-emerald-400 mb-2" />
-        <h4 class="font-bold text-slate-200 text-sm">Все материалы улучшения собраны!</h4>
-        <p class="text-xs text-slate-400 mt-1">Осталось добрать только LMD или EXP (см. рекомендации CE-6 / LS-6 выше).</p>
+        <h4 class="font-bold text-slate-200 text-sm">
+          {{ locale.currentLang === 'ru' ? 'Все материалы улучшения собраны!' : 'All upgrade materials collected!' }}
+        </h4>
+        <p class="text-xs text-slate-400 mt-1">
+          {{ locale.currentLang === 'ru' ? 'Осталось добрать только LMD или EXP (см. рекомендации CE-6 / LS-6 выше).' : 'Only LMD or EXP remaining (see CE-6 / LS-6 recommendations above).' }}
+        </p>
       </div>
 
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -861,11 +880,11 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
                 {{ gameData.getItem(farm.itemId)?.name || farm.itemId }}
               </h4>
               <div class="mt-1 text-xs font-mono">
-                <span class="text-slate-400">Фармить: </span>
-                <strong class="text-red-400 text-sm font-bold">{{ farm.count }} шт.</strong>
+                <span class="text-slate-400">{{ locale.currentLang === 'ru' ? 'Фармить:' : 'Farm:' }} </span>
+                <strong class="text-red-400 text-sm font-bold">{{ farm.count }} {{ locale.currentLang === 'ru' ? 'шт.' : 'pcs' }}</strong>
               </div>
               <div class="text-[10px] text-slate-500 font-mono">
-                Склад: {{ inventory.getStock(farm.itemId) }}
+                {{ locale.currentLang === 'ru' ? 'Склад:' : 'Stock:' }} {{ inventory.getStock(farm.itemId) }}
               </div>
             </div>
           </div>
@@ -873,12 +892,12 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
           <!-- Recommended stage badge from Penguin Stats -->
           <div v-if="getRecommendedStage(farm.itemId)" class="pt-2 border-t border-slate-800/80 space-y-1.5">
             <div class="flex items-center justify-between text-xs">
-              <span class="text-[11px] text-slate-400">Лучшая карта:</span>
+              <span class="text-[11px] text-slate-400">{{ locale.currentLang === 'ru' ? 'Лучшая карта:' : 'Best Stage:' }}</span>
               <button
                 type="button"
                 class="font-mono font-bold text-cyan-300 hover:text-cyan-200 bg-cyan-950/70 border border-cyan-800/80 px-2 py-0.5 rounded text-xs flex items-center gap-1 transition-colors"
                 @click="openFarmingGuide(farm.itemId, farm.count)"
-                title="Нажмите для подробной статистики всех карт"
+                :title="locale.currentLang === 'ru' ? 'Нажмите для подробной статистики всех карт' : 'Click for detailed stage statistics'"
               >
                 <span>{{ getRecommendedStage(farm.itemId)?.stageCode }}</span>
                 <span class="text-[10px] text-slate-400">({{ getRecommendedStage(farm.itemId)?.apCost }}⚡)</span>
@@ -886,9 +905,9 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
             </div>
 
             <div class="flex items-center justify-between text-[11px] font-mono text-slate-400">
-              <span>Оценка:</span>
+              <span>{{ locale.currentLang === 'ru' ? 'Оценка:' : 'Est:' }}</span>
               <span class="text-amber-300 font-medium">
-                ~{{ calculateFarmingEstimate(farm.itemId, farm.count)?.runs }} заходов &bull;
+                ~{{ calculateFarmingEstimate(farm.itemId, farm.count)?.runs }} {{ locale.currentLang === 'ru' ? 'заходов' : 'runs' }} &bull;
                 ~{{ calculateFarmingEstimate(farm.itemId, farm.count)?.totalSanity }} ⚡
               </span>
             </div>

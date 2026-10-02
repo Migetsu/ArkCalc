@@ -15,8 +15,11 @@ import {
   POPULAR_OPERATOR_RU_ALIASES,
 } from '@/data/materialTranslations';
 
+import { useLocaleStore } from '@/stores/locale';
+
 const gameData = useGameDataStore();
 const planner = usePlannerStore();
+const locale = useLocaleStore();
 
 const searchQuery = ref('');
 const selectedRarity = ref<number | null>(null);
@@ -39,16 +42,16 @@ function closeDossier() {
   selectedOperatorForDossier.value = null;
 }
 
-const professions: { id: Profession; label: string }[] = [
-  { id: 'PIONEER', label: 'Vanguard' },
-  { id: 'WARRIOR', label: 'Guard' },
-  { id: 'TANK', label: 'Defender' },
-  { id: 'SNIPER', label: 'Sniper' },
-  { id: 'CASTER', label: 'Caster' },
-  { id: 'MEDIC', label: 'Medic' },
-  { id: 'SUPPORT', label: 'Supporter' },
-  { id: 'SPECIAL', label: 'Specialist' },
-];
+const professions = computed<{ id: Profession; label: string }[]>(() => [
+  { id: 'PIONEER', label: locale.t('class.pioneer') },
+  { id: 'WARRIOR', label: locale.t('class.warrior') },
+  { id: 'TANK', label: locale.t('class.tank') },
+  { id: 'SNIPER', label: locale.t('class.sniper') },
+  { id: 'CASTER', label: locale.t('class.caster') },
+  { id: 'MEDIC', label: locale.t('class.medic') },
+  { id: 'SUPPORT', label: locale.t('class.support') },
+  { id: 'SPECIAL', label: locale.t('class.special') },
+]);
 
 const filteredOperators = computed(() => {
   let list = gameData.operatorList;
@@ -180,7 +183,7 @@ function clearFilters() {
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Поиск оперативника по имени..."
+            :placeholder="locale.t('op.searchPlaceholder')"
             class="w-full bg-slate-900 border border-ark-border rounded-xl pl-10 pr-9 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/60 focus:border-cyan-500"
           />
           <button
@@ -201,7 +204,7 @@ function clearFilters() {
             :class="[selectedPlanFilter === 'all' ? 'bg-cyan-600 text-white font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200']"
             @click="selectedPlanFilter = 'all'"
           >
-            Все ({{ gameData.operatorList.length }})
+            {{ locale.t('op.filterAll') }} ({{ gameData.operatorList.length }})
           </button>
           <button
             type="button"
@@ -210,7 +213,7 @@ function clearFilters() {
             @click="selectedPlanFilter = 'planned'"
           >
             <UserCheck class="w-3.5 h-3.5" />
-            В плане ({{ planner.planCount }})
+            {{ locale.t('op.filterPlanned') }} ({{ planner.planCount }})
           </button>
           <button
             type="button"
@@ -218,14 +221,14 @@ function clearFilters() {
             :class="[selectedPlanFilter === 'unplanned' ? 'bg-cyan-600 text-white font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200']"
             @click="selectedPlanFilter = 'unplanned'"
           >
-            Без плана
+            {{ locale.t('op.filterUnplanned') }}
           </button>
         </div>
       </div>
 
       <!-- Class Filters Row -->
       <div class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 text-xs">
-        <span class="text-slate-400 font-medium mr-1 text-[11px] uppercase tracking-wider flex-shrink-0">Класс:</span>
+        <span class="text-slate-400 font-medium mr-1 text-[11px] uppercase tracking-wider flex-shrink-0">{{ locale.t('op.class') }}:</span>
         <button
           type="button"
           class="px-2.5 py-1 rounded-lg border font-medium transition-all flex-shrink-0"
@@ -236,7 +239,7 @@ function clearFilters() {
           ]"
           @click="selectedProfession = null"
         >
-          Любой
+          {{ locale.t('op.anyClass') }}
         </button>
         <button
           v-for="p in professions"
@@ -257,7 +260,7 @@ function clearFilters() {
       <!-- Rarity Filters Row -->
       <div class="flex items-center justify-between gap-2 overflow-x-auto text-xs">
         <div class="flex items-center gap-1.5">
-          <span class="text-slate-400 font-medium mr-1 text-[11px] uppercase tracking-wider flex-shrink-0">Редкость:</span>
+          <span class="text-slate-400 font-medium mr-1 text-[11px] uppercase tracking-wider flex-shrink-0">{{ locale.t('op.rarity') }}:</span>
           <button
             type="button"
             class="px-2.5 py-1 rounded-lg border font-medium transition-all flex-shrink-0"
@@ -268,7 +271,7 @@ function clearFilters() {
             ]"
             @click="selectedRarity = null"
           >
-            Все
+            {{ locale.t('op.allRarity') }}
           </button>
           <button
             v-for="r in [6, 5, 4, 3, 1]"
@@ -292,7 +295,7 @@ function clearFilters() {
           class="text-xs text-slate-400 hover:text-cyan-400 underline underline-offset-2 flex-shrink-0"
           @click="clearFilters"
         >
-          Сбросить фильтры
+          {{ locale.t('op.resetFilters') }}
         </button>
       </div>
     </div>
@@ -301,13 +304,13 @@ function clearFilters() {
     <div class="flex-1 min-h-[450px]">
       <div v-if="filteredOperators.length === 0" class="h-64 flex flex-col items-center justify-center text-center p-6 bg-ark-card rounded-2xl border border-ark-border">
         <Filter class="w-10 h-10 text-slate-600 mb-2" />
-        <p class="text-slate-400 text-sm font-medium">Оперативники по заданным критериям не найдены.</p>
+        <p class="text-slate-400 text-sm font-medium">{{ locale.t('op.notFound') }}</p>
         <button
           type="button"
           class="mt-3 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 text-xs font-semibold"
           @click="clearFilters"
         >
-          Сбросить все фильтры
+          {{ locale.t('op.resetAllFilters') }}
         </button>
       </div>
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useGameDataStore } from '@/stores/gamedata';
+import { useLocaleStore } from '@/stores/locale';
 import type { OperatorSummary, Profession } from '@/types/game';
 import OperatorDossierModal from '@/components/operator/OperatorDossierModal.vue';
 import PlanEditorModal from '@/components/operator/PlanEditorModal.vue';
@@ -15,6 +16,7 @@ import {
 import { Search, Filter, BookOpen, X, Swords, Shield, Heart } from 'lucide-vue-next';
 
 const gameData = useGameDataStore();
+const locale = useLocaleStore();
 
 const searchQuery = ref('');
 const selectedRarity = ref<number | null>(null);
@@ -143,28 +145,8 @@ function getRarityColor(rarity: number) {
         </div>
 
         <div class="flex items-center gap-2">
-          <!-- Quick Language Switcher -->
-          <div class="inline-flex bg-slate-900 p-0.5 rounded-lg border border-ark-border">
-            <button
-              type="button"
-              class="px-2 py-0.5 rounded text-[11px] font-bold transition-all"
-              :class="gameData.itemLanguage === 'ru' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
-              @click="gameData.setItemLanguage('ru')"
-            >
-              RU
-            </button>
-            <button
-              type="button"
-              class="px-2 py-0.5 rounded text-[11px] font-bold transition-all"
-              :class="gameData.itemLanguage === 'en' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
-              @click="gameData.setItemLanguage('en')"
-            >
-              EN
-            </button>
-          </div>
-
           <span class="text-xs font-mono text-slate-400 font-bold bg-slate-900 px-3 py-1 rounded-xl border border-ark-border">
-            {{ gameData.itemLanguage === 'ru' ? 'Найдено' : 'Found' }}: {{ filteredOperators.length }} / {{ gameData.operatorList.length }}
+            {{ locale.currentLang === 'ru' ? 'Найдено' : 'Found' }}: {{ filteredOperators.length }} / {{ gameData.operatorList.length }}
           </span>
         </div>
       </div>
@@ -272,13 +254,15 @@ function getRarityColor(rarity: number) {
       class="h-64 flex flex-col items-center justify-center text-center p-6 bg-ark-card rounded-2xl border border-ark-border"
     >
       <Filter class="w-10 h-10 text-slate-600 mb-2" />
-      <p class="text-slate-400 text-sm font-medium">Оперативники по заданным критериям не найдены.</p>
+      <p class="text-slate-400 text-sm font-medium">
+        {{ locale.currentLang === 'ru' ? 'Оперативники по заданным критериям не найдены.' : 'No operators found matching the criteria.' }}
+      </p>
       <button
         type="button"
         class="mt-3 px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 text-xs font-semibold"
         @click="clearFilters"
       >
-        Сбросить фильтры
+        {{ locale.currentLang === 'ru' ? 'Сбросить фильтры' : 'Reset filters' }}
       </button>
     </div>
 

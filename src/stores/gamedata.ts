@@ -89,19 +89,20 @@ export const useGameDataStore = defineStore('gamedata', () => {
   const constants = ref<GameConstants | null>(null);
   const ranges = ref<Record<string, RangeInfo>>({});
 
-  function getSavedLanguage(): 'ru' | 'en' | 'cn' {
+  function getSavedLanguage(): 'ru' | 'en' {
     try {
       const saved = localStorage.getItem('ark_item_language');
-      if (saved === 'ru' || saved === 'en' || saved === 'cn') return saved;
+      if (saved === 'ru' || saved === 'en') return saved;
     } catch {
       // ignore
     }
     return 'en';
   }
 
-  const itemLanguage = ref<'ru' | 'en' | 'cn'>(getSavedLanguage());
+  const itemLanguage = ref<'ru' | 'en'>(getSavedLanguage());
 
-  function setItemLanguage(lang: 'ru' | 'en' | 'cn') {
+  function setItemLanguage(lang: 'ru' | 'en') {
+    if (lang !== 'ru' && lang !== 'en') return;
     itemLanguage.value = lang;
     try {
       localStorage.setItem('ark_item_language', lang);

@@ -4,6 +4,7 @@ import type { OperatorSummary } from '@/types/game';
 import { usePlannerStore } from '@/stores/planner';
 import { useGameDataStore } from '@/stores/gamedata';
 import { useRosterStore } from '@/stores/roster';
+import { useLocaleStore } from '@/stores/locale';
 import { calculateOperatorPlanCosts } from '@/services/calculatorEngine';
 import type { OperatorTargetPlan } from '@/services/db';
 import ItemIcon from '@/components/common/ItemIcon.vue';
@@ -29,6 +30,7 @@ const emit = defineEmits<{
 const planner = usePlannerStore();
 const gameData = useGameDataStore();
 const rosterStore = useRosterStore();
+const locale = useLocaleStore();
 
 const localPlan = ref<OperatorTargetPlan>({
   charId: '',
@@ -272,7 +274,7 @@ async function handleDelete() {
       <!-- Presets bar -->
       <div class="px-5 py-2.5 bg-slate-900/60 border-b border-ark-border flex flex-wrap items-center gap-2 text-xs">
         <span class="text-slate-400 font-medium mr-1 flex items-center gap-1">
-          <Sparkles class="w-3.5 h-3.5 text-amber-400" /> Пресеты:
+          <Sparkles class="w-3.5 h-3.5 text-amber-400" /> {{ locale.currentLang === 'ru' ? 'Пресеты:' : 'Presets:' }}
         </span>
         <button
           type="button"
@@ -294,7 +296,7 @@ async function handleDelete() {
           class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 transition-all"
           @click="applyPresetReset"
         >
-          Сбросить к текущему
+          {{ locale.currentLang === 'ru' ? 'Сбросить к текущему' : 'Reset to Current' }}
         </button>
       </div>
 
@@ -305,7 +307,9 @@ async function handleDelete() {
           <!-- CURRENT STATE -->
           <div class="p-4 bg-ark-card rounded-xl border border-ark-border space-y-4">
             <div class="flex items-center justify-between border-b border-ark-border/60 pb-2">
-              <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Текущее состояние</span>
+              <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                {{ locale.currentLang === 'ru' ? 'Текущее состояние' : 'Current State' }}
+              </span>
               <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">
                 E{{ localPlan.current.elite }} Lvl {{ localPlan.current.level }}
               </span>
@@ -313,7 +317,9 @@ async function handleDelete() {
 
             <!-- Current Elite -->
             <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1.5">Элита (Promotion)</label>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">
+                {{ locale.currentLang === 'ru' ? 'Элита (Promotion)' : 'Elite Promotion' }}
+              </label>
               <div class="grid grid-cols-3 gap-2">
                 <button
                   v-for="e in maxElite + 1"
@@ -335,7 +341,9 @@ async function handleDelete() {
             <!-- Current Level -->
             <div>
               <div class="flex justify-between items-center mb-1.5">
-                <label class="text-xs font-medium text-slate-400">Уровень</label>
+                <label class="text-xs font-medium text-slate-400">
+                  {{ locale.currentLang === 'ru' ? 'Уровень' : 'Level' }}
+                </label>
                 <span class="text-xs font-mono font-bold text-slate-200">
                   {{ localPlan.current.level }} / {{ curMaxLevel }}
                 </span>
@@ -352,9 +360,11 @@ async function handleDelete() {
             <!-- Current Common Skill (1-7) -->
             <div>
               <div class="flex justify-between items-center mb-1.5">
-                <label class="text-xs font-medium text-slate-400">Базовый навык (1-7)</label>
+                <label class="text-xs font-medium text-slate-400">
+                  {{ locale.currentLang === 'ru' ? 'Базовый навык (1-7)' : 'Common Skill (1-7)' }}
+                </label>
                 <span class="text-xs font-mono font-bold text-slate-200">
-                  Уровень {{ localPlan.current.skills[0] || 1 }}
+                  {{ locale.currentLang === 'ru' ? 'Уровень' : 'Level' }} {{ localPlan.current.skills[0] || 1 }}
                 </span>
               </div>
               <div class="flex gap-1">
@@ -380,7 +390,7 @@ async function handleDelete() {
           <div class="p-4 bg-ark-card rounded-xl border border-cyan-500/30 space-y-4 shadow-sm">
             <div class="flex items-center justify-between border-b border-ark-border/60 pb-2">
               <span class="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
-                Целевое состояние <ArrowRight class="w-3.5 h-3.5" />
+                {{ locale.currentLang === 'ru' ? 'Целевое состояние' : 'Target State' }} <ArrowRight class="w-3.5 h-3.5" />
               </span>
               <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-700 text-cyan-300">
                 E{{ localPlan.target.elite }} Lvl {{ localPlan.target.level }}
@@ -389,7 +399,9 @@ async function handleDelete() {
 
             <!-- Target Elite -->
             <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1.5">Целевая элита</label>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">
+                {{ locale.currentLang === 'ru' ? 'Целевая элита' : 'Target Elite' }}
+              </label>
               <div class="grid grid-cols-3 gap-2">
                 <button
                   v-for="e in maxElite + 1"
@@ -414,7 +426,9 @@ async function handleDelete() {
             <!-- Target Level -->
             <div>
               <div class="flex justify-between items-center mb-1.5">
-                <label class="text-xs font-medium text-slate-400">Целевой уровень</label>
+                <label class="text-xs font-medium text-slate-400">
+                  {{ locale.currentLang === 'ru' ? 'Целевой уровень' : 'Target Level' }}
+                </label>
                 <span class="text-xs font-mono font-bold text-cyan-300">
                   {{ localPlan.target.level }} / {{ tarMaxLevel }}
                 </span>
@@ -431,9 +445,11 @@ async function handleDelete() {
             <!-- Target Common Skill (1-7) -->
             <div>
               <div class="flex justify-between items-center mb-1.5">
-                <label class="text-xs font-medium text-slate-400">Целевой навык (1-7)</label>
+                <label class="text-xs font-medium text-slate-400">
+                  {{ locale.currentLang === 'ru' ? 'Целевой навык (1-7)' : 'Target Skill (1-7)' }}
+                </label>
                 <span class="text-xs font-mono font-bold text-cyan-300">
-                  Уровень {{ localPlan.target.skills[0] || 1 }}
+                  {{ locale.currentLang === 'ru' ? 'Уровень' : 'Level' }} {{ localPlan.target.skills[0] || 1 }}
                 </span>
               </div>
               <div class="flex gap-1">
@@ -463,8 +479,12 @@ async function handleDelete() {
         <div v-if="operator.skills && operator.skills.length > 0" class="p-4 bg-ark-card rounded-xl border border-ark-border space-y-4">
           <div class="flex items-center justify-between border-b border-ark-border/60 pb-2">
             <div>
-              <h4 class="text-xs font-bold text-purple-300 uppercase tracking-wider">Мастерство навыков (Masteries M1 - M3)</h4>
-              <p class="text-[11px] text-slate-400">Требуется Элита 2 и уровень навыка 7</p>
+              <h4 class="text-xs font-bold text-purple-300 uppercase tracking-wider">
+                {{ locale.currentLang === 'ru' ? 'Мастерство навыков (Masteries M1 - M3)' : 'Skill Masteries (M1 - M3)' }}
+              </h4>
+              <p class="text-[11px] text-slate-400">
+                {{ locale.currentLang === 'ru' ? 'Требуется Элита 2 и уровень навыка 7' : 'Requires Elite 2 and Skill Level 7' }}
+              </p>
             </div>
           </div>
 
@@ -483,7 +503,9 @@ async function handleDelete() {
                   />
                 </div>
                 <div class="truncate">
-                  <span class="text-xs font-bold text-slate-200">Навык {{ idx + 1 }}</span>
+                  <span class="text-xs font-bold text-slate-200">
+                    {{ locale.currentLang === 'ru' ? 'Навык' : 'Skill' }} {{ idx + 1 }}
+                  </span>
                   <p class="text-[10px] text-slate-400 font-mono truncate">{{ skill.skillId }}</p>
                 </div>
               </div>
@@ -515,8 +537,12 @@ async function handleDelete() {
         <div v-if="operator.modules && operator.modules.length > 0" class="p-4 bg-ark-card rounded-xl border border-ark-border space-y-4">
           <div class="flex items-center justify-between border-b border-ark-border/60 pb-2">
             <div>
-              <h4 class="text-xs font-bold text-amber-300 uppercase tracking-wider">Модули снаряжения (Modules 1 - 3)</h4>
-              <p class="text-[11px] text-slate-400">Требуется Элита 2 и блоки данных</p>
+              <h4 class="text-xs font-bold text-amber-300 uppercase tracking-wider">
+                {{ locale.currentLang === 'ru' ? 'Модули снаряжения (Modules 1 - 3)' : 'Operator Modules (Stages 1 - 3)' }}
+              </h4>
+              <p class="text-[11px] text-slate-400">
+                {{ locale.currentLang === 'ru' ? 'Требуется Элита 2 и блоки данных' : 'Requires Elite 2 and Module Data Blocks' }}
+              </p>
             </div>
           </div>
 
@@ -568,7 +594,7 @@ async function handleDelete() {
                   <!-- Readable Title: "Модуль X (WDM)" -->
                   <div class="flex items-center gap-1.5 flex-wrap">
                     <span class="text-xs sm:text-sm font-bold text-slate-100">
-                      {{ (gameData.itemLanguage === 'ru' ? 'Модуль ' : 'Module ') + (mod.typeName2 || '') + (mod.typeName1 ? ` (${mod.typeName1})` : '') }}
+                      {{ (locale.currentLang === 'ru' ? 'Модуль ' : 'Module ') + (mod.typeName2 || '') + (mod.typeName1 ? ` (${mod.typeName1})` : '') }}
                     </span>
                     <span class="text-[10px] font-mono px-1 py-0.5 rounded bg-slate-800 text-amber-300 border border-slate-700">
                       {{ mod.typeName1 }}
@@ -597,7 +623,7 @@ async function handleDelete() {
                   ]"
                   @click="localPlan.target.modules[mod.id] = st - 1"
                 >
-                  {{ st - 1 === 0 ? 'Выкл' : `Lvl ${st - 1}` }}
+                  {{ st - 1 === 0 ? (locale.currentLang === 'ru' ? 'Выкл' : 'Off') : `Lvl ${st - 1}` }}
                 </button>
               </div>
             </div>
@@ -607,26 +633,32 @@ async function handleDelete() {
         <!-- Live Cost Preview -->
         <div class="p-4 bg-slate-900/80 rounded-xl border border-ark-border space-y-3">
           <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">
-            Предпросмотр затрат на этого оперативника:
+            {{ locale.currentLang === 'ru' ? 'Предпросмотр затрат на этого оперативника:' : 'Cost breakdown for this operator:' }}
           </h4>
 
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <div class="p-2.5 rounded-lg bg-ark-card border border-ark-border flex flex-col">
-              <span class="text-[11px] text-slate-400 font-medium">Требуется EXP</span>
+              <span class="text-[11px] text-slate-400 font-medium">
+                {{ locale.currentLang === 'ru' ? 'Требуется EXP' : 'Required EXP' }}
+              </span>
               <span class="text-sm font-mono font-bold text-amber-400 mt-0.5">
                 {{ planPreview.exp.toLocaleString() }}
               </span>
             </div>
 
             <div class="p-2.5 rounded-lg bg-ark-card border border-ark-border flex flex-col">
-              <span class="text-[11px] text-slate-400 font-medium">LMD (Прокачка)</span>
+              <span class="text-[11px] text-slate-400 font-medium">
+                {{ locale.currentLang === 'ru' ? 'LMD (Прокачка)' : 'LMD (Level Up)' }}
+              </span>
               <span class="text-sm font-mono font-bold text-cyan-400 mt-0.5">
                 {{ planPreview.lmdLevel.toLocaleString() }}
               </span>
             </div>
 
             <div class="p-2.5 rounded-lg bg-ark-card border border-ark-border flex flex-col col-span-2 sm:col-span-1">
-              <span class="text-[11px] text-slate-400 font-medium">LMD (Возвышение)</span>
+              <span class="text-[11px] text-slate-400 font-medium">
+                {{ locale.currentLang === 'ru' ? 'LMD (Возвышение)' : 'LMD (Promote & Masteries)' }}
+              </span>
               <span class="text-sm font-mono font-bold text-cyan-300 mt-0.5">
                 {{ planPreview.lmdEvolve.toLocaleString() }}
               </span>
@@ -635,7 +667,9 @@ async function handleDelete() {
 
           <!-- Materials list preview -->
           <div v-if="previewMaterialList.length > 0">
-            <span class="block text-[11px] text-slate-400 mb-2 font-medium">Материалы:</span>
+            <span class="block text-[11px] text-slate-400 mb-2 font-medium">
+              {{ locale.currentLang === 'ru' ? 'Материалы:' : 'Materials:' }}
+            </span>
             <div class="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-1 bg-slate-950/50 rounded-lg border border-slate-800">
               <ItemIcon
                 v-for="m in previewMaterialList"
@@ -647,7 +681,7 @@ async function handleDelete() {
             </div>
           </div>
           <div v-else class="text-xs text-slate-500 italic">
-            Материалы не требуются (уровни совпадают).
+            {{ locale.currentLang === 'ru' ? 'Материалы не требуются (уровни совпадают).' : 'No materials required (current equals target).' }}
           </div>
         </div>
       </div>
@@ -662,7 +696,7 @@ async function handleDelete() {
             @click="handleDelete"
           >
             <Trash2 class="w-3.5 h-3.5" />
-            Удалить план
+            {{ locale.currentLang === 'ru' ? 'Удалить план' : 'Delete Plan' }}
           </button>
         </div>
 
@@ -672,7 +706,7 @@ async function handleDelete() {
             class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
             @click="emit('close')"
           >
-            Отмена
+            {{ locale.currentLang === 'ru' ? 'Отмена' : 'Cancel' }}
           </button>
           <button
             type="button"
@@ -680,7 +714,7 @@ async function handleDelete() {
             @click="handleSave"
           >
             <Check class="w-4 h-4 stroke-[3]" />
-            Сохранить план
+            {{ locale.currentLang === 'ru' ? 'Сохранить план' : 'Save Plan' }}
           </button>
         </div>
       </div>

@@ -13,6 +13,7 @@ import { getAvatarUrl, PLACEHOLDER_AVATAR } from '@/utils/imageUrl';
 import { getOperatorLocalizationRu } from '@/data/translations/ruDatabase';
 import OperatorDossierModal from '@/components/operator/OperatorDossierModal.vue';
 import PlanEditorModal from '@/components/operator/PlanEditorModal.vue';
+import { useLocaleStore } from '@/stores/locale';
 import {
   Radio,
   RotateCcw,
@@ -25,6 +26,7 @@ import {
 } from 'lucide-vue-next';
 
 const gameData = useGameDataStore();
+const locale = useLocaleStore();
 
 // Selected tags (max 5)
 const selectedTags = ref<string[]>([]);
@@ -178,34 +180,35 @@ function getRarityBadgeClass(rarity: number): string {
 }
 
 function getGuaranteeBadge(type: ComboResult['guaranteedType']) {
+  const isRu = locale.currentLang === 'ru';
   switch (type) {
     case '6star':
       return {
-        label: 'Гарантия 6★',
+        label: isRu ? 'Гарантия 6★' : 'Guaranteed 6★',
         class: 'bg-amber-500/20 border-amber-500/60 text-amber-300 shadow-sm shadow-amber-500/20',
         icon: '🌟',
       };
     case '5star':
       return {
-        label: 'Гарантия 5★',
+        label: isRu ? 'Гарантия 5★' : 'Guaranteed 5★',
         class: 'bg-purple-500/20 border-purple-500/60 text-purple-300 shadow-sm shadow-purple-500/20',
         icon: '💎',
       };
     case '4star_plus':
       return {
-        label: 'Гарантия 4★+',
+        label: isRu ? 'Гарантия 4★+' : 'Guaranteed 4★+',
         class: 'bg-cyan-500/20 border-cyan-500/60 text-cyan-300 shadow-sm shadow-cyan-500/20',
         icon: '🎯',
       };
     case 'robot':
       return {
-        label: 'Робот 1★',
+        label: isRu ? 'Робот 1★' : 'Robot 1★',
         class: 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300 shadow-sm shadow-emerald-500/20',
         icon: '🤖',
       };
     default:
       return {
-        label: 'Обычный (3★+)',
+        label: isRu ? 'Обычный (3★+)' : 'Standard (3★+)',
         class: 'bg-slate-800/80 border-slate-700 text-slate-400',
         icon: '⚪',
       };
@@ -214,7 +217,8 @@ function getGuaranteeBadge(type: ComboResult['guaranteedType']) {
 
 function getTagRu(tagId: string): string {
   const def = RECRUIT_TAG_DEFINITIONS.find((t: RecruitTagDefinition) => t.id === tagId);
-  return def ? def.nameRu : tagId;
+  if (!def) return tagId;
+  return locale.currentLang === 'ru' ? def.nameRu : def.nameEn;
 }
 </script>
 
@@ -233,7 +237,7 @@ function getTagRu(tagId: string): string {
         <div>
           <div class="flex items-center gap-2">
             <h2 class="text-lg sm:text-xl font-black text-slate-100 uppercase tracking-wide">
-              Калькулятор рекрутинга
+              {{ locale.currentLang === 'ru' ? 'Калькулятор рекрутинга' : 'Recruitment Calculator' }}
             </h2>
             <span
               class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-950 border border-cyan-700 text-cyan-300 uppercase"
@@ -242,7 +246,7 @@ function getTagRu(tagId: string): string {
             </span>
           </div>
           <p class="text-xs text-slate-400 mt-0.5">
-            Выберите до 5 тегов из игры — алгоритм вычислит все гарантированные 4★, 5★ и 6★ комбинации
+            {{ locale.currentLang === 'ru' ? 'Выберите до 5 тегов из игры — алгоритм вычислит все гарантированные 4★, 5★ и 6★ комбинации' : 'Select up to 5 in-game tags — the solver computes all guaranteed 4★, 5★ and 6★ combinations' }}
           </p>
         </div>
       </div>
@@ -252,7 +256,7 @@ function getTagRu(tagId: string): string {
         <!-- Pool Info Badge -->
         <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-ark-border text-xs font-semibold text-slate-300">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>База: 160 операторов</span>
+          <span>{{ locale.currentLang === 'ru' ? 'База: 160 операторов' : 'Pool: 160 Operators' }}</span>
         </div>
 
         <!-- Selected Tags Counter Badge -->
@@ -266,7 +270,7 @@ function getTagRu(tagId: string): string {
               : 'bg-slate-900 border-slate-800 text-slate-500',
           ]"
         >
-          Выбрано: {{ selectedTags.length }} / 5
+          {{ locale.currentLang === 'ru' ? 'Выбрано:' : 'Selected:' }} {{ selectedTags.length }} / 5
         </div>
 
         <!-- Reset Button -->
@@ -282,7 +286,7 @@ function getTagRu(tagId: string): string {
           @click="clearTags"
         >
           <RotateCcw class="w-3.5 h-3.5" />
-          <span>Сброс</span>
+          <span>{{ locale.currentLang === 'ru' ? 'Сброс' : 'Reset' }}</span>
         </button>
       </div>
     </div>
@@ -292,10 +296,10 @@ function getTagRu(tagId: string): string {
       <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-400">
         <span class="flex items-center gap-2">
           <Layers class="w-4 h-4 text-cyan-400" />
-          Сетка тегов рекрутинга
+          {{ locale.currentLang === 'ru' ? 'Сетка тегов рекрутинга' : 'Recruitment Tag Matrix' }}
         </span>
         <span class="text-[11px] text-slate-500 normal-case font-normal hidden sm:inline">
-          Нажмите на тег, чтобы добавить или исключить его
+          {{ locale.currentLang === 'ru' ? 'Нажмите на тег, чтобы добавить или исключить его' : 'Click a tag to select or deselect' }}
         </span>
       </div>
 
@@ -303,7 +307,7 @@ function getTagRu(tagId: string): string {
       <div class="space-y-1.5">
         <div class="text-[11px] font-bold text-amber-400/90 uppercase tracking-wider flex items-center gap-1.5">
           <span>👑</span>
-          <span>Квалификация / Редкость</span>
+          <span>{{ locale.currentLang === 'ru' ? 'Квалификация / Редкость' : 'Qualification / Rarity' }}</span>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
           <button
@@ -322,10 +326,12 @@ function getTagRu(tagId: string): string {
             @click="toggleTag(tag.id)"
           >
             <div class="flex items-center justify-between w-full">
-              <span class="text-xs sm:text-sm font-semibold truncate">{{ tag.nameRu }}</span>
+              <span class="text-xs sm:text-sm font-semibold truncate">
+                {{ locale.currentLang === 'ru' ? tag.nameRu : tag.nameEn }}
+              </span>
               <CheckCircle2 v-if="selectedTags.includes(tag.id)" class="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
             </div>
-            <span class="text-[10px] text-slate-400 font-mono tracking-tight">{{ tag.nameEn }}</span>
+            <span v-if="locale.currentLang === 'ru'" class="text-[10px] text-slate-400 font-mono tracking-tight">{{ tag.nameEn }}</span>
           </button>
         </div>
       </div>
@@ -334,7 +340,7 @@ function getTagRu(tagId: string): string {
       <div class="space-y-1.5 pt-1">
         <div class="text-[11px] font-bold text-rose-400/90 uppercase tracking-wider flex items-center gap-1.5">
           <span>🏹</span>
-          <span>Позиция</span>
+          <span>{{ locale.currentLang === 'ru' ? 'Позиция' : 'Position' }}</span>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
           <button
@@ -353,10 +359,12 @@ function getTagRu(tagId: string): string {
             @click="toggleTag(tag.id)"
           >
             <div class="flex items-center justify-between w-full">
-              <span class="text-xs sm:text-sm font-semibold truncate">{{ tag.nameRu }}</span>
+              <span class="text-xs sm:text-sm font-semibold truncate">
+                {{ locale.currentLang === 'ru' ? tag.nameRu : tag.nameEn }}
+              </span>
               <CheckCircle2 v-if="selectedTags.includes(tag.id)" class="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
             </div>
-            <span class="text-[10px] text-slate-400 font-mono tracking-tight">{{ tag.nameEn }}</span>
+            <span v-if="locale.currentLang === 'ru'" class="text-[10px] text-slate-400 font-mono tracking-tight">{{ tag.nameEn }}</span>
           </button>
         </div>
       </div>
@@ -365,7 +373,7 @@ function getTagRu(tagId: string): string {
       <div class="space-y-1.5 pt-1">
         <div class="text-[11px] font-bold text-cyan-400/90 uppercase tracking-wider flex items-center gap-1.5">
           <span>🛡️</span>
-          <span>Класс оперативника</span>
+          <span>{{ locale.currentLang === 'ru' ? 'Класс оперативника' : 'Operator Class' }}</span>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
           <button
@@ -384,10 +392,12 @@ function getTagRu(tagId: string): string {
             @click="toggleTag(tag.id)"
           >
             <div class="flex items-center justify-between w-full">
-              <span class="text-xs font-semibold truncate">{{ tag.nameRu }}</span>
+              <span class="text-xs font-semibold truncate">
+                {{ locale.currentLang === 'ru' ? tag.nameRu : tag.nameEn }}
+              </span>
               <CheckCircle2 v-if="selectedTags.includes(tag.id)" class="w-3 h-3 text-cyan-400 flex-shrink-0" />
             </div>
-            <span class="text-[9px] text-slate-400 font-mono tracking-tight truncate">{{ tag.nameEn }}</span>
+            <span v-if="locale.currentLang === 'ru'" class="text-[9px] text-slate-400 font-mono tracking-tight truncate">{{ tag.nameEn }}</span>
           </button>
         </div>
       </div>
@@ -396,7 +406,7 @@ function getTagRu(tagId: string): string {
       <div class="space-y-1.5 pt-1">
         <div class="text-[11px] font-bold text-teal-400/90 uppercase tracking-wider flex items-center gap-1.5">
           <span>⚡</span>
-          <span>Особенности и тактические свойства</span>
+          <span>{{ locale.currentLang === 'ru' ? 'Особенности и тактические свойства' : 'Affixes & Functions' }}</span>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
           <button
@@ -415,10 +425,12 @@ function getTagRu(tagId: string): string {
             @click="toggleTag(tag.id)"
           >
             <div class="flex items-center justify-between w-full">
-              <span class="text-xs font-semibold truncate">{{ tag.nameRu }}</span>
+              <span class="text-xs font-semibold truncate">
+                {{ locale.currentLang === 'ru' ? tag.nameRu : tag.nameEn }}
+              </span>
               <CheckCircle2 v-if="selectedTags.includes(tag.id)" class="w-3 h-3 text-teal-400 flex-shrink-0" />
             </div>
-            <span class="text-[9px] text-slate-400 font-mono tracking-tight truncate">{{ tag.nameEn }}</span>
+            <span v-if="locale.currentLang === 'ru'" class="text-[9px] text-slate-400 font-mono tracking-tight truncate">{{ tag.nameEn }}</span>
           </button>
         </div>
       </div>
@@ -431,14 +443,17 @@ function getTagRu(tagId: string): string {
       <div class="flex items-center gap-2">
         <Clock class="w-4 h-4 text-cyan-400 flex-shrink-0" />
         <span>
-          <strong class="text-cyan-300">Правило 9:00:</strong> Всегда выставляйте таймер на
-          <strong class="text-white">9 часов</strong> для гарантированных 4★, 5★ и 6★ (это полностью исключает выпадение 1★ и 2★).
+          <strong class="text-cyan-300">{{ locale.currentLang === 'ru' ? 'Правило 9:00:' : '9:00 Rule:' }}</strong>
+          {{ locale.currentLang === 'ru' ? 'Всегда выставляйте таймер на' : 'Always set the recruitment timer to' }}
+          <strong class="text-white">{{ locale.currentLang === 'ru' ? '9 часов' : '9 hours' }}</strong>
+          {{ locale.currentLang === 'ru' ? 'для гарантированных 4★, 5★ и 6★ (это полностью исключает выпадение 1★ и 2★).' : 'for guaranteed 4★, 5★, and 6★ (completely excludes 1★ and 2★).' }}
         </span>
       </div>
       <div class="flex items-center gap-2">
         <Info class="w-4 h-4 text-emerald-400 flex-shrink-0" />
         <span>
-          <strong class="text-emerald-300">Для роботов:</strong> Если выбран тег «Робот», ставьте ровно
+          <strong class="text-emerald-300">{{ locale.currentLang === 'ru' ? 'Для роботов:' : 'For Robots:' }}</strong>
+          {{ locale.currentLang === 'ru' ? 'Если выбран тег «Робот», ставьте ровно' : 'If "Robot" tag is selected, set strictly' }}
           <strong class="text-white">3:50</strong>!
         </span>
       </div>
@@ -454,17 +469,17 @@ function getTagRu(tagId: string): string {
       </div>
       <div>
         <h3 class="text-base sm:text-lg font-bold text-slate-200">
-          Выберите выпавшие теги в сетке выше
+          {{ locale.currentLang === 'ru' ? 'Выберите выпавшие теги в сетке выше' : 'Select recruitment tags in the matrix above' }}
         </h3>
         <p class="text-xs text-slate-400 max-w-lg mx-auto mt-1">
-          Калькулятор рассчитает все комбинации одиночных, парных и тройных тегов и мгновенно покажет гарантированные результаты.
+          {{ locale.currentLang === 'ru' ? 'Калькулятор рассчитает все комбинации одиночных, парных и тройных тегов и мгновенно покажет гарантированные результаты.' : 'The solver will calculate all single, double, and triple tag combinations and instantly display guaranteed recruits.' }}
         </p>
       </div>
 
       <!-- Hot Tags shortcuts -->
       <div class="pt-2 max-w-xl mx-auto space-y-2">
         <div class="text-[11px] font-mono uppercase tracking-wider text-slate-500 font-bold">
-          Теги, которые дают гарантию сами по себе:
+          {{ locale.currentLang === 'ru' ? 'Теги, которые дают гарантию сами по себе:' : 'Stand-alone guaranteed tags:' }}
         </div>
         <div class="flex flex-wrap justify-center gap-2">
           <button
@@ -472,7 +487,7 @@ function getTagRu(tagId: string): string {
             class="px-2.5 py-1.5 rounded-lg bg-purple-950/50 hover:bg-purple-900/60 border border-purple-500/50 text-purple-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
             @click="selectSingleHotTag('Crowd-Control')"
           >
-            <span>💎 Контроль</span>
+            <span>{{ locale.currentLang === 'ru' ? '💎 Контроль' : '💎 Crowd-Control' }}</span>
             <span class="text-[10px] text-purple-400 font-mono">(5★)</span>
           </button>
           <button
@@ -480,7 +495,7 @@ function getTagRu(tagId: string): string {
             class="px-2.5 py-1.5 rounded-lg bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-500/50 text-cyan-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
             @click="selectSingleHotTag('Debuff')"
           >
-            <span>🎯 Ослабление</span>
+            <span>{{ locale.currentLang === 'ru' ? '🎯 Ослабление' : '🎯 Debuff' }}</span>
             <span class="text-[10px] text-cyan-400 font-mono">(4★+)</span>
           </button>
           <button
@@ -488,7 +503,7 @@ function getTagRu(tagId: string): string {
             class="px-2.5 py-1.5 rounded-lg bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-500/50 text-cyan-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
             @click="selectSingleHotTag('Fast-Redeploy')"
           >
-            <span>🎯 Быстрый откат</span>
+            <span>{{ locale.currentLang === 'ru' ? '🎯 Быстрый откат' : '🎯 Fast-Redeploy' }}</span>
             <span class="text-[10px] text-cyan-400 font-mono">(4★+)</span>
           </button>
           <button
@@ -496,7 +511,7 @@ function getTagRu(tagId: string): string {
             class="px-2.5 py-1.5 rounded-lg bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-500/50 text-cyan-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
             @click="selectSingleHotTag('Shift')"
           >
-            <span>🎯 Смещение</span>
+            <span>{{ locale.currentLang === 'ru' ? '🎯 Смещение' : '🎯 Shift' }}</span>
             <span class="text-[10px] text-cyan-400 font-mono">(4★+)</span>
           </button>
           <button
@@ -504,7 +519,7 @@ function getTagRu(tagId: string): string {
             class="px-2.5 py-1.5 rounded-lg bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-500/50 text-cyan-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
             @click="selectSingleHotTag('Nuker')"
           >
-            <span>🎯 Взрывной урон</span>
+            <span>{{ locale.currentLang === 'ru' ? '🎯 Взрывной урон' : '🎯 Nuker' }}</span>
             <span class="text-[10px] text-cyan-400 font-mono">(4★+)</span>
           </button>
           <button
@@ -512,7 +527,7 @@ function getTagRu(tagId: string): string {
             class="px-2.5 py-1.5 rounded-lg bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-500/50 text-emerald-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
             @click="selectSingleHotTag('Robot')"
           >
-            <span>🤖 Робот</span>
+            <span>{{ locale.currentLang === 'ru' ? '🤖 Робот' : '🤖 Robot' }}</span>
             <span class="text-[10px] text-emerald-400 font-mono">(1★)</span>
           </button>
         </div>
@@ -535,7 +550,7 @@ function getTagRu(tagId: string): string {
             ]"
             @click="activeFilter = 'all'"
           >
-            <span>Все комбинации</span>
+            <span>{{ locale.currentLang === 'ru' ? 'Все комбинации' : 'All Combos' }}</span>
             <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-slate-800 text-slate-300">
               {{ counts.all }}
             </span>
@@ -553,7 +568,7 @@ function getTagRu(tagId: string): string {
             ]"
             @click="activeFilter = '6star'"
           >
-            <span>🌟 Гарантия 6★</span>
+            <span>{{ locale.currentLang === 'ru' ? '🌟 Гарантия 6★' : '🌟 Guaranteed 6★' }}</span>
             <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-amber-950 text-amber-300 border border-amber-800">
               {{ counts['6star'] }}
             </span>
@@ -571,7 +586,7 @@ function getTagRu(tagId: string): string {
             ]"
             @click="activeFilter = '5star'"
           >
-            <span>💎 Гарантия 5★</span>
+            <span>{{ locale.currentLang === 'ru' ? '💎 Гарантия 5★' : '💎 Guaranteed 5★' }}</span>
             <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-purple-950 text-purple-300 border border-purple-800">
               {{ counts['5star'] }}
             </span>
@@ -589,7 +604,7 @@ function getTagRu(tagId: string): string {
             ]"
             @click="activeFilter = '4star_plus'"
           >
-            <span>🎯 Гарантия 4★+</span>
+            <span>{{ locale.currentLang === 'ru' ? '🎯 Гарантия 4★+' : '🎯 Guaranteed 4★+' }}</span>
             <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-800">
               {{ counts['4star_plus'] }}
             </span>
@@ -607,7 +622,7 @@ function getTagRu(tagId: string): string {
             ]"
             @click="activeFilter = 'robot'"
           >
-            <span>🤖 Роботы (1★)</span>
+            <span>{{ locale.currentLang === 'ru' ? '🤖 Роботы (1★)' : '🤖 Robots (1★)' }}</span>
             <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-emerald-950 text-emerald-300 border border-emerald-800">
               {{ counts.robot }}
             </span>
@@ -625,7 +640,7 @@ function getTagRu(tagId: string): string {
             ]"
             @click="activeFilter = 'normal'"
           >
-            <span>Обычные (3★+)</span>
+            <span>{{ locale.currentLang === 'ru' ? 'Обычные (3★+)' : 'Standard (3★+)' }}</span>
             <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-slate-800 text-slate-400">
               {{ counts.normal }}
             </span>
@@ -633,13 +648,13 @@ function getTagRu(tagId: string): string {
         </div>
 
         <div class="text-xs text-slate-400 font-mono">
-          Найдено: <strong class="text-white">{{ filteredComboResults.length }}</strong> комбо
+          {{ locale.currentLang === 'ru' ? 'Найдено:' : 'Found:' }} <strong class="text-white">{{ filteredComboResults.length }}</strong> {{ locale.currentLang === 'ru' ? 'комбо' : 'combos' }}
         </div>
       </div>
 
       <!-- Combo Cards List -->
       <div v-if="filteredComboResults.length === 0" class="p-8 text-center text-slate-500 text-xs">
-        В этой категории нет комбинаций. Выберите другую категорию фильтра выше.
+        {{ locale.currentLang === 'ru' ? 'В этой категории нет комбинаций. Выберите другую категорию фильтра выше.' : 'No combinations found in this filter category.' }}
       </div>
 
       <div v-else class="space-y-3">
@@ -676,7 +691,7 @@ function getTagRu(tagId: string): string {
                 ]"
               >
                 <span>{{ getTagRu(t) }}</span>
-                <span class="text-[9px] text-slate-400 font-mono tracking-tight font-normal">({{ t }})</span>
+                <span v-if="locale.currentLang === 'ru'" class="text-[9px] text-slate-400 font-mono tracking-tight font-normal">({{ t }})</span>
               </span>
             </div>
 
@@ -694,7 +709,7 @@ function getTagRu(tagId: string): string {
               <!-- Recommended Time -->
               <span
                 class="px-2.5 py-1 rounded-xl text-[11px] font-mono font-bold bg-slate-900 border border-slate-700/80 text-slate-300 flex items-center gap-1"
-                title="Рекомендуемый таймер найма"
+                :title="locale.currentLang === 'ru' ? 'Рекомендуемый таймер найма' : 'Recommended recruitment duration'"
               >
                 <Clock class="w-3 h-3 text-cyan-400" />
                 <span>{{ comboRes.recommendedTime }}</span>
@@ -705,8 +720,8 @@ function getTagRu(tagId: string): string {
           <!-- Matching Operators Grid -->
           <div class="pt-3.5">
             <div class="text-[11px] font-bold text-slate-400 mb-2 flex items-center justify-between">
-              <span>Возможные операторы ({{ comboRes.operators.length }}):</span>
-              <span class="text-[10px] text-slate-500">Нажмите на карточку для открытия досье</span>
+              <span>{{ locale.currentLang === 'ru' ? 'Возможные операторы' : 'Possible Operators' }} ({{ comboRes.operators.length }}):</span>
+              <span class="text-[10px] text-slate-500">{{ locale.currentLang === 'ru' ? 'Нажмите на карточку для открытия досье' : 'Click card to view dossier' }}</span>
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
@@ -737,7 +752,7 @@ function getTagRu(tagId: string): string {
                   <!-- Quick Add to Plan Button -->
                   <button
                     type="button"
-                    title="Добавить в план прокачки"
+                    :title="locale.currentLang === 'ru' ? 'Добавить в план прокачки' : 'Add to Upgrade Plan'"
                     class="absolute bottom-1 right-1 w-6 h-6 rounded-md bg-slate-900/90 hover:bg-cyan-500 hover:text-slate-950 text-cyan-400 border border-cyan-500/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-md z-10"
                     @click.stop="openPlanModal(op.id)"
                   >
@@ -748,9 +763,9 @@ function getTagRu(tagId: string): string {
                 <!-- Operator Name -->
                 <div class="space-y-0.5">
                   <div class="text-xs font-bold text-slate-100 group-hover:text-cyan-300 truncate transition-colors">
-                    {{ getDisplayName(op).ru }}
+                    {{ locale.currentLang === 'ru' ? getDisplayName(op).ru : getDisplayName(op).en }}
                   </div>
-                  <div class="text-[10px] text-slate-400 font-mono truncate">
+                  <div v-if="locale.currentLang === 'ru'" class="text-[10px] text-slate-400 font-mono truncate">
                     {{ getDisplayName(op).en }}
                   </div>
                 </div>
