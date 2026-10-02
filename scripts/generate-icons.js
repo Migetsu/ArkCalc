@@ -1,3 +1,15 @@
+import sharp from 'sharp';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const publicDir = path.resolve(__dirname, '../public');
+
+// 512x512 Rhodes Island PRTS Master Icon SVG
+const masterSvg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
     <!-- Background Gradient (Deep Industrial Slate / PRTS Dark) -->
@@ -144,3 +156,37 @@
   <circle cx="256" cy="76" r="6" fill="#ffffff" />
   <circle cx="256" cy="76" r="14" fill="#00f0ff" opacity="0.4" />
 </svg>
+`;
+
+async function generate() {
+  console.log('Generating high-resolution PWA & Mobile shortcut icons...');
+
+  const svgBuffer = Buffer.from(masterSvg);
+
+  const targets = [
+    { name: 'pwa-512x512.png', size: 512 },
+    { name: 'pwa-192x192.png', size: 192 },
+    { name: 'apple-touch-icon.png', size: 180 },
+    { name: 'apple-touch-icon-180x180.png', size: 180 },
+    { name: 'favicon-32x32.png', size: 32 },
+    { name: 'favicon-16x16.png', size: 16 },
+  ];
+
+  for (const t of targets) {
+    const outPath = path.join(publicDir, t.name);
+    await sharp(svgBuffer)
+      .resize(t.size, t.size)
+      .png({ quality: 100, compressionLevel: 9 })
+      .toFile(outPath);
+    console.log(`✓ Generated ${t.name} (${t.size}x${t.size})`);
+  }
+
+  // Also write an updated, razor-sharp favicon.svg
+  fs.writeFileSync(path.join(publicDir, 'favicon.svg'), masterSvg.trim(), 'utf-8');
+  console.log('✓ Updated favicon.svg');
+}
+
+generate().catch((err) => {
+  console.error('Error generating icons:', err);
+  process.exit(1);
+});
