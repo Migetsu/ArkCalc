@@ -5,6 +5,7 @@ import { usePlannerStore } from '@/stores/planner';
 import { useRosterStore } from '@/stores/roster';
 import { useGameDataStore } from '@/stores/gamedata';
 import { useAuthStore } from '@/stores/auth';
+import { useLocaleStore } from '@/stores/locale';
 import { exportDatabaseToJson, parseAndImportData } from '@/services/syncService';
 import { syncPenguinStatsOnline } from '@/services/penguinStatsService';
 import {
@@ -47,6 +48,12 @@ const planner = usePlannerStore();
 const rosterStore = useRosterStore();
 const gameData = useGameDataStore();
 const auth = useAuthStore();
+const locale = useLocaleStore();
+
+function changeLanguage(lang: 'en' | 'ru' | 'cn') {
+  locale.setLanguage(lang);
+  gameData.setItemLanguage(lang);
+}
 
 const statusMessage = ref<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
 const isOperating = ref(false);
@@ -323,36 +330,37 @@ async function handleSyncPenguin() {
             Подключена полная база данных Arknights со всеми актуальными оперативниками, альтернативными модулями (X/Y/D) и крафтами. Имена персонажей отображаются на английском.
           </p>
 
-          <!-- Language selector for material names & wiki -->
+          <!-- Language selector for interface & game data -->
           <div class="flex items-center justify-between flex-wrap gap-3 p-3 rounded-lg bg-slate-900/80 border border-ark-border">
             <div>
-              <span class="text-xs font-bold text-slate-200 block">Язык материалов и Вики</span>
-              <span class="text-[11px] text-slate-400 block">Отображение ресурсов, навыков, талантов и модулей</span>
+              <span class="text-xs font-bold text-slate-200 block">{{ locale.t('settings.languageTitle') }}</span>
+              <span class="text-[11px] text-slate-400 block">{{ locale.t('settings.languageHint') }}</span>
             </div>
             <div class="inline-flex bg-slate-950 p-1 rounded-lg border border-ark-border">
               <button
                 type="button"
+                class="px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5"
+                :class="locale.currentLang === 'en' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+                @click="changeLanguage('en')"
+              >
+                <span>English (EN)</span>
+                <span class="text-[9px] px-1 rounded bg-slate-900/80 text-cyan-200 border border-cyan-400/30 font-mono">Default</span>
+              </button>
+              <button
+                type="button"
                 class="px-3 py-1.5 rounded-md text-xs font-bold transition-all"
-                :class="gameData.itemLanguage === 'ru' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
-                @click="gameData.setItemLanguage('ru')"
+                :class="locale.currentLang === 'ru' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+                @click="changeLanguage('ru')"
               >
                 Русский (RU)
               </button>
               <button
                 type="button"
                 class="px-3 py-1.5 rounded-md text-xs font-bold transition-all"
-                :class="gameData.itemLanguage === 'en' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
-                @click="gameData.setItemLanguage('en')"
+                :class="locale.currentLang === 'cn' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+                @click="changeLanguage('cn')"
               >
-                English (EN)
-              </button>
-              <button
-                type="button"
-                class="px-3 py-1.5 rounded-md text-xs font-bold transition-all"
-                :class="gameData.itemLanguage === 'cn' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
-                @click="gameData.setItemLanguage('cn')"
-              >
-                Оригинал (CN)
+                简体中文 (CN)
               </button>
             </div>
           </div>

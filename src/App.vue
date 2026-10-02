@@ -11,8 +11,10 @@ import WikiView from '@/components/wiki/WikiView.vue';
 import RecruitmentView from '@/components/recruitment/RecruitmentView.vue';
 import InventoryGrid from '@/components/inventory/InventoryGrid.vue';
 import ResourceSummary from '@/components/calculator/ResourceSummary.vue';
+import EventsView from '@/components/events/EventsView.vue';
 import SettingsModal from '@/components/common/SettingsModal.vue';
 import AuthModal from '@/components/auth/AuthModal.vue';
+import { useLocaleStore } from '@/stores/locale';
 import {
   Users,
   UserCheck,
@@ -30,6 +32,7 @@ import {
   Layers,
   ChevronRight,
   ShieldCheck,
+  Calendar,
 } from 'lucide-vue-next';
 
 const gameData = useGameDataStore();
@@ -37,8 +40,9 @@ const inventory = useInventoryStore();
 const planner = usePlannerStore();
 const roster = useRosterStore();
 const auth = useAuthStore();
+const locale = useLocaleStore();
 
-type TabType = 'operators' | 'roster' | 'inventory' | 'calculator' | 'recruitment' | 'wiki';
+type TabType = 'operators' | 'roster' | 'inventory' | 'calculator' | 'events' | 'recruitment' | 'wiki';
 const currentTab = ref<TabType>('operators');
 const isSettingsOpen = ref<boolean>(false);
 const isAuthModalOpen = ref<boolean>(false);
@@ -112,7 +116,7 @@ onMounted(async () => {
             @click="selectTab('operators')"
           >
             <Users class="w-3.5 h-3.5" />
-            <span>Оперативники</span>
+            <span>{{ locale.t('nav.operators') }}</span>
             <span
               v-if="planner.planCount > 0"
               class="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-cyan-400 text-slate-950 leading-tight"
@@ -133,14 +137,29 @@ onMounted(async () => {
             @click="selectTab('calculator')"
           >
             <Calculator class="w-3.5 h-3.5" />
-            <span>Калькулятор</span>
+            <span>{{ locale.t('nav.calculator') }}</span>
             <span
               v-if="planner.calculationResult.directDeficit.filter(d => d.deficit > 0).length > 0"
               class="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-rose-600 text-white animate-pulse leading-tight"
-              title="Ресурсов в дефиците"
+              title="Deficit items"
             >
               {{ planner.calculationResult.directDeficit.filter(d => d.deficit > 0).length }}
             </span>
+          </button>
+
+          <!-- Events & Schedule Tab -->
+          <button
+            type="button"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all relative"
+            :class="[
+              currentTab === 'events'
+                ? 'bg-gradient-to-r from-cyan-500/25 to-blue-500/20 text-cyan-300 border border-cyan-400/50 shadow-sm font-bold'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent',
+            ]"
+            @click="selectTab('events')"
+          >
+            <Calendar class="w-3.5 h-3.5 text-amber-400" />
+            <span>{{ locale.t('nav.events') }}</span>
           </button>
 
           <!-- Inventory Tab -->
@@ -155,7 +174,7 @@ onMounted(async () => {
             @click="selectTab('inventory')"
           >
             <Package class="w-3.5 h-3.5" />
-            <span>Склад</span>
+            <span>{{ locale.t('nav.inventory') }}</span>
             <span
               v-if="Object.keys(inventory.stock).length > 0"
               class="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-medium bg-slate-800 text-slate-300 border border-slate-700 leading-tight"
@@ -176,7 +195,7 @@ onMounted(async () => {
             @click="selectTab('roster')"
           >
             <UserCheck class="w-3.5 h-3.5 text-emerald-400" />
-            <span>Ростер</span>
+            <span>{{ locale.t('nav.roster') }}</span>
             <span
               v-if="roster.rosterCount > 0"
               class="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-800 leading-tight"
@@ -200,7 +219,7 @@ onMounted(async () => {
             @click="selectTab('recruitment')"
           >
             <Radio class="w-3.5 h-3.5 text-amber-400" />
-            <span>Рекрутинг</span>
+            <span>{{ locale.t('nav.recruitment') }}</span>
           </button>
 
           <!-- Wiki Tab -->
@@ -215,7 +234,7 @@ onMounted(async () => {
             @click="selectTab('wiki')"
           >
             <BookOpen class="w-3.5 h-3.5" />
-            <span>Вики</span>
+            <span>{{ locale.t('nav.wiki') }}</span>
           </button>
         </nav>
 
@@ -305,6 +324,7 @@ onMounted(async () => {
         <RecruitmentView v-show="currentTab === 'recruitment'" />
         <InventoryGrid v-show="currentTab === 'inventory'" />
         <ResourceSummary v-show="currentTab === 'calculator'" />
+        <EventsView v-show="currentTab === 'events'" />
         <WikiView v-show="currentTab === 'wiki'" />
       </div>
     </main>
@@ -489,7 +509,26 @@ onMounted(async () => {
             <ChevronRight class="w-4 h-4 text-slate-500 flex-shrink-0" />
           </button>
 
-          <!-- 2. Вики & Справочник -->
+          <!-- 2. Events & Timeline -->
+          <button
+            type="button"
+            class="p-3.5 rounded-2xl border text-left flex items-center justify-between gap-3 transition-all active:scale-[0.98]"
+            :class="currentTab === 'events' ? 'bg-cyan-950/50 border-cyan-500/50 shadow-md ring-1 ring-cyan-500/30' : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'"
+            @click="selectTab('events')"
+          >
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-950/70 border border-amber-700/60 flex items-center justify-center text-amber-400 flex-shrink-0">
+                <Calendar class="w-5 h-5" />
+              </div>
+              <div>
+                <div class="font-bold text-xs text-slate-100">{{ locale.t('nav.events') }}</div>
+                <div class="text-[11px] text-slate-400">CN & Global расписание и магазины</div>
+              </div>
+            </div>
+            <ChevronRight class="w-4 h-4 text-slate-500 flex-shrink-0" />
+          </button>
+
+          <!-- 3. Вики & Справочник -->
           <button
             type="button"
             class="p-3.5 rounded-2xl border text-left flex items-center justify-between gap-3 transition-all active:scale-[0.98]"
@@ -501,7 +540,7 @@ onMounted(async () => {
                 <BookOpen class="w-5 h-5" />
               </div>
               <div>
-                <div class="font-bold text-xs text-slate-100">База данных & Вики</div>
+                <div class="font-bold text-xs text-slate-100">{{ locale.t('nav.wiki') }}</div>
                 <div class="text-[11px] text-slate-400">Оперативники, ресурсы, модули</div>
               </div>
             </div>

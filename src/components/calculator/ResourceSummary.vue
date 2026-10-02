@@ -3,6 +3,8 @@ import { ref, computed } from 'vue';
 import { usePlannerStore } from '@/stores/planner';
 import { useGameDataStore } from '@/stores/gamedata';
 import { useInventoryStore } from '@/stores/inventory';
+import { useLocaleStore } from '@/stores/locale';
+import { ARKNIGHTS_EVENTS } from '@/data/eventsData';
 import ItemIcon from '@/components/common/ItemIcon.vue';
 import CraftingTree from './CraftingTree.vue';
 import FarmingGuideModal from './FarmingGuideModal.vue';
@@ -20,13 +22,46 @@ import {
   TrendingDown,
   Hammer,
   Zap,
+  ShoppingBag,
+  Home,
 } from 'lucide-vue-next';
 
 const planner = usePlannerStore();
 const gameData = useGameDataStore();
 const inventory = useInventoryStore();
+const locale = useLocaleStore();
 
 const activeTab = ref<'direct' | 'farm' | 'craftingTree'>('direct');
+
+// Event Shop & Base deduction settings
+const includeEventShop = ref<boolean>(true);
+const selectedEventId = ref<string>(ARKNIGHTS_EVENTS[0]?.id || '');
+const includeBaseIncome = ref<boolean>(true);
+
+const activeEvent = computed(() => {
+  return ARKNIGHTS_EVENTS.find((e) => e.id === selectedEventId.value) || ARKNIGHTS_EVENTS[0];
+});
+
+// Calculate event shop supply map
+const eventShopSupplies = computed(() => {
+  if (!includeEventShop.value || !activeEvent.value) return {};
+  const map: Record<string, number> = {};
+  for (const itm of activeEvent.value.shopItems) {
+    map[itm.itemId] = (map[itm.itemId] || 0) + itm.count;
+  }
+  return map;
+});
+
+// Event shop LMD & EXP supplies
+const eventShopLmd = computed(() => eventShopSupplies.value['4001'] || 0);
+const eventShopExp = computed(() => {
+  return (
+    (eventShopSupplies.value['2004'] || 0) * 2000 +
+    (eventShopSupplies.value['2003'] || 0) * 1000 +
+    (eventShopSupplies.value['2002'] || 0) * 400 +
+    (eventShopSupplies.value['2001'] || 0) * 200
+  );
+});
 
 const calc = computed(() => planner.calculationResult);
 
@@ -81,42 +116,81 @@ const totalItemsReadyCount = computed(() => {
   return count;
 });
 
+// Effective Deficit after Event Shop
+const effectiveLmdDeficit = computed(() => {
+  if (!includeEventShop.value) return lmdDeficit.value;
+  return Math.max(0, lmdDeficit.value - eventShopLmd.value);
+});
+
+const effectiveExpDeficit = computed(() => {
+  if (!includeEventShop.value) return expDeficit.value;
+  return Math.max(0, expDeficit.value - eventShopExp.value);
+});
+
+// Base passive coverage days
+const baseLmdDays = computed(() => Math.ceil(effectiveLmdDeficit.value / 50000));
+const baseExpDays = computed(() => Math.ceil(effectiveExpDeficit.value / 40000));
+
 // Plan-wide Sanity estimation via Penguin Stats (Materials, LMD, EXP)
 const planSanityEstimate = computed(() => {
-  const farmList = calc.value.farmRequirements.length > 0
+  let farmList = calc.value.farmRequirements.length > 0
     ? calc.value.farmRequirements
     : calc.value.directDeficit
         .filter((d) => d.deficit > 0)
         .map((d) => ({ itemId: d.itemId, count: d.deficit }));
 
+  if (includeEventShop.value) {
+    farmList = farmList.map((f) => {
+      const shopCount = eventShopSupplies.value[f.itemId] || 0;
+      return {
+        itemId: f.itemId,
+        count: Math.max(0, f.count - shopCount),
+      };
+    }).filter((f) => f.count > 0);
+  }
+
   const matEstimate = calculatePlanSanityEstimate(farmList);
 
-  // LMD Deficit Sanity (CE-6 gives ~10,000 LMD per 36 Sanity -> 0.0036 Sanity per 1 LMD)
-  const lmdSanity = Math.round(lmdDeficit.value * 0.0036);
-  const lmdRuns = Math.ceil(lmdDeficit.value / 10000);
+  // LMD Deficit Sanity
+  const currentLmdDef = effectiveLmdDeficit.value;
+  const lmdSanity = Math.round(currentLmdDef * 0.0036);
+  const lmdRuns = Math.ceil(currentLmdDef / 10000);
 
-  // EXP Deficit Sanity (LS-6 gives ~10,000 EXP per 36 Sanity -> 0.0036 Sanity per 1 EXP)
-  const expSanity = Math.round(expDeficit.value * 0.0036);
-  const expRuns = Math.ceil(expDeficit.value / 10000);
+  // EXP Deficit Sanity
+  const currentExpDef = effectiveExpDeficit.value;
+  const expSanity = Math.round(currentExpDef * 0.0036);
+  const expRuns = Math.ceil(currentExpDef / 10000);
 
   const totalSanity = matEstimate.totalSanity + lmdSanity + expSanity;
   const totalRuns = matEstimate.totalRuns + lmdRuns + expRuns;
   const naturalDays = Math.round((totalSanity / 240) * 10) / 10;
   const opEquivalent = Math.ceil(totalSanity / 135);
 
+  // Raw sanity without event shop for comparison
+  const rawLmdSanity = Math.round(lmdDeficit.value * 0.0036);
+  const rawExpSanity = Math.round(expDeficit.value * 0.0036);
+  const rawTotalSanity = calculatePlanSanityEstimate(
+    calc.value.farmRequirements.length > 0
+      ? calc.value.farmRequirements
+      : calc.value.directDeficit.filter(d => d.deficit > 0).map(d => ({ itemId: d.itemId, count: d.deficit }))
+  ).totalSanity + rawLmdSanity + rawExpSanity;
+
+  const sanitySaved = Math.max(0, rawTotalSanity - totalSanity);
+
   return {
     ...matEstimate,
     materialsSanity: matEstimate.totalSanity,
     lmdSanity,
     expSanity,
-    lmdDeficit: lmdDeficit.value,
-    expDeficit: expDeficit.value,
+    lmdDeficit: currentLmdDef,
+    expDeficit: currentExpDef,
     lmdRuns,
     expRuns,
     totalSanity,
     totalRuns,
     naturalDays,
     opEquivalent,
+    sanitySaved,
   };
 });
 
@@ -134,6 +208,70 @@ function openFarmingGuide(itemId: string, neededCount: number = 0) {
 
 <template>
   <div class="space-y-6">
+    <!-- Event Shop & Base Income Optimization Bar -->
+    <div class="bg-ark-card border border-ark-border rounded-2xl p-4 shadow-sm space-y-3">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-cyan-950/80 border border-cyan-800 flex items-center justify-center text-cyan-400 flex-shrink-0">
+            <ShoppingBag class="w-4 h-4" />
+          </div>
+          <div>
+            <div class="font-bold text-xs sm:text-sm text-slate-100 flex items-center gap-2">
+              <span>{{ locale.t('calc.eventShopDeduction') }}</span>
+              <span v-if="planSanityEstimate.sanitySaved > 0" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 font-bold">
+                -{{ planSanityEstimate.sanitySaved.toLocaleString() }} ⚡ {{ locale.t('calc.sanitySaved') }}!
+              </span>
+            </div>
+            <div class="text-[11px] text-slate-400">
+              {{ locale.t('calc.eventShopDeductionHint') }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Toggles & Select -->
+        <div class="flex items-center gap-3 flex-wrap">
+          <select
+            v-model="selectedEventId"
+            class="bg-slate-900 border border-ark-border rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/60 font-medium"
+          >
+            <option v-for="ev in ARKNIGHTS_EVENTS" :key="ev.id" :value="ev.id">
+              {{ ev.nameEn }} ({{ ev.status === 'cn_active' ? 'CN Active' : 'Upcoming' }})
+            </option>
+          </select>
+
+          <label class="flex items-center gap-2 text-xs font-semibold text-slate-300 cursor-pointer select-none">
+            <input
+              v-model="includeEventShop"
+              type="checkbox"
+              class="w-4 h-4 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-500"
+            />
+            <span>Магазин ивента</span>
+          </label>
+
+          <label class="flex items-center gap-2 text-xs font-semibold text-slate-300 cursor-pointer select-none">
+            <input
+              v-model="includeBaseIncome"
+              type="checkbox"
+              class="w-4 h-4 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-500"
+            />
+            <span>База Родоса</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Base Income Info Banner when active -->
+      <div v-if="includeBaseIncome && (lmdDeficit > 0 || expDeficit > 0)" class="pt-2 border-t border-ark-border/60 flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-slate-400">
+        <div class="flex items-center gap-2">
+          <Home class="w-3.5 h-3.5 text-amber-400" />
+          <span>{{ locale.t('calc.baseIncomeTitle') }}: ~50,000 LMD &bull; ~40,000 EXP в день</span>
+        </div>
+        <div class="flex items-center gap-3 text-cyan-300 font-bold">
+          <span v-if="lmdDeficit > 0">LMD покроется базой за ~{{ baseLmdDays }} дн.</span>
+          <span v-if="expDeficit > 0">EXP за ~{{ baseExpDays }} дн.</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Top KPI Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <!-- Total LMD Card -->
