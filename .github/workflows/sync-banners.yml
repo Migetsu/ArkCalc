@@ -1,0 +1,38 @@
+name: Auto-Sync Upcoming Banners from wiki.gg
+
+on:
+  schedule:
+    # Runs at 06:00 UTC on Monday and Friday
+    - cron: '0 6 * * 1,5'
+  workflow_dispatch: # Allows manual trigger anytime from GitHub Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  sync-banners:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run Banner Sync Script
+        run: node scripts/sync-banners.js
+
+      - name: Commit and push if changes detected
+        run: |
+          if [ -n "$(git status --porcelain src/data/eventsData.ts)" ]; then
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+            git add src/data/eventsData.ts
+            git commit -m "chore(banners): auto-sync upcoming banners from arknights.wiki.gg [skip ci]"
+            git push origin main
+            echo "✓ Successfully pushed updated banners to main branch."
+          else
+            echo "No changes in banners data. Repository is clean."
+          fi

@@ -74,7 +74,7 @@ export const ARKNIGHTS_EVENTS: ArknightsEvent[] = [
     "bannerPosterUrl": "/banners/banner_standard_headhunting_orienteering_8.png",
     "cnStartDate": "2026/09/29",
     "cnEndDate": "2026/10/13",
-    "globalEstimatedArrival": "2027/03",
+    "globalEstimatedArrival": "2027/02",
     "prompt6En": "Choose three of the following 6★ Operators; only these 6★ that will appear in a pull on this banner.",
     "prompt6Ru": "Choose three of the following 6★ Operators; only these 6★ that will appear in a pull on this banner.",
     "prompt6Cn": "Choose three of the following 6★ Operators; only these 6★ that will appear in a pull on this banner.",

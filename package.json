@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vue-tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sync-banners": "node scripts/sync-banners.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
