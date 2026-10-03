@@ -187,15 +187,48 @@ const selectedEvent = computed<ArknightsEvent>(() =>
   ARKNIGHTS_EVENTS.find((e) => e.id === selectedEventId.value) || ARKNIGHTS_EVENTS[0],
 );
 
-// Estimate weeks left until banner arrival
-const weeksUntilEvent = computed(() => {
+// Estimate weeks left until banner arrival dynamically
+const customWeeks = ref<number | null>(null);
+
+// Reset custom weeks whenever user picks a different banner so it auto-recalculates
+watch(selectedEventId, () => {
+  customWeeks.value = null;
+});
+
+const calculatedWeeks = computed(() => {
   const ev = selectedEvent.value;
   if (!ev) return 6;
+
+  let targetDate: Date | null = null;
   if (ev.globalStartDate) {
-    const diffDays = Math.max(1, Math.round((new Date(ev.globalStartDate).getTime() - Date.now()) / (1000 * 3600 * 24)));
+    targetDate = new Date(ev.globalStartDate.replace(/\//g, '-'));
+  } else if (ev.globalEstimatedArrival) {
+    // e.g. '2027/03' -> 15th of March 2027
+    const parts = ev.globalEstimatedArrival.split('/');
+    if (parts.length === 2) {
+      targetDate = new Date(Number(parts[0]), Number(parts[1]) - 1, 15);
+    }
+  } else if (ev.cnStartDate) {
+    // Global schedule is approximately 6 months after CN
+    const d = new Date(ev.cnStartDate.replace(/\//g, '-'));
+    d.setMonth(d.getMonth() + 6);
+    targetDate = d;
+  }
+
+  if (targetDate && !isNaN(targetDate.getTime())) {
+    const diffMs = targetDate.getTime() - Date.now();
+    const diffDays = Math.round(diffMs / (1000 * 3600 * 24));
     return Math.max(1, Math.round(diffDays / 7));
   }
+
   return 8;
+});
+
+const weeksUntilEvent = computed({
+  get: () => customWeeks.value ?? calculatedWeeks.value,
+  set: (val: number) => {
+    customWeeks.value = Math.max(1, Math.min(52, val));
+  },
 });
 
 // Income Preset Profile
@@ -615,9 +648,30 @@ const isFaqOpen = ref<boolean>(false);
               </p>
             </div>
           </div>
-          <span class="text-xs font-mono text-cyan-300 font-bold bg-cyan-950 px-2.5 py-1 rounded-xl border border-cyan-800">
-            ~{{ weeksUntilEvent }} {{ locale.currentLang === 'ru' ? 'недель до баннера' : 'weeks left' }}
-          </span>
+          <div class="flex items-center gap-1.5 bg-cyan-950/80 px-2.5 py-1 rounded-xl border border-cyan-800">
+            <button
+              type="button"
+              class="w-5 h-5 rounded hover:bg-cyan-900 text-cyan-300 font-mono font-bold flex items-center justify-center transition-colors text-sm"
+              :title="locale.currentLang === 'ru' ? 'Уменьшить на 1 неделю' : 'Subtract 1 week'"
+              @click="weeksUntilEvent = Math.max(1, weeksUntilEvent - 1)"
+            >
+              -
+            </button>
+            <span class="text-xs font-mono text-cyan-300 font-bold whitespace-nowrap px-1">
+              ~{{ weeksUntilEvent }} {{ locale.currentLang === 'ru' ? 'нед.' : 'wks' }}
+              <span v-if="selectedEvent?.globalEstimatedArrival" class="text-[10px] text-cyan-400 font-normal">
+                ({{ selectedEvent.globalEstimatedArrival }})
+              </span>
+            </span>
+            <button
+              type="button"
+              class="w-5 h-5 rounded hover:bg-cyan-900 text-cyan-300 font-mono font-bold flex items-center justify-center transition-colors text-sm"
+              :title="locale.currentLang === 'ru' ? 'Увеличить на 1 неделю' : 'Add 1 week'"
+              @click="weeksUntilEvent = Math.min(52, weeksUntilEvent + 1)"
+            >
+              +
+            </button>
+          </div>
         </div>
 
         <!-- 3 Simple Presets -->
