@@ -1676,13 +1676,14 @@ export function optimizeFarmingPlan(
         });
       } else {
         // Direct T3 byproduct drop
-        if (targetDeficits[byp.itemId] && targetDeficits[byp.itemId] > 0) {
-          targetDeficits[byp.itemId] = Math.max(0, targetDeficits[byp.itemId] - totalDropped);
+        const neededCount = targetDeficits[byp.itemId] || 0;
+        if (neededCount > 0) {
+          targetDeficits[byp.itemId] = Math.max(0, neededCount - totalDropped);
         }
         routeByproducts.push({
           itemId: byp.itemId,
           count: totalDropped,
-          isNeededInPlan: (targetDeficits[byp.itemId] || 0) > 0,
+          isNeededInPlan: neededCount > 0,
         });
       }
     }
