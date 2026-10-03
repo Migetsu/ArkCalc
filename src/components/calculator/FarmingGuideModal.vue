@@ -9,7 +9,7 @@ import {
   getRecommendedStage,
   type StageDropRecommendation,
 } from '@/services/penguinStatsService';
-import { X, ExternalLink, Zap, AlertCircle, Hammer, ArrowLeft } from 'lucide-vue-next';
+import { X, ExternalLink, Zap, AlertCircle, Hammer, ArrowLeft, Info } from 'lucide-vue-next';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -197,6 +197,47 @@ onUnmounted(() => {
 
       <!-- Modal Body -->
       <div class="p-5 space-y-4 overflow-y-auto flex-1 text-xs">
+
+        <!-- Info Banner: Verified Penguin Statistics Methodology -->
+        <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-[11px] text-slate-300 space-y-1.5">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5 text-cyan-400 font-bold">
+              <Info class="w-3.5 h-3.5" />
+              <span>{{ locale.currentLang === 'ru' ? 'Верификация Penguin Statistics' : 'Penguin Statistics Verified' }}</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-500">
+              {{ locale.currentLang === 'ru' ? 'Выборка >100 заходов' : 'Sample size >100 runs' }}
+            </span>
+          </div>
+          <p class="text-slate-400 leading-relaxed text-[10.5px]">
+            {{ locale.currentLang === 'ru'
+               ? 'В калькуляторе отображаются только подтвержденные карты с регулярным основным дропом (NORMAL_DROP). Случайные аномалии с 1–2 запусками (например, карта 14-7, где на сайте отображается 100% из-за 2 случайных дропов, хотя Акетон там лишь побочный EXTRA_DROP) отфильтрованы, чтобы не тратить Sanity впустую.'
+               : 'Only verified stages with guaranteed regular drop (NORMAL_DROP) and statistical sample >100 are listed. Random anomalies with 1-2 runs (such as stage 14-7 showing 100% due to 2 lucky runs where Aketon is merely an EXTRA_DROP) are excluded to prevent wasting Sanity.'
+            }}
+          </p>
+        </div>
+
+        <!-- T5 Item Exclusive Synthesis Notice -->
+        <div v-if="item.rarity >= 5 && recipe && stages.filter(s => !s.isCraft).length === 0" class="p-3 rounded-xl bg-amber-950/30 border border-amber-800/50 text-[11px] text-amber-200/90 flex items-start gap-2">
+          <AlertCircle class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+          <span>
+            {{ locale.currentLang === 'ru'
+               ? 'Материалы ранга T5 не имеют прямого дропа на картах в игре. Единственный способ получения — синтез в Мастерской из компонентов T4 и T3.'
+               : 'Tier 5 materials do not drop directly from any stage in the game. They can only be crafted in the Workshop from T4 and T3 components.'
+            }}
+          </span>
+        </div>
+
+        <!-- T4 Item High Sanity Warning & Craft Recommendation -->
+        <div v-if="item.rarity === 4 && recipe" class="p-3 rounded-xl bg-purple-950/30 border border-purple-800/50 text-[11px] text-purple-200/90 flex items-start gap-2">
+          <Hammer class="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
+          <span>
+            {{ locale.currentLang === 'ru'
+               ? 'Рекомендация: Прямой дроп материалов T4 на сюжетных картах имеет крайне низкий шанс (~1-3%, трата до 600-800 Sanity). Гораздо выгоднее синтезировать их в Мастерской из компонентов T3.'
+               : 'Recommendation: Direct T4 stage drops have very low drop rates (~1-3%, costing up to 600-800 Sanity). It is far more efficient to craft them in the Workshop from T3 components.'
+            }}
+          </span>
+        </div>
 
         <!-- Workshop Crafting Recipe Section (if craftable) -->
         <div v-if="recipe" class="p-4 bg-slate-900/90 rounded-xl border border-cyan-500/30 space-y-3">
