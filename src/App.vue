@@ -77,10 +77,33 @@ const activeSecondaryTabInfo = computed(() => {
   }
 });
 
+function parseHashToTab(): TabType | null {
+  const hash = window.location.hash.replace('#', '').toLowerCase();
+  const validTabs: TabType[] = ['operators', 'roster', 'inventory', 'calculator', 'events', 'recruitment', 'wiki', 'gacha'];
+  if (validTabs.includes(hash as TabType)) {
+    return hash as TabType;
+  }
+  return null;
+}
+
 function selectTab(tab: TabType) {
   currentTab.value = tab;
+  if (window.location.hash.replace('#', '') !== tab) {
+    try {
+      history.replaceState(null, '', `#${tab}`);
+    } catch {
+      window.location.hash = tab;
+    }
+  }
   isDrawerOpen.value = false;
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function handleHashChange() {
+  const tab = parseHashToTab();
+  if (tab && tab !== currentTab.value) {
+    currentTab.value = tab;
+  }
 }
 
 function openModalFromMenu(modal: 'settings' | 'auth') {
@@ -107,6 +130,11 @@ function handleKeyDown(e: KeyboardEvent) {
 }
 
 onMounted(async () => {
+  const initialTab = parseHashToTab();
+  if (initialTab) {
+    currentTab.value = initialTab;
+  }
+  window.addEventListener('hashchange', handleHashChange);
   window.addEventListener('keydown', handleKeyDown);
   // Load local IndexedDB stores in parallel with game data first
   await Promise.all([
@@ -133,6 +161,7 @@ watch(
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown);
+  window.removeEventListener('hashchange', handleHashChange);
   document.body.style.overflow = '';
 });
 </script>

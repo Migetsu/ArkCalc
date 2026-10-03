@@ -1,22 +1,149 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="ru" class="dark">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>ARK-Calc — Калькулятор материалов, планировщик прокачки и круток Arknights</title>
+    
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="ARK-Calc — Калькулятор материалов, планировщик прокачки и круток Arknights" />
+    <meta name="description" content="ARK-Calc — удобный и быстрый калькулятор материалов и планировщик прокачки для Arknights. Оптимизатор фарма ресурсов (Penguin Stats), калькулятор круток и Spark (300 гарант), база оперативников, калькулятор открытого найма (Recruitment) и учет инвентаря." />
+    <meta name="keywords" content="arknights, аркнайтс, калькулятор аркнайтс, arknights calculator, планировщик arknights, arknights planner, фарм материалов аркнайтс, где фармить ресурсы arknights, калькулятор круток аркнайтс, калькулятор гаранта arknights, arknights spark calculator, recruitment калькулятор arknights, открытый найм аркнайтс, penguin stats калькулятор, база оперативников arknights, arknights farming, arknights materials" />
+    <meta name="author" content="ARK-Calc Team" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
+    <meta name="yandex" content="index, follow" />
+    <link rel="canonical" href="https://ark-calc.vercel.app/" />
+
+    <!-- Open Graph / Facebook / Discord / VK -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ark-calc.vercel.app/" />
+    <meta property="og:site_name" content="ARK-Calc" />
+    <meta property="og:title" content="ARK-Calc — Калькулятор материалов, планировщик прокачки и круток Arknights" />
+    <meta property="og:description" content="Комплексный калькулятор Arknights: расчет ресурсов для Elite 2, скиллов и модулей, лучший фарм с Penguin Stats, планировщик накопления круток и гаранта 300, калькулятор открытого найма." />
+    <meta property="og:image" content="https://ark-calc.vercel.app/og-image.png" />
+    <meta property="og:image:secure_url" content="https://ark-calc.vercel.app/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="ARK-Calc — Arknights Planner, Material Calculator & Gacha Spark Optimizer" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:locale:alternate" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://ark-calc.vercel.app/" />
+    <meta name="twitter:title" content="ARK-Calc | Arknights Planner & Material Calculator" />
+    <meta name="twitter:description" content="Arknights material calculator, Penguin Stats farming optimizer, gacha banner pull predictor, recruitment tags and operator roster." />
+    <meta name="twitter:image" content="https://ark-calc.vercel.app/og-image.png" />
+    <meta name="twitter:image:alt" content="ARK-Calc - Arknights Calculator & Planner" />
+
+    <!-- Favicon & Icons -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+
+    <!-- Mobile & PWA Configuration -->
     <meta name="theme-color" content="#0e1117" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="ARK-Calc" />
     <meta name="application-name" content="ARK-Calc" />
-    <title>ARK-Calc | Arknights Planner & Material Calculator</title>
+
+    <!-- Schema.org Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "@id": "https://ark-calc.vercel.app/#webapp",
+          "name": "ARK-Calc",
+          "url": "https://ark-calc.vercel.app/",
+          "applicationCategory": "GameApplication, UtilityApplication",
+          "operatingSystem": "All (Web, Android, iOS, Windows, macOS, Linux)",
+          "browserRequirements": "Requires JavaScript. Requires HTML5.",
+          "inLanguage": ["ru", "en"],
+          "description": "Мощный интерактивный веб-калькулятор ресурсов и планировщик прокачки для игры Arknights. Включает оптимизатор фарма с Penguin Stats, калькулятор круток и Spark (300), калькулятор открытого найма и учет инвентаря.",
+          "image": "https://ark-calc.vercel.app/og-image.png",
+          "screenshot": "https://ark-calc.vercel.app/og-image.png",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "featureList": [
+            "Калькулятор материалов для Elite 1/2, навыков Mastery 1-3 и модулей",
+            "Оптимизатор фарма ресурсов на основе Penguin Stats с расчетом Sanity Per Item",
+            "Калькулятор круток и гаранта Spark (300) с учетом расписания Global баннеров",
+            "Калькулятор открытого найма (Recruitment) с фильтром гарантированных 4/5/6★",
+            "Учет инвентаря и автоматический расчет дерева крафта в Мастерской",
+            "Облачная синхронизация и поддержка работы офлайн (PWA)"
+          ]
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://ark-calc.vercel.app/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Как рассчитать материалы для прокачки оперативников в Arknights?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "В калькуляторе ARK-Calc выберите нужного оперативника, укажите текущий и желаемый ранг элиты (Elite 1/2), уровень, мастерство навыков (Mastery 1-3) и уровень модуля. Сервис автоматически сопоставит требуемые материалы с вашим инвентарем и покажет точный дефицит и дерево крафта в Мастерской."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Где выгоднее всего фармить ресурсы в Arknights?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "ARK-Calc интегрирован с актуальной статистикой базы данных Penguin Stats. Для любого материала калькулятор рассчитывает средние затраты санити (Sanity Per Item) и общую ценность уровня с учетом побочного дропа, рекомендуя лучший этап для фарма."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Как работает калькулятор круток и гаранта (Spark 300) в Arknights?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Вкладка 'Крутки & Spark' позволяет выбрать целевой баннер из актуального расписания и рассчитывает, сколько Orundum, Originite Prime и билетов вы накопите к дате запуска баннера за счет ежедневных заданий, Annihilation, логинов, сертификатов и Monthly Card."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Работает ли ARK-Calc офлайн и на смартфонах?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Да, ARK-Calc разработан как Progressive Web App (PWA). Вы можете установить его на телефон или рабочий стол ПК, и он продолжит сохранять все данные локально в IndexedDB даже при отсутствии интернета."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
   </head>
   <body class="bg-ark-dark text-slate-100 min-h-screen antialiased selection:bg-cyan-500 selection:text-white overflow-x-hidden">
+    <!-- Crawlable semantic fallback for Search Engine Bots & Screen Readers -->
+    <noscript>
+      <div style="padding: 24px; font-family: sans-serif; background: #0e1117; color: #f8fafc; max-width: 800px; margin: 0 auto;">
+        <h1>ARK-Calc — Калькулятор материалов и планировщик Arknights</h1>
+        <p>ARK-Calc — это комплексный планировщик прокачки и калькулятор ресурсов для игры Arknights.</p>
+        <h2>Основные возможности:</h2>
+        <ul>
+          <li><strong>Калькулятор оперативников:</strong> точный расчет ресурсов для Elite 2, Mastery 1-3 и модулей.</li>
+          <li><strong>Оптимизатор фарма:</strong> статистика дропа Penguin Stats, минимальные затраты санити на предмет.</li>
+          <li><strong>Калькулятор круток &amp; Spark:</strong> расчет накоплений на лимитированные баннеры до 300 круток.</li>
+          <li><strong>Калькулятор открытого найма:</strong> подбор тегов с гарантией 4★, 5★ и 6★ оперативников.</li>
+          <li><strong>Инвентарь и крафт:</strong> учет склада и автоматическое разложение дерева крафта.</li>
+        </ul>
+        <p>Для полноценной интерактивной работы включите поддержку JavaScript в вашем браузере.</p>
+      </div>
+    </noscript>
+
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

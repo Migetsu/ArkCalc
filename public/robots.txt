@@ -1,0 +1,16 @@
+# robots.txt for ARK-Calc (https://ark-calc.vercel.app)
+User-agent: *
+Allow: /
+
+# Specific bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# XML Sitemap
+Sitemap: https://ark-calc.vercel.app/sitemap.xml
