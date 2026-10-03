@@ -29,7 +29,7 @@ const locale = useLocaleStore();
 
 // Optimizer settings state
 const mode = ref<'synergy' | 'isolated'>('synergy');
-const maxChapter = ref<number>(14);
+const maxChapter = ref<number>(99);
 const prefer1_7 = ref<boolean>(true);
 const isSettingsOpen = ref<boolean>(false);
 
@@ -105,7 +105,7 @@ function handleOpenGuide(itemId: string, count: number) {
             <Sliders class="w-3.5 h-3.5 text-cyan-400" />
             <span>{{ locale.currentLang === 'ru' ? 'Параметры карт' : 'Stage Settings' }}</span>
             <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-cyan-300 border border-slate-700">
-              Ch. {{ maxChapter === 14 ? '14+' : maxChapter }}
+              {{ maxChapter >= 99 ? (locale.currentLang === 'ru' ? 'Все главы' : 'All Ch.') : `Ch. ${maxChapter}` }}
             </span>
             <ChevronDown class="w-3 h-3 text-slate-400 transition-transform" :class="{ 'rotate-180': isSettingsOpen }" />
           </button>
@@ -123,7 +123,8 @@ function handleOpenGuide(itemId: string, count: number) {
             v-model="maxChapter"
             class="w-full bg-slate-900 border border-ark-border rounded-xl px-3 py-1.5 text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 font-mono text-xs"
           >
-            <option :value="14">{{ locale.currentLang === 'ru' ? 'Все главы (Глава 10-14, актуальный эндгейм)' : 'All Chapters (10-14, Endgame)' }}</option>
+            <option :value="99">{{ locale.currentLang === 'ru' ? 'Все доступные главы (актуальный эндгейм 14+)' : 'All Chapters (Latest Endgame 14+)' }}</option>
+            <option :value="14">{{ locale.currentLang === 'ru' ? 'До 14 главы включительно' : 'Up to Chapter 14' }}</option>
             <option :value="10">{{ locale.currentLang === 'ru' ? 'До 10 главы включительно' : 'Up to Chapter 10' }}</option>
             <option :value="7">{{ locale.currentLang === 'ru' ? 'До 7 главы (Середина сюжета)' : 'Up to Chapter 7 (Mid-game)' }}</option>
             <option :value="4">{{ locale.currentLang === 'ru' ? 'До 4 главы (Ранняя игра / Новичок)' : 'Up to Chapter 4 (Early game)' }}</option>

@@ -1476,6 +1476,25 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     tagEn: 'Best Sanity',
     tagRu: 'Лучшая выносливость',
   },
+  // --- 17-11: Electrode Unit ---
+  {
+    stageCode: '17-11',
+    chapter: 17,
+    apCost: 21,
+    primaryItemId: '31113',
+    primaryDropRate: 34.1,
+    sanityPerItem: 61.6,
+    byproducts: [
+      { itemId: '30031', dropRate: 41 },
+      { itemId: '30051', dropRate: 32.6 },
+      { itemId: '30032', dropRate: 9.5 },
+      { itemId: '30052', dropRate: 7.5 },
+      { itemId: '31114', dropRate: 4.3 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Best Sanity',
+    tagRu: 'Лучшая выносливость',
+  },
 ];
 
 /**
@@ -1485,10 +1504,10 @@ export function getAvailableStagesForItem(
   itemId: string,
   options?: OptimizerOptions
 ): StageDefinition[] {
-  const maxCh = options?.maxChapter ?? 14;
+  const maxCh = options?.maxChapter ?? 99;
   const prefer1_7 = options?.prefer1_7 ?? true;
 
-  return STAGE_DEFINITIONS.filter((s) => {
+  const filtered = STAGE_DEFINITIONS.filter((s) => {
     if (s.primaryItemId !== itemId) return false;
     if (s.chapter > maxCh) return false;
     if (itemId === '30013') {
@@ -1497,6 +1516,13 @@ export function getAvailableStagesForItem(
     }
     return true;
   });
+
+  // Fallback: If no stage is available within maxChapter (e.g. user selected ch 10, but item is newly introduced in ch 15+),
+  // return the available stages so the user still receives a recommendation instead of an empty result.
+  if (filtered.length === 0) {
+    return STAGE_DEFINITIONS.filter((s) => s.primaryItemId === itemId);
+  }
+  return filtered;
 }
 
 /**
