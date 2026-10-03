@@ -272,62 +272,6 @@ const projectedOddsResult = computed(() =>
   calculateGachaOdds(totalProjectedPulls.value, detectedBannerType.value, currentPity.value),
 );
 
-// ─── Monthly Savings Trajectory (Milestones) ──────────────────────────────
-interface MonthlyMilestone {
-  monthLabel: string;
-  accumulatedPulls: number;
-  addedThisMonth: number;
-  isTarget: boolean;
-}
-
-const monthlyTimeline = computed<MonthlyMilestone[]>(() => {
-  const current = convertedPulls.value.totalPulls;
-  const weeks = weeksUntilEvent.value;
-  const pullsPerWeek = forecastResult.value.totalPullsGained / Math.max(1, weeks);
-
-  const milestones: MonthlyMilestone[] = [];
-  const now = new Date();
-
-  // Current month (Today)
-  const currentMonthName = now.toLocaleString(locale.currentLang === 'ru' ? 'ru-RU' : 'en-US', {
-    month: 'short',
-    year: 'numeric',
-  });
-  milestones.push({
-    monthLabel: `${currentMonthName} (${locale.currentLang === 'ru' ? 'Сейчас' : 'Today'})`,
-    accumulatedPulls: current,
-    addedThisMonth: 0,
-    isTarget: false,
-  });
-
-  const totalMonths = Math.max(1, Math.ceil(weeks / 4.33));
-  let runningPulls = current;
-
-  for (let m = 1; m <= totalMonths; m++) {
-    const futureDate = new Date(now.getFullYear(), now.getMonth() + m, 1);
-    const monthName = futureDate.toLocaleString(locale.currentLang === 'ru' ? 'ru-RU' : 'en-US', {
-      month: 'short',
-      year: 'numeric',
-    });
-    const isTarget = m === totalMonths;
-
-    const remainingToCap = Math.max(0, totalProjectedPulls.value - runningPulls);
-    const added = isTarget ? remainingToCap : Math.min(remainingToCap, Math.round(4.33 * pullsPerWeek));
-    runningPulls += added;
-
-    milestones.push({
-      monthLabel: isTarget
-        ? `${monthName} (${locale.currentLang === 'ru' ? 'Баннер' : 'Banner'})`
-        : monthName,
-      accumulatedPulls: Math.min(totalProjectedPulls.value, runningPulls),
-      addedThisMonth: added,
-      isTarget,
-    });
-  }
-
-  return milestones;
-});
-
 // ─── Mode 2: Manual Pulls Odds Calculator ──────────────────────────────────
 const manualPullsSlider = ref<number>(100);
 const manualBannerType = ref<BannerType>('limited');
@@ -919,61 +863,6 @@ const isFaqOpen = ref<boolean>(false);
             <span class="text-base font-bold text-cyan-300">
               ~{{ projectedOddsResult.expectedRateUps }} {{ locale.currentLang === 'ru' ? 'шт.' : 'ops' }}
             </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- ─── MONTHLY PROGRESSION TIMELINE ─── -->
-      <div class="bg-ark-card border border-ark-border rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <Calendar class="w-4 h-4 text-cyan-400" />
-            <h4 class="text-xs sm:text-sm font-bold text-slate-100 uppercase tracking-wide">
-              {{ locale.currentLang === 'ru' ? 'Траектория накоплений по месяцам' : 'Monthly Savings Trajectory' }}
-            </h4>
-          </div>
-          <span class="text-[10px] text-slate-400 font-mono">
-            {{ locale.currentLang === 'ru' ? 'Динамика до баннера' : 'Milestones to banner' }}
-          </span>
-        </div>
-
-        <p class="text-[11px] text-slate-400 leading-relaxed">
-          {{
-            locale.currentLang === 'ru'
-              ? '💡 Как работает прогноз: По мере игры каждый месяц ваши полученные крутки переходят в баланс на руках. Если вы регулярно сохраняете их и обновляете Склад, итоговое число круток к баннеру останется тем же!'
-              : '💡 How forecast works: As you play each month, earned pulls transition into your current balance. If you save them and refresh your Depot, your final total pulls at banner arrival remains steady!'
-          }}
-        </p>
-
-        <!-- Milestones Row -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2 pt-2">
-          <div
-            v-for="(step, idx) in monthlyTimeline"
-            :key="idx"
-            class="p-2.5 rounded-xl border flex flex-col justify-between space-y-1.5 transition-all text-xs font-mono"
-            :class="[
-              step.isTarget
-                ? 'bg-gradient-to-b from-cyan-950/70 to-slate-900 border-cyan-500/80 shadow-md ring-1 ring-cyan-500/30'
-                : idx === 0
-                  ? 'bg-slate-900/90 border-slate-700/80 text-slate-300'
-                  : 'bg-slate-900/50 border-slate-800/80 text-slate-400',
-            ]"
-          >
-            <div class="flex items-center justify-between text-[10px]">
-              <span class="font-bold truncate text-slate-300">{{ step.monthLabel }}</span>
-              <span v-if="step.addedThisMonth > 0" class="text-emerald-400 font-semibold">
-                +{{ step.addedThisMonth }}
-              </span>
-            </div>
-            <div class="flex items-baseline justify-between pt-1">
-              <span class="text-xs text-slate-400">{{ locale.currentLang === 'ru' ? 'Баланс:' : 'Total:' }}</span>
-              <span
-                class="text-sm font-bold"
-                :class="step.isTarget ? 'text-cyan-300 font-black' : 'text-slate-100'"
-              >
-                ~{{ step.accumulatedPulls }}
-              </span>
-            </div>
           </div>
         </div>
       </div>
