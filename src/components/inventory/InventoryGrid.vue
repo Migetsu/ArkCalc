@@ -34,9 +34,11 @@ const categories = computed(() => [
 ]);
 
 function isChip(item: ItemSummary): boolean {
+  const n = item.name.toLowerCase();
   return (
-    item.name.toLowerCase().includes('chip') ||
-    item.name.toLowerCase().includes('чип') ||
+    n.includes('chip') ||
+    n.includes('чип') ||
+    n.includes('фишк') ||
     item.iconId.includes('MTL_ASC_') ||
     item.itemId.startsWith('32')
   );

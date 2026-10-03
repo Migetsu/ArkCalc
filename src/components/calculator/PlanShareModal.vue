@@ -3,6 +3,7 @@ import { ref, computed, watch, nextTick } from 'vue';
 import { usePlannerStore } from '@/stores/planner';
 import { useGameDataStore } from '@/stores/gamedata';
 import { useLocaleStore } from '@/stores/locale';
+import { calculatePlanSanityEstimate } from '@/services/penguinStatsService';
 import {
   exportPlansToJson,
   importPlansFromJson,
@@ -38,12 +39,16 @@ const planSanity = computed(() => {
   const s = calc.value;
   const totalLmd = s.totalLmd;
   const totalExp = s.totalExp;
-  const matSanity = s.farmRequirements.reduce((acc, r) => {
-    // Rough approximation: 20 sanity per item needed
-    return acc + r.count * 20;
-  }, 0);
-  const lmdSanity = Math.round(Math.max(0, totalLmd - 0) * 0.0036);
-  const totalSanity = matSanity + lmdSanity;
+  const farmList = s.farmRequirements.length > 0
+    ? s.farmRequirements
+    : s.directDeficit
+        .filter((d) => d.deficit > 0)
+        .map((d) => ({ itemId: d.itemId, count: d.deficit }));
+
+  const matEstimate = calculatePlanSanityEstimate(farmList);
+  const lmdSanity = Math.round(Math.max(0, totalLmd) * 0.0036);
+  const expSanity = Math.round(Math.max(0, totalExp) * 0.0036);
+  const totalSanity = matEstimate.totalSanity + lmdSanity + expSanity;
   const naturalDays = Math.round((totalSanity / 240) * 10) / 10;
   const opEquivalent = Math.ceil(totalSanity / 135);
   return { totalSanity, naturalDays, opEquivalent, totalLmd, totalExp };
