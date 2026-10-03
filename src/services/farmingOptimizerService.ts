@@ -95,23 +95,22 @@ export const T2_TO_T3_MAP: Record<string, { t3Id: string; ratio: number }> = {
 
 // Top Arknights farming stages with authoritative drop rates and verified byproduct distributions
 export const STAGE_DEFINITIONS: StageDefinition[] = [
-  // ==================== ORIROCK CLUSTER (30013) ====================
-  // --- 1-7: Rock Heaven ---
+  // --- 1-7: Orirock Cluster ---
   {
     stageCode: '1-7',
     chapter: 1,
     apCost: 6,
-    primaryItemId: '30013', // Crafts from cubes (30012)
-    primaryDropRate: 124.8, // 1.25 Orirock Cubes per run -> 0.25 T3 equivalent per run
+    primaryItemId: '30013',
+    primaryDropRate: 124.8,
     sanityPerItem: 4.8,
     byproducts: [
       { itemId: '30012', dropRate: 124.8 },
       { itemId: '30011', dropRate: 31.2 },
-      { itemId: '30021', dropRate: 5.0 },
-      { itemId: '30031', dropRate: 5.0 },
-      { itemId: '30041', dropRate: 5.0 },
-      { itemId: '30051', dropRate: 5.0 },
-      { itemId: '30061', dropRate: 5.0 },
+      { itemId: '30021', dropRate: 5 },
+      { itemId: '30031', dropRate: 5 },
+      { itemId: '30041', dropRate: 5 },
+      { itemId: '30051', dropRate: 5 },
+      { itemId: '30061', dropRate: 5 },
     ],
     lmdPerRun: 720,
     tagEn: 'Record Efficiency',
@@ -119,25 +118,7 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     notesEn: 'Legendary stage 1-7: Highest rock Sanity efficiency in the game via Workshop crafting',
     notesRu: 'Легендарная стадия 1-7: наивысшая эффективность камней в игре через Мастерскую',
   },
-  // --- 2-4: Direct Orirock Cluster ---
-  {
-    stageCode: '2-4',
-    chapter: 2,
-    apCost: 12,
-    primaryItemId: '30013',
-    primaryDropRate: 42.3,
-    sanityPerItem: 28.4,
-    byproducts: [
-      { itemId: '30012', dropRate: 22.0 },
-      { itemId: '30022', dropRate: 14.0 },
-    ],
-    lmdPerRun: 1440,
-    tagEn: 'Direct T3',
-    tagRu: 'Прямой дроп T3',
-    notesEn: 'Direct T3 drop without manual crafting',
-    notesRu: 'Прямой дроп группы орирока без необходимости ручного крафта',
-  },
-  // --- 10-6: Ch 10 Orirock Cluster ---
+  // --- 10-6: Orirock Cluster ---
   {
     stageCode: '10-6',
     chapter: 10,
@@ -152,67 +133,117 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     lmdPerRun: 2520,
     tagEn: 'Best Sanity',
     tagRu: 'Лучшая выносливость',
-    notesEn: 'Highest direct T3 drop rate in Main Theme',
-    notesRu: 'Самый высокий прямой шанс дропа T3 в основной теме',
   },
-
-  // ==================== SUGAR PACK (30023) ====================
-  // --- 2-5: Fast & Low AP ---
+  // --- 2-4: Orirock Cluster ---
+  {
+    stageCode: '2-4',
+    chapter: 2,
+    apCost: 12,
+    primaryItemId: '30013',
+    primaryDropRate: 42.3,
+    sanityPerItem: 28.4,
+    byproducts: [
+      { itemId: '30011', dropRate: 41.4 },
+      { itemId: '30031', dropRate: 27.5 },
+      { itemId: '30061', dropRate: 16.4 },
+    ],
+    lmdPerRun: 1440,
+    tagEn: 'Early Game',
+    tagRu: 'Ранняя игра',
+  },
+  // --- 7-6: Orirock Cluster ---
+  {
+    stageCode: '7-6',
+    chapter: 7,
+    apCost: 18,
+    primaryItemId: '30013',
+    primaryDropRate: 60,
+    sanityPerItem: 30,
+    byproducts: [
+      { itemId: '30022', dropRate: 73.3 },
+    ],
+    lmdPerRun: 2160,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 6-5: Orirock Cluster ---
+  {
+    stageCode: '6-5',
+    chapter: 6,
+    apCost: 18,
+    primaryItemId: '30013',
+    primaryDropRate: 60,
+    sanityPerItem: 30,
+    byproducts: [
+      { itemId: '30032', dropRate: 73.3 },
+    ],
+    lmdPerRun: 2160,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 2-5: Sugar Pack ---
   {
     stageCode: '2-5',
     chapter: 2,
     apCost: 12,
     primaryItemId: '30023',
-    primaryDropRate: 37.0,
+    primaryDropRate: 37,
     sanityPerItem: 32.4,
     byproducts: [
-      { itemId: '30022', dropRate: 20.0 },
+      { itemId: '30021', dropRate: 26.1 },
+      { itemId: '30041', dropRate: 20.8 },
+      { itemId: '30051', dropRate: 20.7 },
     ],
     lmdPerRun: 1440,
-    tagEn: 'Fast & Low AP',
-    tagRu: 'Быстрый фарм',
-    notesEn: 'Low sanity consumption per run with high efficiency',
-    notesRu: 'Низкий расход энергии за заход с высокой эффективностью',
+    tagEn: 'Best Sanity',
+    tagRu: 'Лучшая выносливость',
   },
-  // --- 10-10: Ch 10 Sugar Pack ---
-  {
-    stageCode: '10-10',
-    chapter: 10,
-    apCost: 21,
-    primaryItemId: '30023',
-    primaryDropRate: 46.9,
-    sanityPerItem: 44.8,
-    byproducts: [
-      { itemId: '30012', dropRate: 36.2 },
-      { itemId: '30011', dropRate: 21.6 },
-    ],
-    lmdPerRun: 2520,
-    tagEn: 'High Rate',
-    tagRu: 'Высокий шанс',
-    notesEn: 'Solid drop rate in Chapter 10',
-    notesRu: 'Отличный шанс выпадения в 10 главе',
-  },
-  // --- 11-6: Best Sanity Sugar ---
+  // --- 11-6: Sugar Pack ---
   {
     stageCode: '11-6',
     chapter: 11,
     apCost: 21,
     primaryItemId: '30023',
     primaryDropRate: 50.1,
-    sanityPerItem: 42.0,
+    sanityPerItem: 42,
     byproducts: [
-      { itemId: '30022', dropRate: 24.0 },
-      { itemId: '30032', dropRate: 20.0 },
+      { itemId: '30042', dropRate: 106.6 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Best Sanity',
-    tagRu: 'Лучшая выносливость',
-    notesEn: 'Optimal Chapter 11 farming route for Sugar',
-    notesRu: 'Оптимальный маршрут фарминга сахара в 11 главе',
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-
-  // ==================== POLYESTER PACK (30033) ====================
-  // --- 7-4: Polyester Best Sanity ---
+  // --- M8-7: Sugar Pack ---
+  {
+    stageCode: 'M8-7',
+    chapter: 8,
+    apCost: 21,
+    primaryItemId: '30023',
+    primaryDropRate: 49.8,
+    sanityPerItem: 42.2,
+    byproducts: [
+      { itemId: '30042', dropRate: 107 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 7-12: Sugar Pack ---
+  {
+    stageCode: '7-12',
+    chapter: 7,
+    apCost: 18,
+    primaryItemId: '30023',
+    primaryDropRate: 42,
+    sanityPerItem: 42.9,
+    byproducts: [
+      { itemId: '30052', dropRate: 86.1 },
+    ],
+    lmdPerRun: 2160,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 7-4: Polyester Pack ---
   {
     stageCode: '7-4',
     chapter: 7,
@@ -221,16 +252,14 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     primaryDropRate: 55.8,
     sanityPerItem: 32.3,
     byproducts: [
-      { itemId: '30032', dropRate: 25.0 },
-      { itemId: '30022', dropRate: 20.0 },
+      { itemId: '30022', dropRate: 19.4 },
+      { itemId: '30021', dropRate: 16.8 },
     ],
     lmdPerRun: 2160,
     tagEn: 'Best Sanity',
     tagRu: 'Лучшая выносливость',
-    notesEn: 'Authoritative best stage for Polyester packs',
-    notesRu: 'Признанная лучшая карта для добычи пачек полиэстера',
   },
-  // --- 2-6: Early Polyester ---
+  // --- 2-6: Polyester Pack ---
   {
     stageCode: '2-6',
     chapter: 2,
@@ -239,89 +268,178 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     primaryDropRate: 36.8,
     sanityPerItem: 32.6,
     byproducts: [
-      { itemId: '30032', dropRate: 20.0 },
+      { itemId: '30011', dropRate: 41.5 },
+      { itemId: '30031', dropRate: 26.8 },
+      { itemId: '30061', dropRate: 16.2 },
     ],
     lmdPerRun: 1440,
     tagEn: 'Early Game',
     tagRu: 'Ранняя игра',
-    notesEn: 'Low cost alternative in Chapter 2',
-    notesRu: 'Дешевая альтернатива во 2 главе',
   },
-
-  // ==================== ORIRON CLUSTER (30043) ====================
-  // --- 14-12: Oriron Best Sanity ---
+  // --- 14-20: Polyester Pack ---
+  {
+    stageCode: '14-20',
+    chapter: 14,
+    apCost: 24,
+    primaryItemId: '30033',
+    primaryDropRate: 69.7,
+    sanityPerItem: 34.4,
+    byproducts: [
+      { itemId: '30012', dropRate: 186.7 },
+      { itemId: '30053', dropRate: 88.8 },
+    ],
+    lmdPerRun: 2880,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 5-3: Polyester Pack ---
+  {
+    stageCode: '5-3',
+    chapter: 5,
+    apCost: 18,
+    primaryItemId: '30033',
+    primaryDropRate: 49.8,
+    sanityPerItem: 36.1,
+    byproducts: [
+      { itemId: '30022', dropRate: 83.8 },
+    ],
+    lmdPerRun: 2160,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 14-12: Oriron Cluster ---
   {
     stageCode: '14-12',
     chapter: 14,
     apCost: 21,
     primaryItemId: '30043',
-    primaryDropRate: 52.0,
+    primaryDropRate: 52,
     sanityPerItem: 40.4,
     byproducts: [
-      { itemId: '30042', dropRate: 26.0 },
-      { itemId: '30062', dropRate: 22.0 },
+      { itemId: '30063', dropRate: 58.4 },
+      { itemId: '30031', dropRate: 41.2 },
+      { itemId: '30051', dropRate: 32.7 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Record Efficiency',
-    tagRu: 'Рекордная выносливость',
-    notesEn: 'Best endgame stage for Oriron Cluster',
-    notesRu: 'Лучшая стадия поздней игры для орижелеза',
+    tagEn: 'Best Sanity',
+    tagRu: 'Лучшая выносливость',
   },
-  // --- 10-11: Ch 10 Oriron Cluster ---
+  // --- 10-11: Oriron Cluster ---
   {
     stageCode: '10-11',
     chapter: 10,
-    apCost: 21,
+    apCost: 24,
     primaryItemId: '30043',
     primaryDropRate: 45.7,
-    sanityPerItem: 46.0,
+    sanityPerItem: 52.6,
     byproducts: [
-      { itemId: '30062', dropRate: 24.8 },
-      { itemId: '30052', dropRate: 26.1 },
-      { itemId: '30042', dropRate: 18.5 },
+      { itemId: '30022', dropRate: 18.3 },
+      { itemId: '30042', dropRate: 14.8 },
     ],
-    lmdPerRun: 2520,
-    tagEn: 'Best Byproducts',
-    tagRu: 'Богатые побочные',
-    notesEn: 'Rich Device and Polyketon byproducts',
-    notesRu: 'Дает ценные сопутствующие устройства и поликетоны',
+    lmdPerRun: 2880,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-  // --- 7-18: Oriron Classic ---
+  // --- 7-18: Oriron Cluster ---
   {
     stageCode: '7-18',
     chapter: 7,
-    apCost: 18,
+    apCost: 21,
     primaryItemId: '30043',
     primaryDropRate: 39.3,
-    sanityPerItem: 45.8,
+    sanityPerItem: 53.4,
     byproducts: [
-      { itemId: '30062', dropRate: 20.0 },
-      { itemId: '30052', dropRate: 18.0 },
+      { itemId: '30052', dropRate: 107.4 },
     ],
-    lmdPerRun: 2160,
-    tagEn: 'Classic Farm',
-    tagRu: 'Классический фарм',
-    notesEn: 'Popular mid-game Oriron farming stage',
-    notesRu: 'Популярная стадия 7 главы для орижелеза',
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-  // --- 2-8: Early Oriron ---
+  // --- 2-8: Oriron Cluster ---
   {
     stageCode: '2-8',
     chapter: 2,
     apCost: 12,
     primaryItemId: '30043',
     primaryDropRate: 21.9,
-    sanityPerItem: 54.8,
+    sanityPerItem: 54.7,
     byproducts: [
-      { itemId: '30042', dropRate: 18.0 },
+      { itemId: '30021', dropRate: 26.3 },
+      { itemId: '30041', dropRate: 20.9 },
+      { itemId: '30051', dropRate: 20.8 },
     ],
     lmdPerRun: 1440,
     tagEn: 'Early Game',
     tagRu: 'Ранняя игра',
   },
-
-  // ==================== AKETON (30053) ====================
-  // --- 10-4: Aketon Best Sanity ---
+  // --- 14-14: Aketon ---
+  {
+    stageCode: '14-14',
+    chapter: 14,
+    apCost: 21,
+    primaryItemId: '30053',
+    primaryDropRate: 78.1,
+    sanityPerItem: 26.9,
+    byproducts: [
+      { itemId: '30083', dropRate: 36.5 },
+      { itemId: '30012', dropRate: 36.3 },
+      { itemId: '30011', dropRate: 21.3 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Best Sanity',
+    tagRu: 'Лучшая выносливость',
+  },
+  // --- 14-6: Aketon ---
+  {
+    stageCode: '14-6',
+    chapter: 14,
+    apCost: 21,
+    primaryItemId: '30053',
+    primaryDropRate: 77.7,
+    sanityPerItem: 27,
+    byproducts: [
+      { itemId: '30073', dropRate: 43.8 },
+      { itemId: '30022', dropRate: 19.7 },
+      { itemId: '30042', dropRate: 16.2 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 14-17: Aketon ---
+  {
+    stageCode: '14-17',
+    chapter: 14,
+    apCost: 24,
+    primaryItemId: '30053',
+    primaryDropRate: 88.9,
+    sanityPerItem: 27,
+    byproducts: [
+      { itemId: '30023', dropRate: 55.9 },
+      { itemId: '30022', dropRate: 20.1 },
+      { itemId: '30042', dropRate: 16.1 },
+    ],
+    lmdPerRun: 2880,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 14-20: Aketon ---
+  {
+    stageCode: '14-20',
+    chapter: 14,
+    apCost: 24,
+    primaryItemId: '30053',
+    primaryDropRate: 88.8,
+    sanityPerItem: 27,
+    byproducts: [
+      { itemId: '30012', dropRate: 186.7 },
+      { itemId: '30033', dropRate: 69.7 },
+    ],
+    lmdPerRun: 2880,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 10-4: Aketon ---
   {
     stageCode: '10-4',
     chapter: 10,
@@ -330,180 +448,234 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     primaryDropRate: 55.1,
     sanityPerItem: 38.1,
     byproducts: [
-      { itemId: '30062', dropRate: 46.2 }, // Device T2
-      { itemId: '30052', dropRate: 25.0 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Best Sanity',
-    tagRu: 'Лучшая выносливость',
-    notesEn: 'Over 55% drop rate with exceptional Device byproducts',
-    notesRu: 'Свыше 55% шанса выпадения с отличным побочным дропом устройств',
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-  // --- 3-1: Aketon Early ---
+  // --- 3-1: Aketon ---
   {
     stageCode: '3-1',
     chapter: 3,
     apCost: 15,
     primaryItemId: '30053',
-    primaryDropRate: 36.8,
-    sanityPerItem: 40.8,
+    primaryDropRate: 37,
+    sanityPerItem: 40.5,
     byproducts: [
-      { itemId: '30052', dropRate: 25.0 },
-      { itemId: '30022', dropRate: 16.0 },
     ],
     lmdPerRun: 1800,
     tagEn: 'Early Game',
     tagRu: 'Ранняя игра',
-    notesEn: 'Fast and cheap early game stage',
-    notesRu: 'Быстрый и надежный фарм в 3 главе',
   },
-
-  // ==================== INTEGRATED DEVICE (30063) ====================
-  // --- 14-16: Device Record Efficiency ---
+  // --- 14-12: Integrated Device ---
+  {
+    stageCode: '14-12',
+    chapter: 14,
+    apCost: 21,
+    primaryItemId: '30063',
+    primaryDropRate: 58.4,
+    sanityPerItem: 36,
+    byproducts: [
+      { itemId: '30043', dropRate: 52 },
+      { itemId: '30031', dropRate: 41.2 },
+      { itemId: '30051', dropRate: 32.7 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Best Sanity',
+    tagRu: 'Лучшая выносливость',
+  },
+  // --- 14-16: Integrated Device ---
   {
     stageCode: '14-16',
     chapter: 14,
     apCost: 21,
     primaryItemId: '30063',
     primaryDropRate: 58.3,
-    sanityPerItem: 36.0,
+    sanityPerItem: 36,
     byproducts: [
-      { itemId: '30062', dropRate: 25.0 },
-      { itemId: '30042', dropRate: 22.0 },
+      { itemId: '30031', dropRate: 41.5 },
+      { itemId: '30053', dropRate: 38.1 },
+      { itemId: '30051', dropRate: 31.8 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Record Efficiency',
-    tagRu: 'Рекордная выносливость',
-    notesEn: 'Top-tier endgame Device farming with ~58% drop rate',
-    notesRu: 'Топовая стадия поздней игры для приборов с шансом ~58%',
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-  // --- 11-7: Device Ch 11 ---
+  // --- 17-12: Integrated Device ---
+  {
+    stageCode: '17-12',
+    chapter: 17,
+    apCost: 24,
+    primaryItemId: '30063',
+    primaryDropRate: 50,
+    sanityPerItem: 48,
+    byproducts: [
+      { itemId: '30032', dropRate: 83.2 },
+    ],
+    lmdPerRun: 2880,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 11-7: Integrated Device ---
   {
     stageCode: '11-7',
     chapter: 11,
     apCost: 21,
     primaryItemId: '30063',
     primaryDropRate: 40.4,
-    sanityPerItem: 52.0,
+    sanityPerItem: 52,
     byproducts: [
-      { itemId: '30042', dropRate: 24.5 },
-      { itemId: '30052', dropRate: 22.0 },
+      { itemId: '30012', dropRate: 36.3 },
+      { itemId: '30011', dropRate: 21.6 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Best Sanity',
-    tagRu: 'Лучшая выносливость',
-    notesEn: 'Reliable Chapter 11 stage for Device farming',
-    notesRu: 'Надежная стадия 11 главы для фарма приборов',
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-  // --- 7-15: Device Classic ---
+  // --- 7-15: Integrated Device ---
   {
     stageCode: '7-15',
     chapter: 7,
     apCost: 18,
     primaryItemId: '30063',
     primaryDropRate: 33.3,
-    sanityPerItem: 54.0,
+    sanityPerItem: 54,
     byproducts: [
-      { itemId: '30062', dropRate: 20.0 },
-      { itemId: '30032', dropRate: 18.0 },
     ],
     lmdPerRun: 2160,
-    tagEn: 'Classic Farm',
-    tagRu: 'Классический фарм',
-    notesEn: 'Long-standing popular mid-game Device stage',
-    notesRu: 'Популярная проверенная классическая стадия 7 главы',
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-  // --- S3-4: Early Device ---
+  // --- 14-18: Loxic Kohl ---
   {
-    stageCode: 'S3-4',
-    chapter: 3,
-    apCost: 15,
-    primaryItemId: '30063',
-    primaryDropRate: 24.2,
-    sanityPerItem: 62.0,
+    stageCode: '14-18',
+    chapter: 14,
+    apCost: 24,
+    primaryItemId: '30073',
+    primaryDropRate: 71.2,
+    sanityPerItem: 33.7,
     byproducts: [
-      { itemId: '30062', dropRate: 15.0 },
+      { itemId: '30031', dropRate: 42.4 },
+      { itemId: '30051', dropRate: 32 },
     ],
-    lmdPerRun: 1800,
+    lmdPerRun: 2880,
+    tagEn: 'Best Sanity',
+    tagRu: 'Лучшая выносливость',
+  },
+  // --- 6-11: Loxic Kohl ---
+  {
+    stageCode: '6-11',
+    chapter: 6,
+    apCost: 21,
+    primaryItemId: '30073',
+    primaryDropRate: 49.9,
+    sanityPerItem: 42.1,
+    byproducts: [
+      { itemId: '30062', dropRate: 75.1 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 11-13: Loxic Kohl ---
+  {
+    stageCode: '11-13',
+    chapter: 11,
+    apCost: 21,
+    primaryItemId: '30073',
+    primaryDropRate: 47,
+    sanityPerItem: 44.6,
+    byproducts: [
+      { itemId: '30012', dropRate: 36.2 },
+      { itemId: '30011', dropRate: 21.6 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 2-9: Loxic Kohl ---
+  {
+    stageCode: '2-9',
+    chapter: 2,
+    apCost: 12,
+    primaryItemId: '30073',
+    primaryDropRate: 26.2,
+    sanityPerItem: 45.7,
+    byproducts: [
+      { itemId: '30011', dropRate: 41.3 },
+      { itemId: '30031', dropRate: 27.4 },
+      { itemId: '30061', dropRate: 16.2 },
+    ],
+    lmdPerRun: 1440,
     tagEn: 'Early Game',
     tagRu: 'Ранняя игра',
   },
-
-  // ==================== LOXIC KOHL (30073) ====================
-  // --- 12-10: Kohl Record Efficiency ---
-  {
-    stageCode: '12-10',
-    chapter: 12,
-    apCost: 21,
-    primaryItemId: '30073',
-    primaryDropRate: 53.8,
-    sanityPerItem: 39.0,
-    byproducts: [
-      { itemId: '30032', dropRate: 26.5 },
-      { itemId: '30042', dropRate: 23.0 },
-    ],
-    lmdPerRun: 2520,
-    tagEn: 'Record Efficiency',
-    tagRu: 'Рекордная выносливость',
-    notesEn: 'Highest Sanity efficiency for Loxic Kohl in story',
-    notesRu: 'Рекордная выносливость для локсического угля в сюжете',
-  },
-  // --- 10-15: Ch 10 Kohl ---
-  {
-    stageCode: '10-15',
-    chapter: 10,
-    apCost: 21,
-    primaryItemId: '30073',
-    primaryDropRate: 50.3,
-    sanityPerItem: 41.7,
-    byproducts: [
-      { itemId: '30031', dropRate: 41.5 },
-      { itemId: '30051', dropRate: 33.2 },
-    ],
-    lmdPerRun: 2520,
-    tagEn: 'High Rate',
-    tagRu: 'Высокий шанс',
-    notesEn: 'Over 50% drop rate in Chapter 10',
-    notesRu: 'Свыше 50% шанса выпадения в 10 главе',
-  },
-  // --- 4-4: Kohl Classic ---
-  {
-    stageCode: '4-4',
-    chapter: 4,
-    apCost: 18,
-    primaryItemId: '30073',
-    primaryDropRate: 38.6,
-    sanityPerItem: 46.6,
-    byproducts: [
-      { itemId: '30032', dropRate: 18.0 },
-    ],
-    lmdPerRun: 2160,
-    tagEn: 'Classic',
-    tagRu: 'Классическая',
-    notesEn: 'Available early from Chapter 4',
-    notesRu: 'Доступна уже с 4 главы',
-  },
-
-  // ==================== MANGANESE ORE (30083) ====================
-  // --- 10-16: Manganese Best Sanity ---
+  // --- 10-16: Manganese Ore ---
   {
     stageCode: '10-16',
     chapter: 10,
     apCost: 21,
     primaryItemId: '30083',
     primaryDropRate: 54.9,
-    sanityPerItem: 38.2,
+    sanityPerItem: 38.3,
     byproducts: [
       { itemId: '30032', dropRate: 77.2 },
-      { itemId: '30022', dropRate: 20.0 },
     ],
     lmdPerRun: 2520,
     tagEn: 'Best Sanity',
     tagRu: 'Лучшая выносливость',
-    notesEn: 'Highest manganese drop rate (54.9%) and superb polyester byproducts',
-    notesRu: 'Рекордный шанс марганца (54.9%) и отличный сопутствующий дроп полиэстера',
   },
-  // --- 7-16: Manganese Classic ---
+  // --- 15-11: Manganese Ore ---
+  {
+    stageCode: '15-11',
+    chapter: 15,
+    apCost: 21,
+    primaryItemId: '30083',
+    primaryDropRate: 51.8,
+    sanityPerItem: 40.5,
+    byproducts: [
+      { itemId: '30012', dropRate: 36.4 },
+      { itemId: '30011', dropRate: 21.5 },
+      { itemId: '30062', dropRate: 14.6 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 17-6: Manganese Ore ---
+  {
+    stageCode: '17-6',
+    chapter: 17,
+    apCost: 24,
+    primaryItemId: '30083',
+    primaryDropRate: 59.1,
+    sanityPerItem: 40.6,
+    byproducts: [
+      { itemId: '30012', dropRate: 33.2 },
+      { itemId: '30011', dropRate: 21.6 },
+      { itemId: '30062', dropRate: 13.5 },
+    ],
+    lmdPerRun: 2880,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 3-2: Manganese Ore ---
+  {
+    stageCode: '3-2',
+    chapter: 3,
+    apCost: 15,
+    primaryItemId: '30083',
+    primaryDropRate: 37,
+    sanityPerItem: 40.6,
+    byproducts: [
+      { itemId: '30011', dropRate: 21.6 },
+      { itemId: '30012', dropRate: 21.2 },
+    ],
+    lmdPerRun: 1800,
+    tagEn: 'Early Game',
+    tagRu: 'Ранняя игра',
+  },
+  // --- 7-16: Manganese Ore ---
   {
     stageCode: '7-16',
     chapter: 7,
@@ -512,51 +684,27 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     primaryDropRate: 43.8,
     sanityPerItem: 41.1,
     byproducts: [
-      { itemId: '30042', dropRate: 20.0 },
-      { itemId: '30022', dropRate: 19.5 },
     ],
     lmdPerRun: 2160,
-    tagEn: 'Classic Farm',
-    tagRu: 'Классический фарм',
-    notesEn: 'Community favorite stage in Chapter 7',
-    notesRu: 'Самая известная проверенная стадия 7 главы',
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-  // --- 3-2: Early Manganese Ore ---
-  {
-    stageCode: '3-2',
-    chapter: 3,
-    apCost: 15,
-    primaryItemId: '30083',
-    primaryDropRate: 37.0,
-    sanityPerItem: 40.6,
-    byproducts: [
-      { itemId: '30042', dropRate: 15.0 },
-    ],
-    lmdPerRun: 1800,
-    tagEn: 'Early Game',
-    tagRu: 'Ранняя игра',
-  },
-
-  // ==================== GRINDSTONE (30093) ====================
-  // --- 9-16: Grindstone Best Sanity ---
+  // --- 9-16: Grindstone ---
   {
     stageCode: '9-16',
     chapter: 9,
     apCost: 18,
     primaryItemId: '30093',
-    primaryDropRate: 40.0,
-    sanityPerItem: 45.0,
+    primaryDropRate: 40,
+    sanityPerItem: 45,
     byproducts: [
-      { itemId: '30052', dropRate: 22.0 },
-      { itemId: '30022', dropRate: 20.0 },
+      { itemId: '30042', dropRate: 48 },
     ],
     lmdPerRun: 2160,
     tagEn: 'Best Sanity',
     tagRu: 'Лучшая выносливость',
-    notesEn: 'Best sanity-to-item ratio in Chapter 9',
-    notesRu: 'Лучшее соотношение выносливости к предмету в 9 главе',
   },
-  // --- 10-12: Ch 10 Grindstone ---
+  // --- 10-12: Grindstone ---
   {
     stageCode: '10-12',
     chapter: 10,
@@ -569,46 +717,57 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
       { itemId: '30042', dropRate: 16.2 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'High Rate',
-    tagRu: 'Высокий шанс',
-    notesEn: '45.4% drop rate in Chapter 10',
-    notesRu: '45.4% шанс выпадения в 10 главе',
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-  // --- 11-15: Grindstone Ch 11 ---
+  // --- 3-3: Grindstone ---
   {
-    stageCode: '11-15',
-    chapter: 11,
+    stageCode: '3-3',
+    chapter: 3,
+    apCost: 15,
+    primaryItemId: '30093',
+    primaryDropRate: 32.1,
+    sanityPerItem: 46.8,
+    byproducts: [
+      { itemId: '30011', dropRate: 21.7 },
+      { itemId: '30012', dropRate: 21.2 },
+    ],
+    lmdPerRun: 1800,
+    tagEn: 'Early Game',
+    tagRu: 'Ранняя игра',
+  },
+  // --- 15-15: Grindstone ---
+  {
+    stageCode: '15-15',
+    chapter: 15,
     apCost: 21,
     primaryItemId: '30093',
-    primaryDropRate: 41.8,
-    sanityPerItem: 50.2,
+    primaryDropRate: 44.6,
+    sanityPerItem: 47.1,
     byproducts: [
-      { itemId: '30052', dropRate: 24.0 },
-      { itemId: '30022', dropRate: 25.5 },
+      { itemId: '30012', dropRate: 36.4 },
+      { itemId: '30011', dropRate: 21.6 },
+      { itemId: '30062', dropRate: 14.5 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Alternative',
-    tagRu: 'Альтернатива',
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-  // --- 4-8: Grindstone Classic ---
+  // --- 4-8: Grindstone ---
   {
     stageCode: '4-8',
     chapter: 4,
-    apCost: 18,
+    apCost: 21,
     primaryItemId: '30093',
-    primaryDropRate: 30.6,
-    sanityPerItem: 58.8,
+    primaryDropRate: 33.7,
+    sanityPerItem: 62.3,
     byproducts: [
-      { itemId: '30052', dropRate: 18.0 },
-      { itemId: '30022', dropRate: 18.0 },
     ],
-    lmdPerRun: 2160,
-    tagEn: 'Classic',
-    tagRu: 'Классическая',
+    lmdPerRun: 2520,
+    tagEn: 'Early Game',
+    tagRu: 'Ранняя игра',
   },
-
-  // ==================== RMA70-12 (30103) ====================
-  // --- 9-19: RMA Best Sanity ---
+  // --- 9-19: RMA70-12 ---
   {
     stageCode: '9-19',
     chapter: 9,
@@ -617,123 +776,182 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     primaryDropRate: 40.1,
     sanityPerItem: 52.4,
     byproducts: [
-      { itemId: '30062', dropRate: 24.0 },
-      { itemId: '30032', dropRate: 22.0 },
+      { itemId: '30031', dropRate: 41.3 },
+      { itemId: '30051', dropRate: 33 },
     ],
     lmdPerRun: 2520,
     tagEn: 'Best Sanity',
     tagRu: 'Лучшая выносливость',
-    notesEn: 'Highest RMA drop rate and efficiency in Chapter 9',
-    notesRu: 'Лучшая энергоэффективность для RMA в 9 главе',
   },
-  // --- 7-10: RMA Classic ---
+  // --- 7-10: RMA70-12 ---
   {
     stageCode: '7-10',
     chapter: 7,
     apCost: 18,
     primaryItemId: '30103',
-    primaryDropRate: 34.0,
-    sanityPerItem: 53.0,
+    primaryDropRate: 34,
+    sanityPerItem: 53,
     byproducts: [
-      { itemId: '30062', dropRate: 18.0 },
+      { itemId: '30031', dropRate: 41.6 },
+      { itemId: '30051', dropRate: 33.3 },
     ],
     lmdPerRun: 2160,
-    tagEn: 'Classic Farm',
-    tagRu: 'Классический фарм',
-    notesEn: 'Reliable 18 AP stage in Chapter 7',
-    notesRu: 'Надежная проверенная карта за 18 выносливости',
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-  // --- 4-9: RMA Early Classic ---
+  // --- R8-9: RMA70-12 ---
   {
-    stageCode: '4-9',
-    chapter: 4,
+    stageCode: 'R8-9',
+    chapter: 8,
     apCost: 18,
     primaryItemId: '30103',
-    primaryDropRate: 29.0,
-    sanityPerItem: 62.1,
+    primaryDropRate: 33.9,
+    sanityPerItem: 53.1,
     byproducts: [
-      { itemId: '30062', dropRate: 18.0 },
+      { itemId: '30031', dropRate: 41.7 },
+      { itemId: '30051', dropRate: 33.2 },
     ],
     lmdPerRun: 2160,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 2-10: RMA70-12 ---
+  {
+    stageCode: '2-10',
+    chapter: 2,
+    apCost: 15,
+    primaryItemId: '30103',
+    primaryDropRate: 27.8,
+    sanityPerItem: 53.9,
+    byproducts: [
+      { itemId: '30021', dropRate: 15.6 },
+      { itemId: '30022', dropRate: 13 },
+    ],
+    lmdPerRun: 1800,
     tagEn: 'Early Game',
     tagRu: 'Ранняя игра',
   },
-
-  // ==================== COAGULATING GEL (31013) ====================
-  // --- 14-7: Coagulating Gel Best Sanity ---
+  // --- 4-9: RMA70-12 ---
   {
-    stageCode: '14-7',
+    stageCode: '4-9',
+    chapter: 4,
+    apCost: 21,
+    primaryItemId: '30103',
+    primaryDropRate: 29,
+    sanityPerItem: 72.3,
+    byproducts: [
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Early Game',
+    tagRu: 'Ранняя игра',
+  },
+  // --- 14-8: Coagulating Gel ---
+  {
+    stageCode: '14-8',
     chapter: 14,
     apCost: 21,
     primaryItemId: '31013',
     primaryDropRate: 48.5,
     sanityPerItem: 43.3,
     byproducts: [
-      { itemId: '30042', dropRate: 25.0 },
-      { itemId: '30022', dropRate: 22.0 },
+      { itemId: '30012', dropRate: 36.4 },
+      { itemId: '30011', dropRate: 21.6 },
+      { itemId: '30062', dropRate: 14.6 },
     ],
     lmdPerRun: 2520,
     tagEn: 'Best Sanity',
     tagRu: 'Лучшая выносливость',
-    notesEn: 'Authoritative top stage for Gel in late game (48.5% drop rate)',
-    notesRu: 'Абсолютно лучшая стадия для геля в поздней игре (48.5% шанс)',
   },
-  // --- JT8-2: Coagulating Gel Mid-Game ---
+  // --- 12-5: Coagulating Gel ---
   {
-    stageCode: 'JT8-2',
+    stageCode: '12-5',
+    chapter: 12,
+    apCost: 21,
+    primaryItemId: '31013',
+    primaryDropRate: 35,
+    sanityPerItem: 60,
+    byproducts: [
+      { itemId: '30012', dropRate: 36.8 },
+      { itemId: '30011', dropRate: 21.3 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- R8-8: Coagulating Gel ---
+  {
+    stageCode: 'R8-8',
     chapter: 8,
     apCost: 18,
     primaryItemId: '31013',
-    primaryDropRate: 33.3,
-    sanityPerItem: 54.0,
+    primaryDropRate: 29.9,
+    sanityPerItem: 60.2,
     byproducts: [
-      { itemId: '30022', dropRate: 20.0 },
-      { itemId: '30012', dropRate: 18.0 },
+      { itemId: '30052', dropRate: 86.9 },
     ],
     lmdPerRun: 2160,
     tagEn: 'Recommended',
     tagRu: 'Рекомендуемая',
-    notesEn: 'Classic staple stage for Gel in Chapter 8',
-    notesRu: 'Классическая проверенная стадия 8 главы',
   },
-  // --- 10-3: Coagulating Gel Ch 10 ---
+  // --- 16-13: Coagulating Gel ---
+  {
+    stageCode: '16-13',
+    chapter: 16,
+    apCost: 21,
+    primaryItemId: '31013',
+    primaryDropRate: 33.3,
+    sanityPerItem: 63,
+    byproducts: [
+      { itemId: '30031', dropRate: 41.3 },
+      { itemId: '30051', dropRate: 32.9 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 10-3: Coagulating Gel ---
   {
     stageCode: '10-3',
     chapter: 10,
     apCost: 21,
     primaryItemId: '31013',
     primaryDropRate: 33.3,
-    sanityPerItem: 63.0,
+    sanityPerItem: 63.1,
     byproducts: [
-      { itemId: '30022', dropRate: 20.3 },
-      { itemId: '30042', dropRate: 16.2 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Alternative',
-    tagRu: 'Альтернатива',
-    notesEn: 'Primary Gel drop in Chapter 10 with sugar & oriron byproducts',
-    notesRu: 'Прямой дроп геля в 10 главе с побочными ресурсами',
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-  // --- S4-10: Coagulating Gel Classic Early ---
+  // --- JT8-2: Coagulating Gel ---
+  {
+    stageCode: 'JT8-2',
+    chapter: 8,
+    apCost: 21,
+    primaryItemId: '31013',
+    primaryDropRate: 33.3,
+    sanityPerItem: 63,
+    byproducts: [
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- S4-10: Coagulating Gel ---
   {
     stageCode: 'S4-10',
     chapter: 4,
     apCost: 18,
     primaryItemId: '31013',
-    primaryDropRate: 28.1,
-    sanityPerItem: 64.1,
+    primaryDropRate: 27.3,
+    sanityPerItem: 65.9,
     byproducts: [
-      { itemId: '30042', dropRate: 18.0 },
     ],
     lmdPerRun: 2160,
     tagEn: 'Early Game',
     tagRu: 'Ранняя игра',
-    notesEn: 'Earliest unlocked primary Gel stage in Chapter 4',
-    notesRu: 'Самая ранняя доступная стадия с прямым дропом геля',
   },
-
-  // ==================== INCANDESCENT ALLOY (31023) ====================
-  // --- 16-14: Alloy Record Efficiency ---
+  // --- 16-14: Incandescent Alloy ---
   {
     stageCode: '16-14',
     chapter: 16,
@@ -742,16 +960,15 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     primaryDropRate: 55.6,
     sanityPerItem: 37.8,
     byproducts: [
-      { itemId: '30052', dropRate: 25.0 },
-      { itemId: '30032', dropRate: 22.0 },
+      { itemId: '30012', dropRate: 36.4 },
+      { itemId: '30011', dropRate: 21.6 },
+      { itemId: '30062', dropRate: 14.6 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Record Efficiency',
-    tagRu: 'Рекордная выносливость',
-    notesEn: 'Highest drop rate (55.6%) for Alloy in late game',
-    notesRu: 'Рекордный шанс дропа (55.6%) для сплава в поздней игре',
+    tagEn: 'Best Sanity',
+    tagRu: 'Лучшая выносливость',
   },
-  // --- S3-6: Alloy Fast & Low AP ---
+  // --- S3-6: Incandescent Alloy ---
   {
     stageCode: 'S3-6',
     chapter: 3,
@@ -760,15 +977,14 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     primaryDropRate: 39.6,
     sanityPerItem: 37.9,
     byproducts: [
-      { itemId: '30042', dropRate: 18.0 },
+      { itemId: '30011', dropRate: 21.6 },
+      { itemId: '30012', dropRate: 21.2 },
     ],
     lmdPerRun: 1800,
-    tagEn: 'Fast & Low AP',
-    tagRu: 'Быстрый фарм',
-    notesEn: 'Top early game stage for Alloy at only 15 AP per run',
-    notesRu: 'Лучшая ранняя стадия для сплава всего за 15 выносливости',
+    tagEn: 'Early Game',
+    tagRu: 'Ранняя игра',
   },
-  // --- 11-2: Alloy Ch 11 ---
+  // --- 11-2: Incandescent Alloy ---
   {
     stageCode: '11-2',
     chapter: 11,
@@ -777,16 +993,30 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     primaryDropRate: 45.6,
     sanityPerItem: 46.1,
     byproducts: [
-      { itemId: '30022', dropRate: 24.0 },
-      { itemId: '30042', dropRate: 22.0 },
+      { itemId: '30022', dropRate: 123.1 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Best Sanity',
-    tagRu: 'Лучшая выносливость',
-    notesEn: 'Reliable Chapter 11 Alloy stage',
-    notesRu: 'Надежная карта 11 главы для добычи сплава',
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-  // --- 10-14: Alloy Ch 10 ---
+  // --- 13-18: Incandescent Alloy ---
+  {
+    stageCode: '13-18',
+    chapter: 13,
+    apCost: 24,
+    primaryItemId: '31023',
+    primaryDropRate: 48.4,
+    sanityPerItem: 49.6,
+    byproducts: [
+      { itemId: '30022', dropRate: 18.5 },
+      { itemId: '30042', dropRate: 14.7 },
+      { itemId: '30021', dropRate: 11.3 },
+    ],
+    lmdPerRun: 2880,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 10-14: Incandescent Alloy ---
   {
     stageCode: '10-14',
     chapter: 10,
@@ -795,18 +1025,12 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     primaryDropRate: 39.5,
     sanityPerItem: 53.2,
     byproducts: [
-      { itemId: '30031', dropRate: 41.5 },
-      { itemId: '30051', dropRate: 33.2 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Alternative',
-    tagRu: 'Альтернатива',
-    notesEn: 'Chapter 10 Alloy stage',
-    notesRu: 'Стадия добычи сплава в 10 главе',
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-
-  // ==================== CRYSTALLINE COMPONENT (31033) ====================
-  // --- 16-17: Crystalline Component Record ---
+  // --- 16-17: Crystalline Component ---
   {
     stageCode: '16-17',
     chapter: 16,
@@ -815,16 +1039,29 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     primaryDropRate: 70.9,
     sanityPerItem: 29.6,
     byproducts: [
-      { itemId: '30062', dropRate: 25.0 },
-      { itemId: '30012', dropRate: 24.0 },
+      { itemId: '30032', dropRate: 63.2 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Record Efficiency',
-    tagRu: 'Рекордная выносливость',
-    notesEn: 'Over 70% drop rate in Chapter 16',
-    notesRu: 'Свыше 70% шанса выпадения в 16 главе',
+    tagEn: 'Best Sanity',
+    tagRu: 'Лучшая выносливость',
   },
-  // --- 9-14: Crystalline Component Best Sanity ---
+  // --- R8-11: Crystalline Component ---
+  {
+    stageCode: 'R8-11',
+    chapter: 8,
+    apCost: 21,
+    primaryItemId: '31033',
+    primaryDropRate: 58.2,
+    sanityPerItem: 36.1,
+    byproducts: [
+      { itemId: '30012', dropRate: 36.4 },
+      { itemId: '30011', dropRate: 21.6 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 9-14: Crystalline Component ---
   {
     stageCode: '9-14',
     chapter: 9,
@@ -833,35 +1070,31 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     primaryDropRate: 58.1,
     sanityPerItem: 36.1,
     byproducts: [
-      { itemId: '30062', dropRate: 25.0 },
-      { itemId: '30032', dropRate: 24.0 },
+      { itemId: '30012', dropRate: 36.3 },
+      { itemId: '30011', dropRate: 21.7 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Best Sanity',
-    tagRu: 'Лучшая выносливость',
-    notesEn: '58% drop rate in Chapter 9',
-    notesRu: '58% шанс выпадения в 9 главе',
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-  // --- S5-7: Crystalline Component Classic ---
+  // --- 14-3: Crystalline Component ---
   {
-    stageCode: 'S5-7',
-    chapter: 5,
-    apCost: 18,
+    stageCode: '14-3',
+    chapter: 14,
+    apCost: 21,
     primaryItemId: '31033',
-    primaryDropRate: 36.9,
-    sanityPerItem: 48.8,
+    primaryDropRate: 42.8,
+    sanityPerItem: 49.1,
     byproducts: [
-      { itemId: '30062', dropRate: 18.0 },
+      { itemId: '30011', dropRate: 145.7 },
+      { itemId: '30031', dropRate: 97.3 },
+      { itemId: '30051', dropRate: 77.7 },
     ],
-    lmdPerRun: 2160,
-    tagEn: 'Classic',
-    tagRu: 'Классическая',
-    notesEn: 'Early accessible stage from Chapter 5',
-    notesRu: 'Доступна уже с 5 главы',
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-
-  // ==================== SEMI-SYNTHETIC SOLVENT (31043) ====================
-  // --- 17-10: Solvent Record Efficiency ---
+  // --- 17-10: Semi-Synthetic Solvent ---
   {
     stageCode: '17-10',
     chapter: 17,
@@ -870,34 +1103,15 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     primaryDropRate: 46.8,
     sanityPerItem: 44.8,
     byproducts: [
-      { itemId: '30042', dropRate: 24.0 },
-      { itemId: '30022', dropRate: 22.0 },
+      { itemId: '30022', dropRate: 20 },
+      { itemId: '30042', dropRate: 16.5 },
+      { itemId: '30021', dropRate: 11.2 },
     ],
     lmdPerRun: 2520,
     tagEn: 'Best Sanity',
     tagRu: 'Лучшая выносливость',
-    notesEn: 'Best solvent efficiency in Chapter 17',
-    notesRu: 'Лучшая энергоэффективность для растворителя в 17 главе',
   },
-  // --- 9-4: Solvent Ch 9 ---
-  {
-    stageCode: '9-4',
-    chapter: 9,
-    apCost: 21,
-    primaryItemId: '31043',
-    primaryDropRate: 41.5,
-    sanityPerItem: 50.6,
-    byproducts: [
-      { itemId: '30042', dropRate: 22.0 },
-      { itemId: '30022', dropRate: 25.0 },
-    ],
-    lmdPerRun: 2520,
-    tagEn: 'Recommended',
-    tagRu: 'Рекомендуемая',
-    notesEn: 'Most popular Solvent stage in Chapter 9',
-    notesRu: 'Самая популярная стадия для растворителя в 9 главе',
-  },
-  // --- 12-10: Solvent Ch 12 ---
+  // --- 12-10: Semi-Synthetic Solvent ---
   {
     stageCode: '12-10',
     chapter: 12,
@@ -906,68 +1120,113 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     primaryDropRate: 34.2,
     sanityPerItem: 61.4,
     byproducts: [
-      { itemId: '30032', dropRate: 24.0 },
+      { itemId: '30031', dropRate: 42 },
+      { itemId: '30051', dropRate: 32.5 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Alternative',
-    tagRu: 'Альтернатива',
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-
-  // ==================== COMPOUND CUTTING FLUID (31053) ====================
-  // --- 14-11: Cutting Fluid Record Efficiency ---
+  // --- 15-5: Semi-Synthetic Solvent ---
+  {
+    stageCode: '15-5',
+    chapter: 15,
+    apCost: 21,
+    primaryItemId: '31043',
+    primaryDropRate: 34.2,
+    sanityPerItem: 61.4,
+    byproducts: [
+      { itemId: '30031', dropRate: 41.2 },
+      { itemId: '30051', dropRate: 32.7 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 13-14: Semi-Synthetic Solvent ---
+  {
+    stageCode: '13-14',
+    chapter: 13,
+    apCost: 21,
+    primaryItemId: '31043',
+    primaryDropRate: 33.3,
+    sanityPerItem: 63,
+    byproducts: [
+      { itemId: '30022', dropRate: 20.3 },
+      { itemId: '30042', dropRate: 16.1 },
+      { itemId: '30021', dropRate: 11.2 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 14-11: Compound Cutting Fluid ---
   {
     stageCode: '14-11',
     chapter: 14,
     apCost: 21,
     primaryItemId: '31053',
     primaryDropRate: 70.1,
-    sanityPerItem: 30.0,
+    sanityPerItem: 30,
     byproducts: [
-      { itemId: '30062', dropRate: 24.0 },
-      { itemId: '30042', dropRate: 23.0 },
-    ],
-    lmdPerRun: 2520,
-    tagEn: 'Record Efficiency',
-    tagRu: 'Рекордная выносливость',
-    notesEn: 'Unrivaled 70.1% drop rate for Cutting Fluid in Chapter 14',
-    notesRu: 'Непревзойденный 70.1% шанс дропа СОЖ в 14 главе',
-  },
-  // --- 10-17: Cutting Fluid Best Sanity (Ch 10) ---
-  {
-    stageCode: '10-17',
-    chapter: 10,
-    apCost: 21,
-    primaryItemId: '31053',
-    primaryDropRate: 53.6,
-    sanityPerItem: 39.2,
-    byproducts: [
-      { itemId: '30012', dropRate: 33.1 },
-      { itemId: '30011', dropRate: 21.6 },
+      { itemId: '30062', dropRate: 116.9 },
+      { itemId: '30022', dropRate: 20.2 },
+      { itemId: '30042', dropRate: 16.3 },
     ],
     lmdPerRun: 2520,
     tagEn: 'Best Sanity',
     tagRu: 'Лучшая выносливость',
-    notesEn: 'Chapter 10 primary drop for Compound Cutting Fluid (53.6% drop rate)',
-    notesRu: 'Основной источник СОЖ в 10 главе (53.6% шанс дропа)',
   },
-  // --- 12-17: Cutting Fluid Ch 12 ---
+  // --- 12-17: Compound Cutting Fluid ---
   {
     stageCode: '12-17',
     chapter: 12,
     apCost: 21,
     primaryItemId: '31053',
-    primaryDropRate: 47.0,
+    primaryDropRate: 47,
     sanityPerItem: 44.7,
     byproducts: [
-      { itemId: '30032', dropRate: 25.0 },
+      { itemId: '30012', dropRate: 36.4 },
+      { itemId: '30011', dropRate: 21.7 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Alternative',
-    tagRu: 'Альтернатива',
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-
-  // ==================== TRANSMUTED SALT (31063) ====================
-  // --- 14-2: Salt Record Efficiency ---
+  // --- 10-17: Compound Cutting Fluid ---
+  {
+    stageCode: '10-17',
+    chapter: 10,
+    apCost: 24,
+    primaryItemId: '31053',
+    primaryDropRate: 53.6,
+    sanityPerItem: 44.7,
+    byproducts: [
+      { itemId: '30012', dropRate: 33.1 },
+      { itemId: '30011', dropRate: 21.6 },
+    ],
+    lmdPerRun: 2880,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 14-15: Compound Cutting Fluid ---
+  {
+    stageCode: '14-15',
+    chapter: 14,
+    apCost: 21,
+    primaryItemId: '31053',
+    primaryDropRate: 46.3,
+    sanityPerItem: 45.4,
+    byproducts: [
+      { itemId: '30022', dropRate: 20.6 },
+      { itemId: '30042', dropRate: 16.1 },
+      { itemId: '30021', dropRate: 11.5 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 14-2: Transmuted Salt ---
   {
     stageCode: '14-2',
     chapter: 14,
@@ -976,16 +1235,15 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     primaryDropRate: 42.3,
     sanityPerItem: 49.7,
     byproducts: [
-      { itemId: '30022', dropRate: 25.0 },
-      { itemId: '30042', dropRate: 23.0 },
+      { itemId: '30021', dropRate: 97.3 },
+      { itemId: '30031', dropRate: 97.2 },
+      { itemId: '30041', dropRate: 77.6 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Record Efficiency',
-    tagRu: 'Рекордная выносливость',
-    notesEn: 'Best salt drop rate in Chapter 14',
-    notesRu: 'Лучший шанс соли в 14 главе',
+    tagEn: 'Best Sanity',
+    tagRu: 'Лучшая выносливость',
   },
-  // --- 11-3: Salt Ch 11 ---
+  // --- 11-3: Transmuted Salt ---
   {
     stageCode: '11-3',
     chapter: 11,
@@ -994,74 +1252,180 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     primaryDropRate: 31.4,
     sanityPerItem: 66.8,
     byproducts: [
-      { itemId: '30022', dropRate: 25.0 },
-      { itemId: '30042', dropRate: 23.0 },
+      { itemId: '30022', dropRate: 20.2 },
+      { itemId: '30042', dropRate: 15.9 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Best Sanity',
-    tagRu: 'Лучшая выносливость',
-    notesEn: 'Primary Salt stage in Chapter 11',
-    notesRu: 'Основная стадия добычи соли в 11 главе',
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-
-  // ==================== FUSCOUS FIBER (31073) ====================
-  // --- 13-5: Fiber Best Sanity ---
+  // --- 17-15: Transmuted Salt ---
+  {
+    stageCode: '17-15',
+    chapter: 17,
+    apCost: 24,
+    primaryItemId: '31063',
+    primaryDropRate: 35.5,
+    sanityPerItem: 67.6,
+    byproducts: [
+      { itemId: '30022', dropRate: 19.3 },
+      { itemId: '30042', dropRate: 14.9 },
+      { itemId: '30021', dropRate: 11.9 },
+    ],
+    lmdPerRun: 2880,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 16-10: Transmuted Salt ---
+  {
+    stageCode: '16-10',
+    chapter: 16,
+    apCost: 21,
+    primaryItemId: '31063',
+    primaryDropRate: 29.5,
+    sanityPerItem: 71.1,
+    byproducts: [
+      { itemId: '30012', dropRate: 36.7 },
+      { itemId: '30011', dropRate: 21.6 },
+      { itemId: '30062', dropRate: 14.4 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 13-5: Fuscous Fiber ---
   {
     stageCode: '13-5',
     chapter: 13,
-    apCost: 21,
+    apCost: 24,
     primaryItemId: '31073',
-    primaryDropRate: 37.0,
-    sanityPerItem: 56.8,
+    primaryDropRate: 37,
+    sanityPerItem: 64.8,
     byproducts: [
-      { itemId: '30052', dropRate: 24.0 },
-      { itemId: '30032', dropRate: 25.0 },
+      { itemId: '30012', dropRate: 33.2 },
+      { itemId: '30011', dropRate: 21.5 },
+      { itemId: '30062', dropRate: 13.2 },
     ],
-    lmdPerRun: 2520,
+    lmdPerRun: 2880,
     tagEn: 'Best Sanity',
     tagRu: 'Лучшая выносливость',
-    notesEn: 'Optimal Chapter 13 stage for Fuscous Fiber',
-    notesRu: 'Оптимальная стадия 13 главы для бурого волокна',
   },
-
-  // ==================== AGGREGATE CYCLICENE (31083) ====================
-  // --- 15-20: Cyclicene Best Sanity ---
+  // --- 17-17: Fuscous Fiber ---
+  {
+    stageCode: '17-17',
+    chapter: 17,
+    apCost: 21,
+    primaryItemId: '31073',
+    primaryDropRate: 30.9,
+    sanityPerItem: 68.1,
+    byproducts: [
+      { itemId: '30022', dropRate: 20.4 },
+      { itemId: '30042', dropRate: 15.9 },
+      { itemId: '30021', dropRate: 11.1 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 15-18: Fuscous Fiber ---
+  {
+    stageCode: '15-18',
+    chapter: 15,
+    apCost: 21,
+    primaryItemId: '31073',
+    primaryDropRate: 30.7,
+    sanityPerItem: 68.5,
+    byproducts: [
+      { itemId: '30031', dropRate: 41.3 },
+      { itemId: '30051', dropRate: 32.9 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- S9-3: Fuscous Fiber ---
+  {
+    stageCode: 'S9-3',
+    chapter: 9,
+    apCost: 18,
+    primaryItemId: '31073',
+    primaryDropRate: 24.1,
+    sanityPerItem: 74.7,
+    byproducts: [
+      { itemId: '30022', dropRate: 19.1 },
+      { itemId: '30021', dropRate: 16.6 },
+      { itemId: '30042', dropRate: 15.2 },
+    ],
+    lmdPerRun: 2160,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 15-20: Aggregate Cyclicene ---
   {
     stageCode: '15-20',
     chapter: 15,
-    apCost: 21,
+    apCost: 24,
     primaryItemId: '31083',
     primaryDropRate: 32.6,
-    sanityPerItem: 64.4,
+    sanityPerItem: 73.6,
     byproducts: [
-      { itemId: '30062', dropRate: 24.0 },
-      { itemId: '30042', dropRate: 23.0 },
+      { itemId: '30031', dropRate: 41.4 },
+      { itemId: '30051', dropRate: 32.6 },
     ],
-    lmdPerRun: 2520,
+    lmdPerRun: 2880,
     tagEn: 'Best Sanity',
     tagRu: 'Лучшая выносливость',
-    notesEn: 'Top stage for Aggregate Cyclicene in Chapter 15',
-    notesRu: 'Топовая стадия для цикличена в 15 главе',
   },
-  // --- 14-19: Cyclicene Ch 14 ---
+  // --- 17-8: Aggregate Cyclicene ---
+  {
+    stageCode: '17-8',
+    chapter: 17,
+    apCost: 21,
+    primaryItemId: '31083',
+    primaryDropRate: 28.2,
+    sanityPerItem: 74.4,
+    byproducts: [
+      { itemId: '30031', dropRate: 41.1 },
+      { itemId: '30051', dropRate: 32.7 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 16-15: Aggregate Cyclicene ---
+  {
+    stageCode: '16-15',
+    chapter: 16,
+    apCost: 21,
+    primaryItemId: '31083',
+    primaryDropRate: 27.8,
+    sanityPerItem: 75.7,
+    byproducts: [
+      { itemId: '30022', dropRate: 20.2 },
+      { itemId: '30042', dropRate: 16.2 },
+      { itemId: '30021', dropRate: 11.3 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 14-19: Aggregate Cyclicene ---
   {
     stageCode: '14-19',
     chapter: 14,
     apCost: 21,
     primaryItemId: '31083',
     primaryDropRate: 27.4,
-    sanityPerItem: 76.6,
+    sanityPerItem: 76.7,
     byproducts: [
-      { itemId: '30042', dropRate: 22.0 },
+      { itemId: '30012', dropRate: 36.1 },
+      { itemId: '30011', dropRate: 21.8 },
+      { itemId: '30062', dropRate: 14.5 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Alternative',
-    tagRu: 'Альтернатива',
-    notesEn: 'Accessible from Chapter 14',
-    notesRu: 'Доступна с 14 главы',
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
   },
-
-  // ==================== COAGULATIVE NODULE (31093) ====================
   // --- 15-9: Coagulative Nodule ---
   {
     stageCode: '15-9',
@@ -1069,34 +1433,48 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     apCost: 21,
     primaryItemId: '31093',
     primaryDropRate: 33.3,
-    sanityPerItem: 63.0,
+    sanityPerItem: 63,
     byproducts: [
-      { itemId: '30022', dropRate: 22.0 },
+      { itemId: '30012', dropRate: 36.4 },
+      { itemId: '30011', dropRate: 21.6 },
+      { itemId: '30062', dropRate: 14.5 },
     ],
     lmdPerRun: 2520,
     tagEn: 'Best Sanity',
     tagRu: 'Лучшая выносливость',
-    notesEn: 'Chapter 15 Coagulative Nodule farming',
-    notesRu: 'Фарм коагуляционных узелков в 15 главе',
   },
-
-  // ==================== LIQUEFIED HIGH-ENERGY GAS (31103) ====================
-  // --- 17-5: Liquefied Gas ---
+  // --- 17-4: Coagulative Nodule ---
+  {
+    stageCode: '17-4',
+    chapter: 17,
+    apCost: 21,
+    primaryItemId: '31093',
+    primaryDropRate: 33.2,
+    sanityPerItem: 63.2,
+    byproducts: [
+      { itemId: '30031', dropRate: 40.8 },
+      { itemId: '30051', dropRate: 32.4 },
+    ],
+    lmdPerRun: 2520,
+    tagEn: 'Recommended',
+    tagRu: 'Рекомендуемая',
+  },
+  // --- 17-5: Liquefied High-Energy Gas ---
   {
     stageCode: '17-5',
     chapter: 17,
     apCost: 21,
     primaryItemId: '31103',
     primaryDropRate: 30.7,
-    sanityPerItem: 68.4,
+    sanityPerItem: 68.3,
     byproducts: [
-      { itemId: '30052', dropRate: 20.0 },
+      { itemId: '30012', dropRate: 36.4 },
+      { itemId: '30011', dropRate: 21.6 },
+      { itemId: '30062', dropRate: 14.5 },
     ],
     lmdPerRun: 2520,
     tagEn: 'Best Sanity',
     tagRu: 'Лучшая выносливость',
-    notesEn: 'Chapter 17 Liquefied Gas farming',
-    notesRu: 'Фарм сжиженного газа в 17 главе',
   },
 ];
 
