@@ -70,8 +70,17 @@ const yostarServer = ref<ArknightsServer>('en');
 const isSendingCode = ref(false);
 const isLinking = ref(false);
 const isDirectSyncing = ref(false);
+const isReauthenticating = ref(false);
 const codeCooldown = ref(0);
 let cooldownTimer: any = null;
+
+function triggerReauth() {
+  isReauthenticating.value = true;
+  if (yostarAccount.value) {
+    yostarEmail.value = yostarAccount.value.email;
+    yostarServer.value = yostarAccount.value.server;
+  }
+}
 
 function startCooldown() {
   codeCooldown.value = 60;
@@ -129,6 +138,7 @@ async function handleLinkAndSyncYostar() {
     if (res.success && res.account) {
       yostarAccount.value = res.account;
       yostarCode.value = '';
+      isReauthenticating.value = false;
       statusMessage.value = {
         type: 'success',
         text: locale.currentLang === 'ru'
@@ -153,6 +163,7 @@ async function handleDirectSyncYostar() {
     const res = await syncDirect();
     if (res.success && res.account) {
       yostarAccount.value = res.account;
+      isReauthenticating.value = false;
       statusMessage.value = {
         type: 'success',
         text: locale.currentLang === 'ru'
@@ -160,6 +171,9 @@ async function handleDirectSyncYostar() {
           : `Live server data refreshed in 1 click! Loaded items: ${res.inventoryCount || 0}, operators: ${res.rosterCount || 0}.`,
       };
     } else {
+      if (res.sessionExpired) {
+        triggerReauth();
+      }
       statusMessage.value = {
         type: 'error',
         text: res.error || (locale.currentLang === 'ru' ? 'Ошибка синхронизации с аккаунтом' : 'Account synchronization error'),
@@ -543,19 +557,90 @@ onUnmounted(() => {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  class="text-[11px] text-rose-400 hover:text-rose-300 font-medium flex items-center gap-1 transition-colors p-1"
-                  @click="handleUnlinkYostar"
-                >
-                  <Unlink class="w-3.5 h-3.5" />
-                  <span>{{ locale.currentLang === 'ru' ? 'Отвязать' : 'Unlink' }}</span>
-                </button>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    class="text-[11px] text-amber-400 hover:text-amber-300 font-medium flex items-center gap-1 transition-colors p-1"
+                    @click="triggerReauth"
+                    :title="locale.currentLang === 'ru' ? 'Обновить сессию токена' : 'Refresh session token'"
+                  >
+                    <KeyRound class="w-3.5 h-3.5" />
+                    <span>{{ locale.currentLang === 'ru' ? 'Обновить сессию' : 'Refresh' }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="text-[11px] text-rose-400 hover:text-rose-300 font-medium flex items-center gap-1 transition-colors p-1"
+                    @click="handleUnlinkYostar"
+                  >
+                    <Unlink class="w-3.5 h-3.5" />
+                    <span>{{ locale.currentLang === 'ru' ? 'Отвязать' : 'Unlink' }}</span>
+                  </button>
+                </div>
               </div>
 
               <div class="text-[10px] text-slate-500 font-mono flex items-center justify-between pt-2 border-t border-slate-800/80">
                 <span>{{ locale.currentLang === 'ru' ? 'Последняя синхронизация:' : 'Last synchronized:' }}</span>
                 <strong class="text-slate-300">{{ formatSyncTime(yostarAccount.lastSyncAt) }}</strong>
+              </div>
+            </div>
+
+            <!-- Re-auth Banner if session expired or triggered -->
+            <div
+              v-if="isReauthenticating"
+              class="p-3.5 bg-amber-950/40 border border-amber-600/50 rounded-xl space-y-2.5"
+            >
+              <div class="flex items-center justify-between text-xs font-semibold text-amber-300">
+                <div class="flex items-center gap-1.5">
+                  <KeyRound class="w-4 h-4 text-amber-400" />
+                  <span>{{ locale.currentLang === 'ru' ? 'Обновление сессии Yostar' : 'Refresh Yostar Session' }}</span>
+                </div>
+                <button
+                  type="button"
+                  class="text-[10px] text-slate-400 hover:text-slate-200"
+                  @click="isReauthenticating = false"
+                >
+                  {{ locale.currentLang === 'ru' ? 'Закрыть' : 'Dismiss' }}
+                </button>
+              </div>
+              <p class="text-[11px] text-slate-300 leading-relaxed">
+                {{ locale.currentLang === 'ru'
+                  ? 'Срок действия предыдущего токена истек (verify fail). Отправьте свежий 6-значный код на вашу почту, чтобы мгновенно обновить сессию:'
+                  : 'Previous session token has expired. Send a fresh 6-digit code to your email to refresh the session:' }}
+                <strong class="text-amber-200 font-mono block mt-1">{{ yostarAccount.email }}</strong>
+              </p>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  :disabled="isSendingCode || codeCooldown > 0"
+                  class="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center gap-1.5 transition-all disabled:opacity-50"
+                  @click="handleSendYostarCode"
+                >
+                  <RefreshCw v-if="isSendingCode" class="w-3.5 h-3.5 animate-spin" />
+                  <Send v-else class="w-3.5 h-3.5" />
+                  <span>{{ codeCooldown > 0 ? (locale.currentLang === 'ru' ? `${codeCooldown} сек.` : `${codeCooldown}s`) : (locale.currentLang === 'ru' ? '1. Отправить код на почту' : '1. Send Code') }}</span>
+                </button>
+              </div>
+              <div class="flex items-center gap-2 pt-1">
+                <div class="relative w-36">
+                  <KeyRound class="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <input
+                    v-model="yostarCode"
+                    type="text"
+                    maxlength="6"
+                    placeholder="123456"
+                    class="w-full bg-slate-900 border border-slate-700/80 rounded-lg pl-8 pr-2 py-1.5 text-xs text-slate-100 placeholder-slate-500 font-mono tracking-widest focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <button
+                  type="button"
+                  :disabled="isLinking || !yostarCode.trim()"
+                  class="px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex items-center gap-1.5 transition-all disabled:opacity-50"
+                  @click="handleLinkAndSyncYostar"
+                >
+                  <RefreshCw v-if="isLinking" class="w-3.5 h-3.5 animate-spin" />
+                  <CheckCircle v-else class="w-3.5 h-3.5" />
+                  <span>{{ locale.currentLang === 'ru' ? '2. Обновить и синхронизировать' : '2. Update & Sync' }}</span>
+                </button>
               </div>
             </div>
 

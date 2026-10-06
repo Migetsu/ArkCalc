@@ -160,6 +160,7 @@ export async function linkAndSync(
 export async function syncDirect(): Promise<{
   success: boolean;
   error?: string;
+  sessionExpired?: boolean;
   account?: YostarLinkedAccount;
   inventoryCount?: number;
   rosterCount?: number;
@@ -181,9 +182,21 @@ export async function syncDirect(): Promise<{
       }),
     });
 
-  if (!ok || !data.success) {
-    return { success: false, error: data.error || 'Ошибка обновления данных аккаунта' };
-  }
+    if (!ok || !data.success) {
+      const isExpired =
+        !!data?.sessionExpired ||
+        String(data?.error || '').toLowerCase().includes('verify fail') ||
+        String(data?.error || '').toLowerCase().includes('истек') ||
+        String(data?.error || '').toLowerCase().includes('устарел');
+
+      return {
+        success: false,
+        error: isExpired
+          ? 'Сессия Yostar истекла (токен устарел). Пожалуйста, обновите привязку через проверочный код с почты.'
+          : (data?.error || 'Ошибка обновления данных аккаунта'),
+        sessionExpired: isExpired,
+      };
+    }
 
     // Update lastSyncAt and playerInfo
     account.lastSyncAt = new Date().toISOString();

@@ -256,7 +256,14 @@ async function fetchArknightsGameData(
   });
   const u8Data: any = await u8Res.json();
   if (!u8Data.uid || !u8Data.token) {
-    throw new Error(u8Data.message || 'Ошибка авторизации на шлюзе игры (u8 token)');
+    const rawMsg = String(u8Data.message || u8Data.error || '');
+    if (rawMsg === 'verify fail' || rawMsg.toLowerCase().includes('fail')) {
+      const err: any = new Error('Срок действия сессии Yostar истек (токен устарел). Пожалуйста, обновите привязку через код с почты.');
+      err.statusCode = 401;
+      err.sessionExpired = true;
+      throw err;
+    }
+    throw new Error(rawMsg || 'Ошибка авторизации на шлюзе игры (u8 token)');
   }
   const arknightsUid = String(u8Data.uid);
   const u8Token = String(u8Data.token);
@@ -289,7 +296,10 @@ async function fetchArknightsGameData(
   const gsLoginData: any = await gsLoginRes.json();
   if (gsLoginData.result !== 0 || !gsLoginData.secret) {
     if (gsLoginData.result === 3) {
-      throw new Error('Сессия Yostar истекла. Пожалуйста, запросите код подтверждения повторно.');
+      const err: any = new Error('Сессия Yostar истекла. Пожалуйста, запросите код подтверждения повторно.');
+      err.statusCode = 401;
+      err.sessionExpired = true;
+      throw err;
     }
     throw new Error(`Ошибка входа на игровой сервер (result: ${gsLoginData.result})`);
   }
@@ -410,9 +420,11 @@ export default async function handler(req: any, res: any) {
     return res.status(400).json({ success: false, error: 'Неизвестное действие (action)' });
   } catch (err: any) {
     console.error('[Arknights API Error]', err);
-    return res.status(500).json({
+    const statusCode = err?.statusCode || (err?.sessionExpired ? 401 : 500);
+    return res.status(statusCode).json({
       success: false,
       error: err?.message || 'Ошибка обработки запроса к Arknights API',
+      sessionExpired: !!err?.sessionExpired,
     });
   }
 }

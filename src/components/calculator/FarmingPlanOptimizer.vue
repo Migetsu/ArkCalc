@@ -7,6 +7,7 @@ import {
   optimizeFarmingPlan,
   getAvailableStagesForItem,
   type OptimizerOptions,
+  type OptimizedStageRoute,
 } from '@/services/farmingOptimizerService';
 import {
   Sparkles,
@@ -61,29 +62,41 @@ function saveRunsToStorage(data: Record<string, number>) {
 
 const stageRunsDone = ref<Record<string, number>>(loadSavedRuns());
 
-function getRunsDone(stageCode: string): number {
-  return stageRunsDone.value[stageCode] || 0;
+function getRouteKey(route: OptimizedStageRoute, index?: number): string {
+  return `${route.stageCode}_${route.primaryDrop?.itemId || index || '0'}`;
 }
 
-function adjustRuns(stageCode: string, delta: number) {
-  const current = stageRunsDone.value[stageCode] || 0;
+function getRunsDone(routeKey: string): number {
+  if (stageRunsDone.value[routeKey] !== undefined) {
+    return stageRunsDone.value[routeKey];
+  }
+  // Backwards compatibility if key was stored as stageCode
+  const stageCode = routeKey.split('_')[0];
+  if (stageCode && stageRunsDone.value[stageCode] !== undefined) {
+    return stageRunsDone.value[stageCode];
+  }
+  return 0;
+}
+
+function adjustRuns(routeKey: string, delta: number) {
+  const current = getRunsDone(routeKey);
   const next = Math.max(0, current + delta);
-  stageRunsDone.value = { ...stageRunsDone.value, [stageCode]: next };
+  stageRunsDone.value = { ...stageRunsDone.value, [routeKey]: next };
   saveRunsToStorage(stageRunsDone.value);
 }
 
-function setRunsDirect(stageCode: string, val: number) {
+function setRunsDirect(routeKey: string, val: number) {
   const next = Math.max(0, Math.floor(val || 0));
-  stageRunsDone.value = { ...stageRunsDone.value, [stageCode]: next };
+  stageRunsDone.value = { ...stageRunsDone.value, [routeKey]: next };
   saveRunsToStorage(stageRunsDone.value);
 }
 
-function toggleStageComplete(stageCode: string, totalNeeded: number) {
-  const current = stageRunsDone.value[stageCode] || 0;
+function toggleStageComplete(routeKey: string, totalNeeded: number) {
+  const current = getRunsDone(routeKey);
   if (current >= totalNeeded) {
-    stageRunsDone.value = { ...stageRunsDone.value, [stageCode]: 0 };
+    stageRunsDone.value = { ...stageRunsDone.value, [routeKey]: 0 };
   } else {
-    stageRunsDone.value = { ...stageRunsDone.value, [stageCode]: totalNeeded };
+    stageRunsDone.value = { ...stageRunsDone.value, [routeKey]: totalNeeded };
   }
   saveRunsToStorage(stageRunsDone.value);
 }
@@ -115,16 +128,18 @@ const unfarmableStoryItems = computed(() => {
 const totalPlannedRuns = computed(() => optimizationResult.value.totalRuns);
 const totalCompletedRuns = computed(() => {
   let done = 0;
-  for (const r of optimizationResult.value.routes) {
-    done += Math.min(r.recommendedRuns, getRunsDone(r.stageCode));
+  for (let i = 0; i < optimizationResult.value.routes.length; i++) {
+    const r = optimizationResult.value.routes[i];
+    done += Math.min(r.recommendedRuns, getRunsDone(getRouteKey(r, i)));
   }
   return done;
 });
 
 const totalRemainingSanity = computed(() => {
   let remainingSanity = 0;
-  for (const r of optimizationResult.value.routes) {
-    const leftRuns = Math.max(0, r.recommendedRuns - getRunsDone(r.stageCode));
+  for (let i = 0; i < optimizationResult.value.routes.length; i++) {
+    const r = optimizationResult.value.routes[i];
+    const leftRuns = Math.max(0, r.recommendedRuns - getRunsDone(getRouteKey(r, i)));
     remainingSanity += leftRuns * r.apCost;
   }
   return remainingSanity;
@@ -425,10 +440,10 @@ function getEstimatedGatheredText(stageCode: string, runsDone: number, dropRate:
       <div class="space-y-3">
         <div
           v-for="(route, idx) in optimizationResult.routes"
-          :key="route.stageCode"
+          :key="getRouteKey(route, idx)"
           class="bg-ark-card border rounded-2xl p-4 transition-all shadow-sm space-y-3.5"
           :class="[
-            getRunsDone(route.stageCode) >= route.recommendedRuns
+            getRunsDone(getRouteKey(route, idx)) >= route.recommendedRuns
               ? 'border-emerald-700/60 bg-emerald-950/15'
               : 'border-ark-border hover:border-slate-600 bg-ark-card',
           ]"
@@ -441,17 +456,17 @@ function getEstimatedGatheredText(stageCode: string, runsDone: number, dropRate:
                 type="button"
                 class="w-8 h-8 rounded-xl border flex items-center justify-center transition-all flex-shrink-0 cursor-pointer shadow-sm"
                 :class="[
-                  getRunsDone(route.stageCode) >= route.recommendedRuns
+                  getRunsDone(getRouteKey(route, idx)) >= route.recommendedRuns
                     ? 'bg-emerald-600 border-emerald-500 text-white shadow-emerald-900/50'
                     : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-cyan-500 hover:text-cyan-300'
                 ]"
-                @click="toggleStageComplete(route.stageCode, route.recommendedRuns)"
-                :title="getRunsDone(route.stageCode) >= route.recommendedRuns
+                @click="toggleStageComplete(getRouteKey(route, idx), route.recommendedRuns)"
+                :title="getRunsDone(getRouteKey(route, idx)) >= route.recommendedRuns
                   ? (locale.currentLang === 'ru' ? 'Снять отметку о завершении' : 'Unmark completed')
                   : (locale.currentLang === 'ru' ? 'Отметить стадию как завершенную (100%)' : 'Mark stage complete (100%)')
                 "
               >
-                <Check v-if="getRunsDone(route.stageCode) >= route.recommendedRuns" class="w-4 h-4 stroke-[3]" />
+                <Check v-if="getRunsDone(getRouteKey(route, idx)) >= route.recommendedRuns" class="w-4 h-4 stroke-[3]" />
                 <span v-else class="text-xs font-mono font-bold">{{ idx + 1 }}</span>
               </button>
 
@@ -554,8 +569,8 @@ function getEstimatedGatheredText(stageCode: string, runsDone: number, dropRate:
                 <button
                   type="button"
                   class="w-7 h-7 rounded-lg bg-slate-900 border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                  :disabled="getRunsDone(route.stageCode) <= 0"
-                  @click="adjustRuns(route.stageCode, -1)"
+                  :disabled="getRunsDone(getRouteKey(route, idx)) <= 0"
+                  @click="adjustRuns(getRouteKey(route, idx), -1)"
                   title="-1"
                 >
                   <Minus class="w-3.5 h-3.5" />
@@ -565,15 +580,15 @@ function getEstimatedGatheredText(stageCode: string, runsDone: number, dropRate:
                   type="number"
                   min="0"
                   :max="route.recommendedRuns * 3"
-                  :value="getRunsDone(route.stageCode)"
-                  @input="(e: Event) => setRunsDirect(route.stageCode, Number((e.target as HTMLInputElement).value))"
+                  :value="getRunsDone(getRouteKey(route, idx))"
+                  @input="(e: Event) => setRunsDirect(getRouteKey(route, idx), Number((e.target as HTMLInputElement).value))"
                   class="w-16 bg-slate-900 border border-slate-700 focus:border-cyan-500 rounded-lg py-1 px-2 text-center text-xs font-mono font-bold text-cyan-300 focus:outline-none"
                 />
 
                 <button
                   type="button"
                   class="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-500/80 text-cyan-300 hover:text-cyan-200 text-xs font-mono font-bold transition-all"
-                  @click="adjustRuns(route.stageCode, 1)"
+                  @click="adjustRuns(getRouteKey(route, idx), 1)"
                   title="+1"
                 >
                   +1
@@ -581,7 +596,7 @@ function getEstimatedGatheredText(stageCode: string, runsDone: number, dropRate:
                 <button
                   type="button"
                   class="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-500/80 text-cyan-300 hover:text-cyan-200 text-xs font-mono font-bold transition-all"
-                  @click="adjustRuns(route.stageCode, 5)"
+                  @click="adjustRuns(getRouteKey(route, idx), 5)"
                   title="+5"
                 >
                   +5
@@ -589,7 +604,7 @@ function getEstimatedGatheredText(stageCode: string, runsDone: number, dropRate:
                 <button
                   type="button"
                   class="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 hover:border-cyan-500/80 text-cyan-300 hover:text-cyan-200 text-xs font-mono font-bold transition-all"
-                  @click="adjustRuns(route.stageCode, 10)"
+                  @click="adjustRuns(getRouteKey(route, idx), 10)"
                   title="+10"
                 >
                   +10
@@ -600,23 +615,23 @@ function getEstimatedGatheredText(stageCode: string, runsDone: number, dropRate:
                   type="button"
                   class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1 ml-1"
                   :class="[
-                    getRunsDone(route.stageCode) >= route.recommendedRuns
+                    getRunsDone(getRouteKey(route, idx)) >= route.recommendedRuns
                       ? 'bg-emerald-900/60 border border-emerald-600 text-emerald-300'
                       : 'bg-slate-900 border border-slate-700 hover:border-emerald-500 text-slate-300 hover:text-emerald-300'
                   ]"
-                  @click="toggleStageComplete(route.stageCode, route.recommendedRuns)"
+                  @click="toggleStageComplete(getRouteKey(route, idx), route.recommendedRuns)"
                 >
                   <Check class="w-3 h-3 stroke-[3]" />
-                  <span>{{ getRunsDone(route.stageCode) >= route.recommendedRuns ? (locale.currentLang === 'ru' ? 'Готово' : 'Done') : (locale.currentLang === 'ru' ? 'Завершить' : 'Finish') }}</span>
+                  <span>{{ getRunsDone(getRouteKey(route, idx)) >= route.recommendedRuns ? (locale.currentLang === 'ru' ? 'Готово' : 'Done') : (locale.currentLang === 'ru' ? 'Завершить' : 'Finish') }}</span>
                 </button>
               </div>
 
               <!-- Remaining Runs & Sanity -->
               <div class="text-right text-xs font-mono">
-                <div v-if="getRunsDone(route.stageCode) < route.recommendedRuns" class="text-slate-300">
+                <div v-if="getRunsDone(getRouteKey(route, idx)) < route.recommendedRuns" class="text-slate-300">
                   <span>{{ locale.currentLang === 'ru' ? 'Осталось:' : 'Remaining:' }} </span>
-                  <strong class="text-cyan-300 font-bold">~{{ route.recommendedRuns - getRunsDone(route.stageCode) }} {{ locale.currentLang === 'ru' ? 'заходов' : 'runs' }}</strong>
-                  <span class="text-amber-300 ml-1.5 font-bold">(~{{ (route.recommendedRuns - getRunsDone(route.stageCode)) * route.apCost }}⚡)</span>
+                  <strong class="text-cyan-300 font-bold">~{{ route.recommendedRuns - getRunsDone(getRouteKey(route, idx)) }} {{ locale.currentLang === 'ru' ? 'заходов' : 'runs' }}</strong>
+                  <span class="text-amber-300 ml-1.5 font-bold">(~{{ (route.recommendedRuns - getRunsDone(getRouteKey(route, idx))) * route.apCost }}⚡)</span>
                 </div>
                 <div v-else class="text-emerald-400 font-bold flex items-center sm:justify-end gap-1">
                   <Check class="w-3.5 h-3.5 stroke-[3]" />
@@ -630,12 +645,12 @@ function getEstimatedGatheredText(stageCode: string, runsDone: number, dropRate:
               <div
                 class="h-full transition-all duration-300 rounded-full"
                 :class="[
-                  getRunsDone(route.stageCode) >= route.recommendedRuns
+                  getRunsDone(getRouteKey(route, idx)) >= route.recommendedRuns
                     ? 'bg-emerald-400'
                     : 'bg-gradient-to-r from-cyan-500 to-emerald-400'
                 ]"
                 :style="{
-                  width: `${Math.min(100, Math.round((getRunsDone(route.stageCode) / Math.max(1, route.recommendedRuns)) * 100))}%`
+                  width: `${Math.min(100, Math.round((getRunsDone(getRouteKey(route, idx)) / Math.max(1, route.recommendedRuns)) * 100))}%`
                 }"
               ></div>
             </div>
@@ -645,14 +660,14 @@ function getEstimatedGatheredText(stageCode: string, runsDone: number, dropRate:
               <span>
                 {{ locale.currentLang === 'ru' ? 'Прогресс:' : 'Progress:' }}
                 <strong class="text-slate-200">
-                  {{ Math.min(100, Math.round((getRunsDone(route.stageCode) / Math.max(1, route.recommendedRuns)) * 100)) }}%
+                  {{ Math.min(100, Math.round((getRunsDone(getRouteKey(route, idx)) / Math.max(1, route.recommendedRuns)) * 100)) }}%
                 </strong>
-                ({{ getRunsDone(route.stageCode) }} / {{ route.recommendedRuns }})
+                ({{ getRunsDone(getRouteKey(route, idx)) }} / {{ route.recommendedRuns }})
               </span>
 
-              <span v-if="getRunsDone(route.stageCode) > 0" class="text-emerald-400">
+              <span v-if="getRunsDone(getRouteKey(route, idx)) > 0" class="text-emerald-400">
                 {{ locale.currentLang === 'ru' ? 'Добыто за заходы:' : 'Gathered from runs:' }}
-                <strong class="text-emerald-300">{{ getEstimatedGatheredText(route.stageCode, getRunsDone(route.stageCode), route.primaryDrop.dropRate) }}</strong>
+                <strong class="text-emerald-300">{{ getEstimatedGatheredText(route.stageCode, getRunsDone(getRouteKey(route, idx)), route.primaryDrop.dropRate) }}</strong>
               </span>
             </div>
           </div>
