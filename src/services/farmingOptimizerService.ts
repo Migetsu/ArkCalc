@@ -501,21 +501,6 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     tagEn: 'Recommended',
     tagRu: 'Рекомендуемая',
   },
-  // --- 17-12: Integrated Device ---
-  {
-    stageCode: '17-12',
-    chapter: 17,
-    apCost: 24,
-    primaryItemId: '30063',
-    primaryDropRate: 50,
-    sanityPerItem: 48,
-    byproducts: [
-      { itemId: '30032', dropRate: 83.2 },
-    ],
-    lmdPerRun: 2880,
-    tagEn: 'Recommended',
-    tagRu: 'Рекомендуемая',
-  },
   // --- 11-7: Integrated Device ---
   {
     stageCode: '11-7',
@@ -639,23 +624,6 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
       { itemId: '30062', dropRate: 14.6 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Recommended',
-    tagRu: 'Рекомендуемая',
-  },
-  // --- 17-6: Manganese Ore ---
-  {
-    stageCode: '17-6',
-    chapter: 17,
-    apCost: 24,
-    primaryItemId: '30083',
-    primaryDropRate: 59.1,
-    sanityPerItem: 40.6,
-    byproducts: [
-      { itemId: '30012', dropRate: 33.2 },
-      { itemId: '30011', dropRate: 21.6 },
-      { itemId: '30062', dropRate: 13.5 },
-    ],
-    lmdPerRun: 2880,
     tagEn: 'Recommended',
     tagRu: 'Рекомендуемая',
   },
@@ -893,22 +861,6 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     tagEn: 'Recommended',
     tagRu: 'Рекомендуемая',
   },
-  // --- 16-13: Coagulating Gel ---
-  {
-    stageCode: '16-13',
-    chapter: 16,
-    apCost: 21,
-    primaryItemId: '31013',
-    primaryDropRate: 33.3,
-    sanityPerItem: 63,
-    byproducts: [
-      { itemId: '30031', dropRate: 41.3 },
-      { itemId: '30051', dropRate: 32.9 },
-    ],
-    lmdPerRun: 2520,
-    tagEn: 'Recommended',
-    tagRu: 'Рекомендуемая',
-  },
   // --- 10-3: Coagulating Gel ---
   {
     stageCode: '10-3',
@@ -951,23 +903,6 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     tagEn: 'Early Game',
     tagRu: 'Ранняя игра',
   },
-  // --- 16-14: Incandescent Alloy ---
-  {
-    stageCode: '16-14',
-    chapter: 16,
-    apCost: 21,
-    primaryItemId: '31023',
-    primaryDropRate: 55.6,
-    sanityPerItem: 37.8,
-    byproducts: [
-      { itemId: '30012', dropRate: 36.4 },
-      { itemId: '30011', dropRate: 21.6 },
-      { itemId: '30062', dropRate: 14.6 },
-    ],
-    lmdPerRun: 2520,
-    tagEn: 'Best Sanity',
-    tagRu: 'Лучшая выносливость',
-  },
   // --- S3-6: Incandescent Alloy ---
   {
     stageCode: 'S3-6',
@@ -981,8 +916,8 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
       { itemId: '30012', dropRate: 21.2 },
     ],
     lmdPerRun: 1800,
-    tagEn: 'Early Game',
-    tagRu: 'Ранняя игра',
+    tagEn: 'Best Sanity',
+    tagRu: 'Лучшая выносливость',
   },
   // --- 11-2: Incandescent Alloy ---
   {
@@ -1030,21 +965,6 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     tagEn: 'Recommended',
     tagRu: 'Рекомендуемая',
   },
-  // --- 16-17: Crystalline Component ---
-  {
-    stageCode: '16-17',
-    chapter: 16,
-    apCost: 21,
-    primaryItemId: '31033',
-    primaryDropRate: 70.9,
-    sanityPerItem: 29.6,
-    byproducts: [
-      { itemId: '30032', dropRate: 63.2 },
-    ],
-    lmdPerRun: 2520,
-    tagEn: 'Best Sanity',
-    tagRu: 'Лучшая выносливость',
-  },
   // --- R8-11: Crystalline Component ---
   {
     stageCode: 'R8-11',
@@ -1058,8 +978,8 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
       { itemId: '30011', dropRate: 21.6 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Recommended',
-    tagRu: 'Рекомендуемая',
+    tagEn: 'Best Sanity',
+    tagRu: 'Лучшая выносливость',
   },
   // --- 9-14: Crystalline Component ---
   {
@@ -1094,23 +1014,6 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     tagEn: 'Recommended',
     tagRu: 'Рекомендуемая',
   },
-  // --- 17-10: Semi-Synthetic Solvent ---
-  {
-    stageCode: '17-10',
-    chapter: 17,
-    apCost: 21,
-    primaryItemId: '31043',
-    primaryDropRate: 46.8,
-    sanityPerItem: 44.8,
-    byproducts: [
-      { itemId: '30022', dropRate: 20 },
-      { itemId: '30042', dropRate: 16.5 },
-      { itemId: '30021', dropRate: 11.2 },
-    ],
-    lmdPerRun: 2520,
-    tagEn: 'Best Sanity',
-    tagRu: 'Лучшая выносливость',
-  },
   // --- 12-10: Semi-Synthetic Solvent ---
   {
     stageCode: '12-10',
@@ -1124,8 +1027,8 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
       { itemId: '30051', dropRate: 32.5 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Recommended',
-    tagRu: 'Рекомендуемая',
+    tagEn: 'Best Sanity',
+    tagRu: 'Лучшая выносливость',
   },
   // --- 15-5: Semi-Synthetic Solvent ---
   {
@@ -1259,40 +1162,6 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     tagEn: 'Recommended',
     tagRu: 'Рекомендуемая',
   },
-  // --- 17-15: Transmuted Salt ---
-  {
-    stageCode: '17-15',
-    chapter: 17,
-    apCost: 24,
-    primaryItemId: '31063',
-    primaryDropRate: 35.5,
-    sanityPerItem: 67.6,
-    byproducts: [
-      { itemId: '30022', dropRate: 19.3 },
-      { itemId: '30042', dropRate: 14.9 },
-      { itemId: '30021', dropRate: 11.9 },
-    ],
-    lmdPerRun: 2880,
-    tagEn: 'Recommended',
-    tagRu: 'Рекомендуемая',
-  },
-  // --- 16-10: Transmuted Salt ---
-  {
-    stageCode: '16-10',
-    chapter: 16,
-    apCost: 21,
-    primaryItemId: '31063',
-    primaryDropRate: 29.5,
-    sanityPerItem: 71.1,
-    byproducts: [
-      { itemId: '30012', dropRate: 36.7 },
-      { itemId: '30011', dropRate: 21.6 },
-      { itemId: '30062', dropRate: 14.4 },
-    ],
-    lmdPerRun: 2520,
-    tagEn: 'Recommended',
-    tagRu: 'Рекомендуемая',
-  },
   // --- 13-5: Fuscous Fiber ---
   {
     stageCode: '13-5',
@@ -1309,23 +1178,6 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     lmdPerRun: 2880,
     tagEn: 'Best Sanity',
     tagRu: 'Лучшая выносливость',
-  },
-  // --- 17-17: Fuscous Fiber ---
-  {
-    stageCode: '17-17',
-    chapter: 17,
-    apCost: 21,
-    primaryItemId: '31073',
-    primaryDropRate: 30.9,
-    sanityPerItem: 68.1,
-    byproducts: [
-      { itemId: '30022', dropRate: 20.4 },
-      { itemId: '30042', dropRate: 15.9 },
-      { itemId: '30021', dropRate: 11.1 },
-    ],
-    lmdPerRun: 2520,
-    tagEn: 'Recommended',
-    tagRu: 'Рекомендуемая',
   },
   // --- 15-18: Fuscous Fiber ---
   {
@@ -1376,39 +1228,6 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     tagEn: 'Best Sanity',
     tagRu: 'Лучшая выносливость',
   },
-  // --- 17-8: Aggregate Cyclicene ---
-  {
-    stageCode: '17-8',
-    chapter: 17,
-    apCost: 21,
-    primaryItemId: '31083',
-    primaryDropRate: 28.2,
-    sanityPerItem: 74.4,
-    byproducts: [
-      { itemId: '30031', dropRate: 41.1 },
-      { itemId: '30051', dropRate: 32.7 },
-    ],
-    lmdPerRun: 2520,
-    tagEn: 'Recommended',
-    tagRu: 'Рекомендуемая',
-  },
-  // --- 16-15: Aggregate Cyclicene ---
-  {
-    stageCode: '16-15',
-    chapter: 16,
-    apCost: 21,
-    primaryItemId: '31083',
-    primaryDropRate: 27.8,
-    sanityPerItem: 75.7,
-    byproducts: [
-      { itemId: '30022', dropRate: 20.2 },
-      { itemId: '30042', dropRate: 16.2 },
-      { itemId: '30021', dropRate: 11.3 },
-    ],
-    lmdPerRun: 2520,
-    tagEn: 'Recommended',
-    tagRu: 'Рекомендуемая',
-  },
   // --- 14-19: Aggregate Cyclicene ---
   {
     stageCode: '14-19',
@@ -1443,22 +1262,6 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     tagEn: 'Best Sanity',
     tagRu: 'Лучшая выносливость',
   },
-  // --- 17-4: Coagulative Nodule ---
-  {
-    stageCode: '17-4',
-    chapter: 17,
-    apCost: 21,
-    primaryItemId: '31093',
-    primaryDropRate: 33.2,
-    sanityPerItem: 63.2,
-    byproducts: [
-      { itemId: '30031', dropRate: 40.8 },
-      { itemId: '30051', dropRate: 32.4 },
-    ],
-    lmdPerRun: 2520,
-    tagEn: 'Recommended',
-    tagRu: 'Рекомендуемая',
-  },
   // --- 17-5: Liquefied High-Energy Gas ---
   {
     stageCode: '17-5',
@@ -1473,8 +1276,8 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
       { itemId: '30062', dropRate: 14.5 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Best Sanity',
-    tagRu: 'Лучшая выносливость',
+    tagEn: 'Best Sanity (CN Server)',
+    tagRu: 'Лучшая выносливость (CN сервер)',
   },
   // --- 17-11: Electrode Unit ---
   {
@@ -1492,8 +1295,8 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
       { itemId: '31114', dropRate: 4.3 },
     ],
     lmdPerRun: 2520,
-    tagEn: 'Best Sanity',
-    tagRu: 'Лучшая выносливость',
+    tagEn: 'Best Sanity (CN Server)',
+    tagRu: 'Лучшая выносливость (CN сервер)',
   },
 ];
 
@@ -1504,7 +1307,7 @@ export function getAvailableStagesForItem(
   itemId: string,
   options?: OptimizerOptions
 ): StageDefinition[] {
-  const maxCh = options?.maxChapter ?? 99;
+  const maxCh = options?.maxChapter ?? 15; // Default to Chapter 15 (Global / US server cap)
   const prefer1_7 = options?.prefer1_7 ?? true;
 
   const filtered = STAGE_DEFINITIONS.filter((s) => {
@@ -1517,9 +1320,13 @@ export function getAvailableStagesForItem(
     return true;
   });
 
-  // Fallback: If no stage is available within maxChapter (e.g. user selected ch 10, but item is newly introduced in ch 15+),
-  // return the available stages so the user still receives a recommendation instead of an empty result.
+  // Fallback: If no stage is available within maxChapter, check if any stages exist up to Global cap (15).
+  // If maxCh < 15 (e.g. user selected ch 10, but item is in ch 11-15), return stages up to 15.
+  // NEVER return Chapter 16+ stages if maxCh <= 15 (Global server)!
   if (filtered.length === 0) {
+    if (maxCh <= 15) {
+      return STAGE_DEFINITIONS.filter((s) => s.primaryItemId === itemId && s.chapter <= 15);
+    }
     return STAGE_DEFINITIONS.filter((s) => s.primaryItemId === itemId);
   }
   return filtered;

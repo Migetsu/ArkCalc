@@ -224,13 +224,99 @@ export function calculateAllPlans(
       return;
     }
 
-    // In Arknights, players directly farm T3 materials from main story stages.
-    // Only decompose T3 materials into T2/T1 if the player actually has ingredients in stock to craft them.
+    // In Arknights, players directly farm T3 materials from main story stages (or 1-7 for Orirock).
+    // They do NOT farm T2/T1 stages to satisfy T3 deficits.
+    // Therefore, for T3 materials (itemRarity <= 3 and !isDualChip):
+    // 1. Synthesize as many T3 items as possible from available T2 and T1 ingredients currently in warehouse stock.
+    // 2. Consume those ingredients from virtualStock and record the crafting steps.
+    // 3. Any remaining deficit that CANNOT be crafted from stock must be farmed directly as T3!
     const itemRarity = items[itemId]?.rarity || 1;
     const isDualChip = itemId.startsWith('32') && itemRarity >= 4;
     if (itemRarity <= 3 && !isDualChip) {
-      const hasIngredientsInStock = recipe.costs.some((c) => (virtualStock[c.id] || 0) > 0);
-      if (!hasIngredientsInStock) {
+      // First, synthesize intermediate T2 ingredients from T1 stock if available (e.g. 30011 -> 30012)
+      for (const ingredient of recipe.costs) {
+        const subRecipe = recipes[ingredient.id];
+        if (subRecipe && subRecipe.costs && subRecipe.costs.length === 1) {
+          const t1Cost = subRecipe.costs[0];
+          const t1Stock = virtualStock[t1Cost.id] || 0;
+          if (t1Stock >= t1Cost.count) {
+            const possibleT2Crafts = Math.floor(t1Stock / t1Cost.count);
+            const t1Used = possibleT2Crafts * t1Cost.count;
+            virtualStock[t1Cost.id] -= t1Used;
+            virtualStock[ingredient.id] = (virtualStock[ingredient.id] || 0) + (possibleT2Crafts * (subRecipe.count || 1));
+            totalLmdCraft += (subRecipe.goldCost || 0) * possibleT2Crafts;
+
+            if (!craftingStepsMap[ingredient.id]) {
+              craftingStepsMap[ingredient.id] = {
+                itemId: ingredient.id,
+                countToCraft: 0,
+                goldCost: 0,
+                ingredients: [],
+              };
+            }
+            craftingStepsMap[ingredient.id].countToCraft += possibleT2Crafts * (subRecipe.count || 1);
+            craftingStepsMap[ingredient.id].goldCost += (subRecipe.goldCost || 0) * possibleT2Crafts;
+          }
+        }
+      }
+
+      // Determine how many of itemId can be crafted from available virtualStock
+      let maxCraftsPossible = 999999;
+      for (const ingredient of recipe.costs) {
+        const available = virtualStock[ingredient.id] || 0;
+        const canMake = Math.floor(available / ingredient.count);
+        if (canMake < maxCraftsPossible) {
+          maxCraftsPossible = canMake;
+        }
+      }
+
+      const yieldCount = recipe.count || 1;
+      const craftsNeeded = Math.ceil(neededAmount / yieldCount);
+      const actualCrafts = Math.min(craftsNeeded, maxCraftsPossible);
+
+      if (actualCrafts > 0) {
+        const producedCount = actualCrafts * yieldCount;
+        totalLmdCraft += (recipe.goldCost || 0) * actualCrafts;
+
+        if (!craftingStepsMap[itemId]) {
+          craftingStepsMap[itemId] = {
+            itemId,
+            countToCraft: 0,
+            goldCost: 0,
+            ingredients: [],
+          };
+        }
+        const step = craftingStepsMap[itemId];
+        step.countToCraft += producedCount;
+        step.goldCost += (recipe.goldCost || 0) * actualCrafts;
+
+        for (const ingredient of recipe.costs) {
+          const subItemId = ingredient.id;
+          const subCountNeeded = ingredient.count * actualCrafts;
+          virtualStock[subItemId] = Math.max(0, (virtualStock[subItemId] || 0) - subCountNeeded);
+
+          let existingIng = step.ingredients.find((i) => i.itemId === subItemId);
+          if (!existingIng) {
+            existingIng = {
+              itemId: subItemId,
+              countPerCraft: ingredient.count,
+              totalNeeded: 0,
+              usedFromStock: 0,
+              missingToCraftOrFarm: 0,
+            };
+            step.ingredients.push(existingIng);
+          }
+          existingIng.totalNeeded += subCountNeeded;
+          existingIng.usedFromStock += subCountNeeded;
+        }
+
+        const remainingDeficit = Math.max(0, neededAmount - producedCount);
+        if (remainingDeficit > 0) {
+          farmMap[itemId] = (farmMap[itemId] || 0) + remainingDeficit;
+        }
+        return;
+      } else {
+        // Cannot craft any from stock -> must be farmed directly
         farmMap[itemId] = (farmMap[itemId] || 0) + neededAmount;
         return;
       }
