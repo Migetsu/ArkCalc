@@ -150,6 +150,35 @@ const overallProgressPercent = computed(() => {
   return Math.min(100, Math.round((totalCompletedRuns.value / totalPlannedRuns.value) * 100));
 });
 
+// Category filtering: all, story materials, chips & supplies
+const activeFilter = ref<'all' | 'story' | 'chip'>('all');
+
+const storyRoutesCount = computed(() => {
+  return optimizationResult.value.routes.filter(
+    (r) => r.stageType !== 'chip' && r.stageType !== 'supply' && r.chapter > 0
+  ).length;
+});
+
+const chipRoutesCount = computed(() => {
+  return optimizationResult.value.routes.filter(
+    (r) => r.stageType === 'chip' || r.stageType === 'supply' || r.chapter === 0
+  ).length;
+});
+
+const filteredRoutes = computed(() => {
+  if (activeFilter.value === 'story') {
+    return optimizationResult.value.routes.filter(
+      (r) => r.stageType !== 'chip' && r.stageType !== 'supply' && r.chapter > 0
+    );
+  }
+  if (activeFilter.value === 'chip') {
+    return optimizationResult.value.routes.filter(
+      (r) => r.stageType === 'chip' || r.stageType === 'supply' || r.chapter === 0
+    );
+  }
+  return optimizationResult.value.routes;
+});
+
 function handleOpenGuide(itemId: string, count: number) {
   emit('openGuide', itemId, count);
 }
@@ -162,6 +191,13 @@ function getDepotDescription(itemId: string): string {
     const craftableT3 = Math.floor(cubes / 5) + Math.floor(rocks / 15);
     return `${stock} T3 (+${cubes} T2 камней ≈ ${craftableT3} T3)`;
   }
+  if (itemId === '32001') {
+    const certs = inventory.getStock('4006');
+    if (certs > 0) {
+      const craftable = Math.floor(certs / 90);
+      return `${stock} шт. (${certs} серт. ≈ +${craftable} шт.)`;
+    }
+  }
   return `${stock} шт.`;
 }
 
@@ -170,6 +206,11 @@ function getEstimatedGatheredText(stageCode: string, runsDone: number, dropRate:
     const t3 = Math.floor(runsDone / 4);
     const t2 = Math.floor(runsDone * 1.25);
     return `~${t3} T3 (~${t2} T2 камней)`;
+  }
+  if (stageCode === 'AP-5') {
+    const certs = Math.floor(runsDone * 21.5);
+    const catalysts = Math.floor(certs / 90);
+    return `~${catalysts} шт. (~${certs} серт.)`;
   }
   const count = Math.floor(runsDone * (dropRate / 100));
   return `~${count} шт.`;
@@ -421,7 +462,7 @@ function getEstimatedGatheredText(stageCode: string, runsDone: number, dropRate:
 
     <!-- STAGE ROUTE CHECKLIST (Карточки маршрута) -->
     <div class="space-y-3">
-      <div class="flex items-center justify-between pt-1">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
         <h3 class="font-bold text-xs sm:text-sm text-slate-100 uppercase tracking-wide flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
           <span>
@@ -431,7 +472,36 @@ function getEstimatedGatheredText(stageCode: string, runsDone: number, dropRate:
             }} ({{ optimizationResult.routes.length }})
           </span>
         </h3>
-        <span class="text-xs text-slate-400 font-mono">
+
+        <!-- Filter tabs: All, Story, Chips & Supplies -->
+        <div v-if="chipRoutesCount > 0" class="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-ark-border/80 text-xs font-semibold">
+          <button
+            type="button"
+            class="px-2.5 py-1 rounded-lg transition-all"
+            :class="activeFilter === 'all' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+            @click="activeFilter = 'all'"
+          >
+            {{ locale.currentLang === 'ru' ? 'Все' : 'All' }} ({{ optimizationResult.routes.length }})
+          </button>
+          <button
+            type="button"
+            class="px-2.5 py-1 rounded-lg transition-all"
+            :class="activeFilter === 'story' ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+            @click="activeFilter = 'story'"
+          >
+            {{ locale.currentLang === 'ru' ? 'Сюжет' : 'Story' }} ({{ storyRoutesCount }})
+          </button>
+          <button
+            type="button"
+            class="px-2.5 py-1 rounded-lg transition-all"
+            :class="activeFilter === 'chip' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+            @click="activeFilter = 'chip'"
+          >
+            {{ locale.currentLang === 'ru' ? 'Фишки' : 'Chips' }} ({{ chipRoutesCount }})
+          </button>
+        </div>
+
+        <span v-else class="text-xs text-slate-400 font-mono">
           {{ locale.currentLang === 'ru' ? 'Отмечайте заходы по мере прохождения' : 'Track runs as you complete them' }}
         </span>
       </div>
@@ -439,7 +509,7 @@ function getEstimatedGatheredText(stageCode: string, runsDone: number, dropRate:
       <!-- Route Cards -->
       <div class="space-y-3">
         <div
-          v-for="(route, idx) in optimizationResult.routes"
+          v-for="(route, idx) in filteredRoutes"
           :key="getRouteKey(route, idx)"
           class="bg-ark-card border rounded-2xl p-4 transition-all shadow-sm space-y-3.5"
           :class="[
@@ -478,12 +548,31 @@ function getEstimatedGatheredText(stageCode: string, runsDone: number, dropRate:
                   <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-bold">
                     {{ route.apCost }} ⚡
                   </span>
-                  <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-800 text-cyan-300 font-bold">
+                  <span v-if="route.chapter > 0" class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-800 text-cyan-300 font-bold">
                     Ch. {{ route.chapter }}
                   </span>
+                  <span v-else-if="route.stageType === 'chip'" class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950/80 border border-purple-700 text-purple-300 font-bold">
+                    {{ locale.currentLang === 'ru' ? 'Рейд фишек' : 'Chip Raid' }}
+                  </span>
+                  <span v-else class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-950/80 border border-amber-700 text-amber-300 font-bold">
+                    {{ locale.currentLang === 'ru' ? 'Припасы' : 'Supplies' }}
+                  </span>
                 </div>
-                <div class="text-[11px] text-slate-400 mt-0.5 font-medium">
-                  {{ locale.currentLang === 'ru' ? route.tagRu : route.tagEn }}
+                <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+                  <span class="text-[11px] text-slate-400 font-medium">
+                    {{ locale.currentLang === 'ru' ? route.tagRu : route.tagEn }}
+                  </span>
+                  <span
+                    v-if="route.openDaysRu"
+                    class="text-[9px] font-mono px-1.5 py-0.2 rounded font-bold"
+                    :class="[
+                      route.isOpenToday
+                        ? 'bg-emerald-950/80 border border-emerald-600/60 text-emerald-300'
+                        : 'bg-slate-900 border border-slate-700 text-slate-400'
+                    ]"
+                  >
+                    {{ route.isOpenToday ? (locale.currentLang === 'ru' ? '🟢 Открыто сегодня' : '🟢 Open Today') : (locale.currentLang === 'ru' ? `⏳ ${route.openDaysRu}` : `⏳ ${route.openDaysEn}`) }}
+                  </span>
                 </div>
               </div>
             </div>

@@ -12,6 +12,10 @@ export interface StageDefinition {
   stageCode: string;
   stageId?: string;
   chapter: number;
+  stageType?: 'story' | 'chip' | 'supply';
+  openDays?: number[]; // [0 = Sun, 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri, 6 = Sat]
+  openDaysRu?: string;
+  openDaysEn?: string;
   apCost: number;
   primaryItemId: string;
   primaryDropRate: number; // e.g. 43.8 for 43.8%
@@ -36,6 +40,11 @@ export interface OptimizerOptions {
 export interface OptimizedStageRoute {
   stageCode: string;
   chapter: number;
+  stageType?: 'story' | 'chip' | 'supply';
+  openDays?: number[];
+  openDaysRu?: string;
+  openDaysEn?: string;
+  isOpenToday?: boolean;
   apCost: number;
   recommendedRuns: number;
   totalSanity: number;
@@ -1279,24 +1288,481 @@ export const STAGE_DEFINITIONS: StageDefinition[] = [
     tagEn: 'Best Sanity (CN Server)',
     tagRu: 'Лучшая выносливость (CN сервер)',
   },
-  // --- 17-11: Electrode Unit ---
+
+  // ========================================================
+  // SUPPLY RAIDS: CHIPS, CHIP PACKS & CATALYSTS (PR & AP)
+  // ========================================================
+
+  // --- PR-A-1: Vanguard & Defender Chips (T1) ---
   {
-    stageCode: '17-11',
-    chapter: 17,
-    apCost: 21,
-    primaryItemId: '31113',
-    primaryDropRate: 34.1,
-    sanityPerItem: 61.6,
-    byproducts: [
-      { itemId: '30031', dropRate: 41 },
-      { itemId: '30051', dropRate: 32.6 },
-      { itemId: '30032', dropRate: 9.5 },
-      { itemId: '30052', dropRate: 7.5 },
-      { itemId: '31114', dropRate: 4.3 },
-    ],
-    lmdPerRun: 2520,
-    tagEn: 'Best Sanity (CN Server)',
-    tagRu: 'Лучшая выносливость (CN сервер)',
+    stageCode: 'PR-A-1',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [1, 4, 0], // Mon, Thu, Sun
+    openDaysRu: 'Пн, Чт, Вс',
+    openDaysEn: 'Mon, Thu, Sun',
+    apCost: 18,
+    primaryItemId: '3211', // Vanguard Chip
+    primaryDropRate: 50.0,
+    sanityPerItem: 36.0,
+    byproducts: [{ itemId: '3231', dropRate: 50.0 }], // Defender Chip
+    lmdPerRun: 2160,
+    tagEn: 'Chip Raid (Mon, Thu, Sun)',
+    tagRu: 'Рейд фишек (Пн, Чт, Вс)',
+  },
+  {
+    stageCode: 'PR-A-1',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [1, 4, 0],
+    openDaysRu: 'Пн, Чт, Вс',
+    openDaysEn: 'Mon, Thu, Sun',
+    apCost: 18,
+    primaryItemId: '3231', // Defender Chip
+    primaryDropRate: 50.0,
+    sanityPerItem: 36.0,
+    byproducts: [{ itemId: '3211', dropRate: 50.0 }], // Vanguard Chip
+    lmdPerRun: 2160,
+    tagEn: 'Chip Raid (Mon, Thu, Sun)',
+    tagRu: 'Рейд фишек (Пн, Чт, Вс)',
+  },
+
+  // --- PR-A-2: Vanguard & Defender Chip Packs (T2) ---
+  {
+    stageCode: 'PR-A-2',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [1, 4, 0],
+    openDaysRu: 'Пн, Чт, Вс',
+    openDaysEn: 'Mon, Thu, Sun',
+    apCost: 36,
+    primaryItemId: '3212', // Vanguard Chip Pack
+    primaryDropRate: 50.0,
+    sanityPerItem: 72.0,
+    byproducts: [{ itemId: '3232', dropRate: 50.0 }], // Defender Chip Pack
+    lmdPerRun: 4320,
+    tagEn: 'Chip Pack Raid (Mon, Thu, Sun)',
+    tagRu: 'Рейд наборов фишек (Пн, Чт, Вс)',
+  },
+  {
+    stageCode: 'PR-A-2',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [1, 4, 0],
+    openDaysRu: 'Пн, Чт, Вс',
+    openDaysEn: 'Mon, Thu, Sun',
+    apCost: 36,
+    primaryItemId: '3232', // Defender Chip Pack
+    primaryDropRate: 50.0,
+    sanityPerItem: 72.0,
+    byproducts: [{ itemId: '3212', dropRate: 50.0 }], // Vanguard Chip Pack
+    lmdPerRun: 4320,
+    tagEn: 'Chip Pack Raid (Mon, Thu, Sun)',
+    tagRu: 'Рейд наборов фишек (Пн, Чт, Вс)',
+  },
+
+  // --- PR-B-1: Sniper & Caster Chips (T1) ---
+  {
+    stageCode: 'PR-B-1',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [3, 6, 0], // Wed, Sat, Sun
+    openDaysRu: 'Ср, Сб, Вс',
+    openDaysEn: 'Wed, Sat, Sun',
+    apCost: 18,
+    primaryItemId: '3241', // Sniper Chip
+    primaryDropRate: 50.0,
+    sanityPerItem: 36.0,
+    byproducts: [{ itemId: '3251', dropRate: 50.0 }], // Caster Chip
+    lmdPerRun: 2160,
+    tagEn: 'Chip Raid (Wed, Sat, Sun)',
+    tagRu: 'Рейд фишек (Ср, Сб, Вс)',
+  },
+  {
+    stageCode: 'PR-B-1',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [3, 6, 0],
+    openDaysRu: 'Ср, Сб, Вс',
+    openDaysEn: 'Wed, Sat, Sun',
+    apCost: 18,
+    primaryItemId: '3251', // Caster Chip
+    primaryDropRate: 50.0,
+    sanityPerItem: 36.0,
+    byproducts: [{ itemId: '3241', dropRate: 50.0 }], // Sniper Chip
+    lmdPerRun: 2160,
+    tagEn: 'Chip Raid (Wed, Sat, Sun)',
+    tagRu: 'Рейд фишек (Ср, Сб, Вс)',
+  },
+
+  // --- PR-B-2: Sniper & Caster Chip Packs (T2) ---
+  {
+    stageCode: 'PR-B-2',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [3, 6, 0],
+    openDaysRu: 'Ср, Сб, Вс',
+    openDaysEn: 'Wed, Sat, Sun',
+    apCost: 36,
+    primaryItemId: '3242', // Sniper Chip Pack
+    primaryDropRate: 50.0,
+    sanityPerItem: 72.0,
+    byproducts: [{ itemId: '3252', dropRate: 50.0 }], // Caster Chip Pack
+    lmdPerRun: 4320,
+    tagEn: 'Chip Pack Raid (Wed, Sat, Sun)',
+    tagRu: 'Рейд наборов фишек (Ср, Сб, Вс)',
+  },
+  {
+    stageCode: 'PR-B-2',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [3, 6, 0],
+    openDaysRu: 'Ср, Сб, Вс',
+    openDaysEn: 'Wed, Sat, Sun',
+    apCost: 36,
+    primaryItemId: '3252', // Caster Chip Pack
+    primaryDropRate: 50.0,
+    sanityPerItem: 72.0,
+    byproducts: [{ itemId: '3242', dropRate: 50.0 }], // Sniper Chip Pack
+    lmdPerRun: 4320,
+    tagEn: 'Chip Pack Raid (Wed, Sat, Sun)',
+    tagRu: 'Рейд наборов фишек (Ср, Сб, Вс)',
+  },
+
+  // --- PR-C-1: Medic & Supporter Chips (T1) ---
+  {
+    stageCode: 'PR-C-1',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [1, 5, 0], // Mon, Fri, Sun
+    openDaysRu: 'Пн, Пт, Вс',
+    openDaysEn: 'Mon, Fri, Sun',
+    apCost: 18,
+    primaryItemId: '3261', // Medic Chip
+    primaryDropRate: 50.0,
+    sanityPerItem: 36.0,
+    byproducts: [{ itemId: '3271', dropRate: 50.0 }], // Supporter Chip
+    lmdPerRun: 2160,
+    tagEn: 'Chip Raid (Mon, Fri, Sun)',
+    tagRu: 'Рейд фишек (Пн, Пт, Вс)',
+  },
+  {
+    stageCode: 'PR-C-1',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [1, 5, 0],
+    openDaysRu: 'Пн, Пт, Вс',
+    openDaysEn: 'Mon, Fri, Sun',
+    apCost: 18,
+    primaryItemId: '3271', // Supporter Chip
+    primaryDropRate: 50.0,
+    sanityPerItem: 36.0,
+    byproducts: [{ itemId: '3261', dropRate: 50.0 }], // Medic Chip
+    lmdPerRun: 2160,
+    tagEn: 'Chip Raid (Mon, Fri, Sun)',
+    tagRu: 'Рейд фишек (Пн, Пт, Вс)',
+  },
+
+  // --- PR-C-2: Medic & Supporter Chip Packs (T2) ---
+  {
+    stageCode: 'PR-C-2',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [1, 5, 0],
+    openDaysRu: 'Пн, Пт, Вс',
+    openDaysEn: 'Mon, Fri, Sun',
+    apCost: 36,
+    primaryItemId: '3262', // Medic Chip Pack
+    primaryDropRate: 50.0,
+    sanityPerItem: 72.0,
+    byproducts: [{ itemId: '3272', dropRate: 50.0 }], // Supporter Chip Pack
+    lmdPerRun: 4320,
+    tagEn: 'Chip Pack Raid (Mon, Fri, Sun)',
+    tagRu: 'Рейд наборов фишек (Пн, Пт, Вс)',
+  },
+  {
+    stageCode: 'PR-C-2',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [1, 5, 0],
+    openDaysRu: 'Пн, Пт, Вс',
+    openDaysEn: 'Mon, Fri, Sun',
+    apCost: 36,
+    primaryItemId: '3272', // Supporter Chip Pack
+    primaryDropRate: 50.0,
+    sanityPerItem: 72.0,
+    byproducts: [{ itemId: '3262', dropRate: 50.0 }], // Medic Chip Pack
+    lmdPerRun: 4320,
+    tagEn: 'Chip Pack Raid (Mon, Fri, Sun)',
+    tagRu: 'Рейд наборов фишек (Пн, Пт, Вс)',
+  },
+
+  // --- PR-D-1: Guard & Specialist Chips (T1) ---
+  {
+    stageCode: 'PR-D-1',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [2, 6, 0], // Tue, Sat, Sun
+    openDaysRu: 'Вт, Сб, Вс',
+    openDaysEn: 'Tue, Sat, Sun',
+    apCost: 18,
+    primaryItemId: '3221', // Guard Chip
+    primaryDropRate: 50.0,
+    sanityPerItem: 36.0,
+    byproducts: [{ itemId: '3281', dropRate: 50.0 }], // Specialist Chip
+    lmdPerRun: 2160,
+    tagEn: 'Chip Raid (Tue, Sat, Sun)',
+    tagRu: 'Рейд фишек (Вт, Сб, Вс)',
+  },
+  {
+    stageCode: 'PR-D-1',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [2, 6, 0],
+    openDaysRu: 'Вт, Сб, Вс',
+    openDaysEn: 'Tue, Sat, Sun',
+    apCost: 18,
+    primaryItemId: '3281', // Specialist Chip
+    primaryDropRate: 50.0,
+    sanityPerItem: 36.0,
+    byproducts: [{ itemId: '3221', dropRate: 50.0 }], // Guard Chip
+    lmdPerRun: 2160,
+    tagEn: 'Chip Raid (Tue, Sat, Sun)',
+    tagRu: 'Рейд фишек (Вт, Сб, Вс)',
+  },
+
+  // --- PR-D-2: Guard & Specialist Chip Packs (T2) ---
+  {
+    stageCode: 'PR-D-2',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [2, 6, 0],
+    openDaysRu: 'Вт, Сб, Вс',
+    openDaysEn: 'Tue, Sat, Sun',
+    apCost: 36,
+    primaryItemId: '3222', // Guard Chip Pack
+    primaryDropRate: 50.0,
+    sanityPerItem: 72.0,
+    byproducts: [{ itemId: '3282', dropRate: 50.0 }], // Specialist Chip Pack
+    lmdPerRun: 4320,
+    tagEn: 'Chip Pack Raid (Tue, Sat, Sun)',
+    tagRu: 'Рейд наборов фишек (Вт, Сб, Вс)',
+  },
+  {
+    stageCode: 'PR-D-2',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [2, 6, 0],
+    openDaysRu: 'Вт, Сб, Вс',
+    openDaysEn: 'Tue, Sat, Sun',
+    apCost: 36,
+    primaryItemId: '3282', // Specialist Chip Pack
+    primaryDropRate: 50.0,
+    sanityPerItem: 72.0,
+    byproducts: [{ itemId: '3222', dropRate: 50.0 }], // Guard Chip Pack
+    lmdPerRun: 4320,
+    tagEn: 'Chip Pack Raid (Tue, Sat, Sun)',
+    tagRu: 'Рейд наборов фишек (Пн, Вт, Вс)',
+  },
+
+  // --- AP-5: Chip Catalyst (via Purchase Certificates) ---
+  {
+    stageCode: 'AP-5',
+    chapter: 0,
+    stageType: 'supply',
+    openDays: [1, 4, 6, 0], // Mon, Thu, Sat, Sun
+    openDaysRu: 'Пн, Чт, Сб, Вс',
+    openDaysEn: 'Mon, Thu, Sat, Sun',
+    apCost: 30,
+    primaryItemId: '32001', // Chip Catalyst
+    primaryDropRate: 23.9, // 21.5 certs / 90 certs = 0.2388 catalysts/run (~4.19 runs per 1 catalyst)
+    sanityPerItem: 125.6,
+    byproducts: [],
+    lmdPerRun: 3600,
+    tagEn: 'Shop / AP-5 (Mon, Thu, Sat, Sun)',
+    tagRu: 'Магазин / AP-5 (Пн, Чт, Сб, Вс)',
+    notesEn: 'Purchased for 90 red certs from AP-5 (~4.2 runs per catalyst)',
+    notesRu: 'Покупка за 90 красных сертификатов из AP-5 (~4.2 захода на 1 катализатор)',
+  },
+
+  // --- Direct Dual Chip references (Workshop Craft using PR-*-2 + AP-5) ---
+  {
+    stageCode: 'PR-A-2',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [1, 4, 0],
+    openDaysRu: 'Пн, Чт, Вс',
+    openDaysEn: 'Mon, Thu, Sun',
+    apCost: 36,
+    primaryItemId: '3213', // Vanguard Dualchip
+    primaryDropRate: 25.0, // 2 chip packs needed
+    sanityPerItem: 234.0,
+    byproducts: [{ itemId: '3232', dropRate: 50.0 }],
+    lmdPerRun: 4320,
+    tagEn: 'Craft (PR-A-2 + AP-5)',
+    tagRu: 'Крафт (PR-A-2 + AP-5)',
+  },
+  {
+    stageCode: 'PR-D-2',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [2, 6, 0],
+    openDaysRu: 'Вт, Сб, Вс',
+    openDaysEn: 'Tue, Sat, Sun',
+    apCost: 36,
+    primaryItemId: '3223', // Guard Dualchip
+    primaryDropRate: 25.0,
+    sanityPerItem: 234.0,
+    byproducts: [{ itemId: '3282', dropRate: 50.0 }],
+    lmdPerRun: 4320,
+    tagEn: 'Craft (PR-D-2 + AP-5)',
+    tagRu: 'Крафт (PR-D-2 + AP-5)',
+  },
+  {
+    stageCode: 'PR-A-2',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [1, 4, 0],
+    openDaysRu: 'Пн, Чт, Вс',
+    openDaysEn: 'Mon, Thu, Sun',
+    apCost: 36,
+    primaryItemId: '3233', // Defender Dualchip
+    primaryDropRate: 25.0,
+    sanityPerItem: 234.0,
+    byproducts: [{ itemId: '3212', dropRate: 50.0 }],
+    lmdPerRun: 4320,
+    tagEn: 'Craft (PR-A-2 + AP-5)',
+    tagRu: 'Крафт (PR-A-2 + AP-5)',
+  },
+  {
+    stageCode: 'PR-B-2',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [3, 6, 0],
+    openDaysRu: 'Ср, Сб, Вс',
+    openDaysEn: 'Wed, Sat, Sun',
+    apCost: 36,
+    primaryItemId: '3243', // Sniper Dualchip
+    primaryDropRate: 25.0,
+    sanityPerItem: 234.0,
+    byproducts: [{ itemId: '3252', dropRate: 50.0 }],
+    lmdPerRun: 4320,
+    tagEn: 'Craft (PR-B-2 + AP-5)',
+    tagRu: 'Крафт (PR-B-2 + AP-5)',
+  },
+  {
+    stageCode: 'PR-B-2',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [3, 6, 0],
+    openDaysRu: 'Ср, Сб, Вс',
+    openDaysEn: 'Wed, Sat, Sun',
+    apCost: 36,
+    primaryItemId: '3253', // Caster Dualchip
+    primaryDropRate: 25.0,
+    sanityPerItem: 234.0,
+    byproducts: [{ itemId: '3242', dropRate: 50.0 }],
+    lmdPerRun: 4320,
+    tagEn: 'Craft (PR-B-2 + AP-5)',
+    tagRu: 'Крафт (PR-B-2 + AP-5)',
+  },
+  {
+    stageCode: 'PR-C-2',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [1, 5, 0],
+    openDaysRu: 'Пн, Пт, Вс',
+    openDaysEn: 'Mon, Fri, Sun',
+    apCost: 36,
+    primaryItemId: '3263', // Medic Dualchip
+    primaryDropRate: 25.0,
+    sanityPerItem: 234.0,
+    byproducts: [{ itemId: '3272', dropRate: 50.0 }],
+    lmdPerRun: 4320,
+    tagEn: 'Craft (PR-C-2 + AP-5)',
+    tagRu: 'Крафт (PR-C-2 + AP-5)',
+  },
+  {
+    stageCode: 'PR-C-2',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [1, 5, 0],
+    openDaysRu: 'Пн, Пт, Вс',
+    openDaysEn: 'Mon, Fri, Sun',
+    apCost: 36,
+    primaryItemId: '3273', // Supporter Dualchip
+    primaryDropRate: 25.0,
+    sanityPerItem: 234.0,
+    byproducts: [{ itemId: '3262', dropRate: 50.0 }],
+    lmdPerRun: 4320,
+    tagEn: 'Craft (PR-C-2 + AP-5)',
+    tagRu: 'Крафт (PR-C-2 + AP-5)',
+  },
+  {
+    stageCode: 'PR-D-2',
+    chapter: 0,
+    stageType: 'chip',
+    openDays: [2, 6, 0],
+    openDaysRu: 'Вт, Сб, Вс',
+    openDaysEn: 'Tue, Sat, Sun',
+    apCost: 36,
+    primaryItemId: '3283', // Specialist Dualchip
+    primaryDropRate: 25.0,
+    sanityPerItem: 234.0,
+    byproducts: [{ itemId: '3222', dropRate: 50.0 }],
+    lmdPerRun: 4320,
+    tagEn: 'Craft (PR-D-2 + AP-5)',
+    tagRu: 'Крафт (PR-D-2 + AP-5)',
+  },
+
+  // --- Skill Summaries (CA-5 / CA-4 / CA-3) ---
+  {
+    stageCode: 'CA-5',
+    chapter: 0,
+    stageType: 'supply',
+    openDays: [2, 3, 5, 0], // Tue, Wed, Fri, Sun
+    openDaysRu: 'Вт, Ср, Пт, Вс',
+    openDaysEn: 'Tue, Wed, Fri, Sun',
+    apCost: 30,
+    primaryItemId: '3303', // Skill Summary - 3
+    primaryDropRate: 185.0, // ~1.85 books per run
+    sanityPerItem: 16.2,
+    byproducts: [{ itemId: '3302', dropRate: 120.0 }],
+    lmdPerRun: 3600,
+    tagEn: 'Skill Books (Tue, Wed, Fri, Sun)',
+    tagRu: 'Книги навыков (Вт, Ср, Пт, Вс)',
+  },
+  {
+    stageCode: 'CA-4',
+    chapter: 0,
+    stageType: 'supply',
+    openDays: [2, 3, 5, 0],
+    openDaysRu: 'Вт, Ср, Пт, Вс',
+    openDaysEn: 'Tue, Wed, Fri, Sun',
+    apCost: 24,
+    primaryItemId: '3302', // Skill Summary - 2
+    primaryDropRate: 200.0,
+    sanityPerItem: 12.0,
+    byproducts: [{ itemId: '3301', dropRate: 150.0 }],
+    lmdPerRun: 2880,
+    tagEn: 'Skill Books (Tue, Wed, Fri, Sun)',
+    tagRu: 'Книги навыков (Вт, Ср, Пт, Вс)',
+  },
+  {
+    stageCode: 'CA-3',
+    chapter: 0,
+    stageType: 'supply',
+    openDays: [2, 3, 5, 0],
+    openDaysRu: 'Вт, Ср, Пт, Вс',
+    openDaysEn: 'Tue, Wed, Fri, Sun',
+    apCost: 18,
+    primaryItemId: '3301', // Skill Summary - 1
+    primaryDropRate: 200.0,
+    sanityPerItem: 9.0,
+    byproducts: [],
+    lmdPerRun: 2160,
+    tagEn: 'Skill Books (Tue, Wed, Fri, Sun)',
+    tagRu: 'Книги навыков (Вт, Ср, Пт, Вс)',
   },
 ];
 
@@ -1312,7 +1778,8 @@ export function getAvailableStagesForItem(
 
   const filtered = STAGE_DEFINITIONS.filter((s) => {
     if (s.primaryItemId !== itemId) return false;
-    if (s.chapter > maxCh) return false;
+    // Supply / Chip stages have chapter: 0, which is always accessible
+    if (s.chapter > 0 && s.chapter > maxCh) return false;
     if (itemId === '30013') {
       if (prefer1_7 && s.stageCode !== '1-7') return false;
       if (!prefer1_7 && s.stageCode === '1-7') return false;
@@ -1325,7 +1792,7 @@ export function getAvailableStagesForItem(
   // NEVER return Chapter 16+ stages if maxCh <= 15 (Global server)!
   if (filtered.length === 0) {
     if (maxCh <= 15) {
-      return STAGE_DEFINITIONS.filter((s) => s.primaryItemId === itemId && s.chapter <= 15);
+      return STAGE_DEFINITIONS.filter((s) => s.primaryItemId === itemId && (s.chapter === 0 || s.chapter <= 15));
     }
     return STAGE_DEFINITIONS.filter((s) => s.primaryItemId === itemId);
   }
@@ -1365,9 +1832,19 @@ export function optimizeFarmingPlan(
       isolatedTotalSanity += sanity;
       isolatedTotalRuns += runs;
 
+      const today = new Date().getDay();
+      const isOpenToday = stage.openDays
+        ? stage.openDays.includes(today) || today === 0
+        : true;
+
       isolatedRoutes.push({
         stageCode: stage.stageCode,
         chapter: stage.chapter,
+        stageType: stage.stageType || (stage.chapter === 0 ? 'chip' : 'story'),
+        openDays: stage.openDays,
+        openDaysRu: stage.openDaysRu,
+        openDaysEn: stage.openDaysEn,
+        isOpenToday,
         apCost: stage.apCost,
         recommendedRuns: runs,
         totalSanity: sanity,
@@ -1495,9 +1972,19 @@ export function optimizeFarmingPlan(
       }
     }
 
+    const today = new Date().getDay();
+    const isOpenToday = stage.openDays
+      ? stage.openDays.includes(today) || today === 0
+      : true;
+
     optimizedRoutes.push({
       stageCode: stage.stageCode,
       chapter: stage.chapter,
+      stageType: stage.stageType || (stage.chapter === 0 ? 'chip' : 'story'),
+      openDays: stage.openDays,
+      openDaysRu: stage.openDaysRu,
+      openDaysEn: stage.openDaysEn,
+      isOpenToday,
       apCost: stage.apCost,
       recommendedRuns: runs,
       totalSanity: runs * stage.apCost,
