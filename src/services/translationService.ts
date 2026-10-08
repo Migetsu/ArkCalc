@@ -510,6 +510,7 @@ export async function getTranslatedModules(
                 ...st,
                 traitChange: localStage?.traitChange || st.traitChange,
                 talentChange: localStage?.talentChange || st.talentChange,
+                talentChanges: localStage?.talentChanges || (localStage?.talentChange ? [localStage.talentChange] : st.talentChanges),
               };
             });
           }
@@ -532,31 +533,53 @@ export async function getTranslatedModules(
               traitChange = await translateText(traitChange, targetLang);
             }
 
-            let talentChange = st.talentChange;
-            if (talentChange) {
-              let tName = talentChange.name;
-              let tDesc = talentChange.description;
-              if (tName && needsTranslation(tName, targetLang)) {
-                tName = await translateText(tName, targetLang);
-              }
-              if (tDesc && needsTranslation(tDesc, targetLang)) {
-                tDesc = await translateText(tDesc, targetLang);
-              }
-              if (targetLang === 'ru') {
-                if (tName) tName = cleanArknightsTalentNameRu(tName);
-                if (tDesc) tDesc = cleanArknightsTalentTextRu(tDesc);
-              }
-              talentChange = {
-                ...talentChange,
-                name: tName,
-                description: tDesc,
-              };
-            }
+            // Translate all talent changes (both operator and summon/token talents)
+            const rawTalentList =
+              Array.isArray(st.talentChanges) && st.talentChanges.length > 0
+                ? st.talentChanges
+                : st.talentChange
+                ? [st.talentChange]
+                : [];
+
+            const translatedTalentChanges = await Promise.all(
+              rawTalentList.map(async (tc: any) => {
+                let tName = tc.name;
+                let tDesc = tc.description;
+                let potDesc = tc.potentialDescription;
+
+                if (tName && needsTranslation(tName, targetLang)) {
+                  tName = await translateText(tName, targetLang);
+                }
+                if (tDesc && needsTranslation(tDesc, targetLang)) {
+                  tDesc = await translateText(tDesc, targetLang);
+                }
+                if (potDesc && needsTranslation(potDesc, targetLang)) {
+                  potDesc = await translateText(potDesc, targetLang);
+                }
+                if (targetLang === 'ru') {
+                  if (tName) tName = cleanArknightsTalentNameRu(tName);
+                  if (tDesc) tDesc = cleanArknightsTalentTextRu(tDesc);
+                  if (potDesc) potDesc = cleanArknightsTalentTextRu(potDesc);
+                }
+                return {
+                  ...tc,
+                  name: tName,
+                  description: tDesc,
+                  potentialDescription: potDesc,
+                };
+              })
+            );
+
+            const primaryTalentChange =
+              translatedTalentChanges.find((t: any) => !t.isToken) ||
+              translatedTalentChanges[0] ||
+              st.talentChange;
 
             return {
               ...st,
               traitChange,
-              talentChange,
+              talentChange: primaryTalentChange,
+              talentChanges: translatedTalentChanges,
             };
           })
         );

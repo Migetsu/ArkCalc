@@ -423,8 +423,12 @@ async function resolveDynamicTranslations() {
       (m.stages || []).some(
         (s: any) =>
           needsTranslation(s.traitChange, lang) ||
-          needsTranslation(s.talentChange?.name, lang) ||
-          needsTranslation(s.talentChange?.description, lang)
+          (s.talentChanges || (s.talentChange ? [s.talentChange] : [])).some(
+            (tc: any) =>
+              needsTranslation(tc.name, lang) ||
+              needsTranslation(tc.description, lang) ||
+              needsTranslation(tc.potentialDescription, lang)
+          )
       )
   );
 
@@ -1076,21 +1080,47 @@ watch(
                   </p>
                 </div>
 
-                <!-- Talent Upgrade -->
-                <div v-if="currentModuleStageDetail?.talentChange" class="p-3.5 bg-slate-900/90 rounded-xl border border-purple-900/40 space-y-1.5">
+                <!-- Talent Upgrades (All improved talents & summon/token talents) -->
+                <div
+                  v-for="(tc, tcIdx) in (currentModuleStageDetail?.talentChanges && currentModuleStageDetail.talentChanges.length > 0
+                    ? currentModuleStageDetail.talentChanges
+                    : (currentModuleStageDetail?.talentChange ? [currentModuleStageDetail.talentChange] : []))"
+                  :key="tcIdx"
+                  class="p-3.5 bg-slate-900/90 rounded-xl border space-y-1.5"
+                  :class="tc.isToken ? 'border-indigo-900/40 bg-indigo-950/20' : 'border-purple-900/40'"
+                >
                   <div class="flex items-center justify-between gap-2">
-                    <div class="flex items-center gap-1.5">
-                      <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-purple-950 text-purple-400 border border-purple-800">
-                        {{ gameData.itemLanguage === 'ru' ? 'Улучшение таланта' : 'Talent Upgrade' }}
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <span
+                        class="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border"
+                        :class="tc.isToken
+                          ? 'bg-indigo-950 text-indigo-300 border-indigo-800'
+                          : 'bg-purple-950 text-purple-400 border-purple-800'"
+                      >
+                        <template v-if="tc.isToken">
+                          {{ gameData.itemLanguage === 'ru' ? 'Улучшение призывателя (Токен)' : 'Summon / Token Upgrade' }}
+                        </template>
+                        <template v-else-if="tc.talentIndex !== undefined && tc.talentIndex >= 0">
+                          {{ gameData.itemLanguage === 'ru' ? `Улучшение таланта ${tc.talentIndex + 1}` : `Talent ${tc.talentIndex + 1} Upgrade` }}
+                        </template>
+                        <template v-else>
+                          {{ gameData.itemLanguage === 'ru' ? 'Улучшение таланта' : 'Talent Upgrade' }}
+                        </template>
                       </span>
-                      <span v-if="currentModuleStageDetail.talentChange.name" class="text-xs font-bold text-purple-300">
-                        {{ currentModuleStageDetail.talentChange.name }}
+                      <span v-if="tc.name" class="text-xs font-bold" :class="tc.isToken ? 'text-indigo-300' : 'text-purple-300'">
+                        {{ tc.name }}
                       </span>
                     </div>
                   </div>
-                  <p v-if="currentModuleStageDetail.talentChange.description" class="text-xs text-slate-300 leading-relaxed font-sans">
-                    {{ currentModuleStageDetail.talentChange.description }}
+                  <p v-if="tc.description" class="text-xs text-slate-300 leading-relaxed font-sans whitespace-pre-line">
+                    {{ tc.description }}
                   </p>
+                  <div v-if="tc.potentialDescription" class="pt-1.5 border-t border-slate-800/60 flex items-start gap-1.5 text-[11px] text-amber-300/90">
+                    <span class="px-1.5 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800 text-[9px] font-mono font-bold flex-shrink-0">
+                      {{ gameData.itemLanguage === 'ru' ? `Потенциал ${tc.potentialRank || 5}` : `Potential ${tc.potentialRank || 5}` }}
+                    </span>
+                    <span class="leading-relaxed">{{ tc.potentialDescription }}</span>
+                  </div>
                 </div>
 
                 <!-- Module Lore / Story Accordion -->

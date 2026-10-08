@@ -92,14 +92,21 @@ export interface OperatorSkill {
   unlockCond?: { phase: string; level: number };
 }
 
+export interface ModuleTalentChange {
+  name?: string;
+  description?: string;
+  talentIndex?: number;
+  isToken?: boolean;
+  potentialDescription?: string;
+  potentialRank?: number;
+}
+
 export interface ModuleStageDetail {
   stage: number; // 1, 2, 3
   attributes: { key: string; value: number }[];
   traitChange?: string;
-  talentChange?: {
-    name?: string;
-    description?: string;
-  };
+  talentChange?: ModuleTalentChange;
+  talentChanges?: ModuleTalentChange[];
   costs: MaterialCost[];
 }
 

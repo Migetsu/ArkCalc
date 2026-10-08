@@ -21,7 +21,17 @@ export interface RuModuleStageLocalization {
   talentChange?: {
     name?: string;
     description?: string;
+    potentialDescription?: string;
+    potentialRank?: number;
   };
+  talentChanges?: {
+    name?: string;
+    description?: string;
+    talentIndex?: number;
+    isToken?: boolean;
+    potentialDescription?: string;
+    potentialRank?: number;
+  }[];
 }
 
 export interface RuModuleLocalization {

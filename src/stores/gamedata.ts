@@ -10,6 +10,7 @@ import type {
   Profession,
   OperatorModule,
   ModuleStageDetail,
+  ModuleTalentChange,
   RangeInfo,
   OperatorSkin,
 } from '@/types/game';
@@ -29,7 +30,7 @@ import { useLocaleStore } from './locale';
 
 const CACHE_DB_NAME = 'ARKCalcCacheDB';
 const CACHE_STORE_NAME = 'gamedata_cache';
-const CACHE_KEY = 'ark_cleaned_gamedata_v23_gacha_items';
+const CACHE_KEY = 'ark_cleaned_gamedata_v24_module_talents';
 
 // Open simple IndexedDB for game data cache
 function openCacheDb(): Promise<IDBDatabase> {
@@ -607,6 +608,7 @@ export const useGameDataStore = defineStore('gamedata', () => {
           const battlePhases = battleEquipData?.[mId]?.phases || [];
           const enBattlePhases = enBattleEquipData?.[mId]?.phases || [];
           const stages: ModuleStageDetail[] = [];
+          let inheritedTraitChange: string | undefined = undefined;
 
           for (let pIdx = 0; pIdx < battlePhases.length; pIdx++) {
             const rawPhase = battlePhases[pIdx] || {};
@@ -621,51 +623,151 @@ export const useGameDataStore = defineStore('gamedata', () => {
 
             // Trait and talent changes
             let traitChange: string | undefined = undefined;
-            let talentChange: { name?: string; description?: string } | undefined = undefined;
 
             const rawParts = rawPhase.parts || [];
             const enParts = enPhase.parts || [];
 
+            // 1. Process trait changes (from TRAIT, TRAIT_DATA_ONLY, DISPLAY, or any part with overrideTraitDataBundle)
             for (let partIdx = 0; partIdx < rawParts.length; partIdx++) {
               const rawPart = rawParts[partIdx];
-              const enPart = enParts[partIdx] || {};
+              const enPart =
+                enParts.find(
+                  (ep: any) =>
+                    (ep.resKey && rawPart.resKey ? ep.resKey === rawPart.resKey : true) &&
+                    ep.target === rawPart.target &&
+                    Boolean(ep.isToken) === Boolean(rawPart.isToken)
+                ) || enParts[partIdx] || {};
 
-              if (rawPart.target === 'TRAIT') {
-                const rawCand = rawPart.overrideTraitDataBundle?.candidates?.[0];
-                const enCand = enPart.overrideTraitDataBundle?.candidates?.[0];
+              if (rawPart.overrideTraitDataBundle?.candidates?.length > 0) {
+                const rawCand =
+                  rawPart.overrideTraitDataBundle.candidates.find((c: any) => c.requiredPotentialRank === 0) ||
+                  rawPart.overrideTraitDataBundle.candidates[0];
+                const enCand =
+                  enPart.overrideTraitDataBundle?.candidates?.find((c: any) => c.requiredPotentialRank === 0) ||
+                  enPart.overrideTraitDataBundle?.candidates?.[0];
+
                 if (rawCand || enCand) {
-                  const descTemplate = enCand?.additionalDescription || enCand?.overrideDescripton || rawCand?.additionalDescription || rawCand?.overrideDescripton || '';
+                  const descTemplate =
+                    enCand?.additionalDescription ||
+                    enCand?.overrideDescripton ||
+                    rawCand?.additionalDescription ||
+                    rawCand?.overrideDescripton ||
+                    '';
                   const bb = enCand?.blackboard || rawCand?.blackboard || [];
-                  traitChange = formatSkillDescription(descTemplate, bb);
+                  const formatted = formatSkillDescription(descTemplate, bb);
+                  if (formatted) traitChange = formatted;
                 }
-              } else if (rawPart.target === 'TALENT' || rawPart.target === 'TALENT_DATA_ONLY') {
-                const rawCandList = rawPart.addOrOverrideTalentDataBundle?.candidates || [];
+              }
+            }
+
+            if (traitChange) {
+              inheritedTraitChange = traitChange;
+            } else if (inheritedTraitChange) {
+              traitChange = inheritedTraitChange;
+            }
+
+            // 2. Process all talent changes (operator talents and summon/token talents)
+            const talentMap = new Map<string, ModuleTalentChange>();
+
+            for (let partIdx = 0; partIdx < rawParts.length; partIdx++) {
+              const rawPart = rawParts[partIdx];
+              const enPart =
+                enParts.find(
+                  (ep: any) =>
+                    (ep.resKey && rawPart.resKey ? ep.resKey === rawPart.resKey : true) &&
+                    ep.target === rawPart.target &&
+                    Boolean(ep.isToken) === Boolean(rawPart.isToken)
+                ) || enParts[partIdx] || {};
+
+              if (rawPart.addOrOverrideTalentDataBundle?.candidates?.length > 0) {
+                const rawCandList = rawPart.addOrOverrideTalentDataBundle.candidates;
                 const enCandList = enPart.addOrOverrideTalentDataBundle?.candidates || [];
 
                 const rawCand = rawCandList.find((c: any) => c.requiredPotentialRank === 0) || rawCandList[0];
                 const enCand = enCandList.find((c: any) => c.requiredPotentialRank === 0) || enCandList[0];
 
+                if (rawCand?.isHideTalent && enCand?.isHideTalent) continue;
+
                 if (rawCand || enCand) {
                   const tName = enCand?.name || rawCand?.name || '';
-                  const descTemplate = enCand?.upgradeDescription || enCand?.description || rawCand?.upgradeDescription || rawCand?.description || '';
+                  const descTemplate =
+                    enCand?.upgradeDescription ||
+                    enCand?.description ||
+                    rawCand?.upgradeDescription ||
+                    rawCand?.description ||
+                    '';
                   const bb = enCand?.blackboard || rawCand?.blackboard || [];
                   const formattedDesc = formatSkillDescription(descTemplate, bb);
 
+                  // Extract potential improvement (if requiredPotentialRank > 0 exists)
+                  const rawPotCand = rawCandList.find((c: any) => c.requiredPotentialRank > 0);
+                  const enPotCand = enCandList.find((c: any) => c.requiredPotentialRank > 0);
+                  let potentialDescription: string | undefined = undefined;
+                  let potentialRank: number | undefined = undefined;
+
+                  if (rawPotCand || enPotCand) {
+                    potentialRank = (enPotCand?.requiredPotentialRank ?? rawPotCand?.requiredPotentialRank) || 5;
+                    const potDescTemplate =
+                      enPotCand?.upgradeDescription ||
+                      enPotCand?.description ||
+                      rawPotCand?.upgradeDescription ||
+                      rawPotCand?.description ||
+                      '';
+                    const potBb = enPotCand?.blackboard || rawPotCand?.blackboard || [];
+                    const potFormatted = formatSkillDescription(potDescTemplate, potBb);
+                    if (potFormatted && potFormatted !== formattedDesc) {
+                      potentialDescription = potFormatted;
+                    }
+                  }
+
                   if (tName || formattedDesc) {
-                    talentChange = {
-                      name: tName,
-                      description: formattedDesc,
-                    };
+                    const isToken = Boolean(rawPart.isToken);
+                    const talentIndex = rawCand?.talentIndex ?? enCand?.talentIndex ?? 0;
+                    const key = `${isToken ? 'token' : 'op'}_${talentIndex}_${tName}`;
+
+                    const existing = talentMap.get(key);
+                    if (!existing) {
+                      talentMap.set(key, {
+                        name: tName,
+                        description: formattedDesc,
+                        talentIndex,
+                        isToken,
+                        potentialDescription,
+                        potentialRank,
+                      });
+                    } else {
+                      // Never overwrite a non-empty description with an empty one; keep longest/most detailed
+                      if (!existing.description && formattedDesc) {
+                        existing.description = formattedDesc;
+                      } else if (formattedDesc && formattedDesc.length > (existing.description || '').length) {
+                        existing.description = formattedDesc;
+                      }
+                      if (!existing.potentialDescription && potentialDescription) {
+                        existing.potentialDescription = potentialDescription;
+                        existing.potentialRank = potentialRank;
+                      }
+                    }
                   }
                 }
               }
             }
+
+            // Order: operator talents first (by talentIndex), then token/summon talents
+            const talentChanges: ModuleTalentChange[] = Array.from(talentMap.values())
+              .filter((t) => t.name || t.description)
+              .sort((a, b) => {
+                if (a.isToken !== b.isToken) return a.isToken ? 1 : -1;
+                return (a.talentIndex || 0) - (b.talentIndex || 0);
+              });
+
+            const talentChange = talentChanges.find((t) => !t.isToken) || talentChanges[0];
 
             stages.push({
               stage: stageNum,
               attributes,
               traitChange,
               talentChange,
+              talentChanges,
               costs: itemCosts[stageNum] || [],
             });
           }
