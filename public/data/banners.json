@@ -1,251 +1,1123 @@
 [
   {
-    "id": "banner_cn_2026_05_anni",
-    "name": "Shatter the Black Sky",
-    "nameZh": "碎裂黑天",
-    "type": "limited",
-    "category": "Celebration",
-    "cnStartDate": "2026-05-01T16:00:00+08:00",
-    "cnEndDate": "2026-05-15T03:59:00+08:00",
-    "sparkCost": 300,
-    "freePulls": 24,
-    "description": "7th Anniversary Celebration Limited Headhunting featuring new Alters.",
-    "featuredOperators": [
+    "id": "banner_1",
+    "name": "Orienteering #7",
+    "title": "[Standard Headhunting] Orienteering #7",
+    "bannerImg": "https://arknights.wiki.gg/images/thumb/CN_Orienteering_7_banner.png/1024px-CN_Orienteering_7_banner.png?e8cd15",
+    "bannerImage": "https://arknights.wiki.gg/images/thumb/CN_Orienteering_7_banner.png/1024px-CN_Orienteering_7_banner.png?e8cd15",
+    "type": "orienteering",
+    "category": "Orienteering",
+    "cnStartDate": "2026-05-15",
+    "cnEndDate": "2026-05-29",
+    "sparkCost": 0,
+    "freePulls": 0,
+    "description": "Choose three of the following 6★ Operators; only these 6★ that will appear in a pull on this banner. Choose three of the following 5★ Operators; they have a 60% chance to be the 5★ that appears in a pull on this banner.",
+    "operators": [
       {
-        "id": "char_1037_talulah",
-        "name": "Talulah the Liberator",
+        "name": "Blaze the Igniting Spark",
+        "rarity": 6,
+        "profession": "Caster",
+        "icon": "https://arknights.wiki.gg/images/thumb/Blaze_the_Igniting_Spark_icon.png/60px-Blaze_the_Igniting_Spark_icon.png?c75bfc"
+      },
+      {
+        "name": "Entelechia",
         "rarity": 6,
         "profession": "Guard",
-        "isLimited": true,
-        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_010_chen.png"
+        "icon": "https://arknights.wiki.gg/images/thumb/Entelechia_icon.png/60px-Entelechia_icon.png?e27069"
       },
       {
-        "id": "char_1038_theresa",
-        "name": "Theresa",
+        "name": "Leizi the Thunderbringer",
         "rarity": 6,
-        "profession": "Supporter",
-        "isLimited": false,
-        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_003_kalts.png"
+        "profession": "Guard",
+        "icon": "https://arknights.wiki.gg/images/thumb/Leizi_the_Thunderbringer_icon.png/60px-Leizi_the_Thunderbringer_icon.png?acc84b"
       },
       {
-        "id": "char_1039_guard",
-        "name": "Astra",
-        "rarity": 5,
+        "name": "Pramanix the Prerita",
+        "rarity": 6,
         "profession": "Caster",
-        "isLimited": false,
-        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_002_amiya.png"
-      }
-    ]
-  },
-  {
-    "id": "banner_cn_2026_04_dungeon",
-    "name": "Delicious on Terra II",
-    "nameZh": "泰拉饭·再会",
-    "type": "collab",
-    "category": "Collaboration",
-    "cnStartDate": "2026-04-09T16:00:00+08:00",
-    "cnEndDate": "2026-04-23T03:59:00+08:00",
-    "sparkCost": 120,
-    "freePulls": 20,
-    "description": "Special Collaboration Part 2 with Dungeon Meshi. Guaranteed collab 6★ within 120 pulls.",
-    "featuredOperators": [
-      {
-        "id": "char_collab_senshi",
-        "name": "Senshi",
-        "rarity": 6,
-        "profession": "Defender",
-        "isLimited": true,
-        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_202_demkni.png"
+        "icon": "https://arknights.wiki.gg/images/thumb/Pramanix_the_Prerita_icon.png/60px-Pramanix_the_Prerita_icon.png?10c8fb"
       },
       {
-        "id": "char_collab_falun",
-        "name": "Falin",
+        "name": "Qiubai",
+        "rarity": 6,
+        "profession": "Guard",
+        "icon": "https://arknights.wiki.gg/images/thumb/Qiubai_icon.png/60px-Qiubai_icon.png?6f7017"
+      },
+      {
+        "name": "Typhon",
+        "rarity": 6,
+        "profession": "Sniper",
+        "icon": "https://arknights.wiki.gg/images/thumb/Typhon_icon.png/60px-Typhon_icon.png?3bf745"
+      },
+      {
+        "name": "Perfumer the Distilled",
+        "rarity": 5,
+        "profession": "Supporter",
+        "icon": "https://arknights.wiki.gg/images/thumb/Perfumer_the_Distilled_icon.png/60px-Perfumer_the_Distilled_icon.png?b036c7"
+      },
+      {
+        "name": "Spuria",
+        "rarity": 5,
+        "profession": "Specialist",
+        "icon": "https://arknights.wiki.gg/images/thumb/Spuria_icon.png/60px-Spuria_icon.png?fb9ed7"
+      },
+      {
+        "name": "Vetochki",
+        "rarity": 5,
+        "profession": "Defender",
+        "icon": "https://arknights.wiki.gg/images/thumb/Vetochki_icon.png/60px-Vetochki_icon.png?2598d2"
+      },
+      {
+        "name": "Taraxacum",
         "rarity": 5,
         "profession": "Medic",
-        "isLimited": true,
-        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_179_cgbird.png"
+        "icon": "https://arknights.wiki.gg/images/thumb/Taraxacum_icon.png/60px-Taraxacum_icon.png?53e9b6"
+      },
+      {
+        "name": "Figurino",
+        "rarity": 5,
+        "profession": "Specialist",
+        "icon": "https://arknights.wiki.gg/images/thumb/Figurino_icon.png/60px-Figurino_icon.png?6394f7"
+      },
+      {
+        "name": "Cantabile",
+        "rarity": 5,
+        "profession": "Vanguard",
+        "icon": "https://arknights.wiki.gg/images/thumb/Cantabile_icon.png/60px-Cantabile_icon.png?d638bf"
       }
-    ]
-  },
-  {
-    "id": "banner_cn_2026_03_standard",
-    "name": "Gears of Order",
-    "nameZh": "秩序齿轮",
-    "type": "standard",
-    "category": "Standard",
-    "cnStartDate": "2026-03-12T16:00:00+08:00",
-    "cnEndDate": "2026-03-26T03:59:00+08:00",
-    "sparkCost": 300,
-    "freePulls": 0,
-    "description": "Side Story: Rim Billiton Tech Corporation. New vanguard and sniper operators.",
+    ],
     "featuredOperators": [
       {
-        "id": "char_4125_baird",
-        "name": "Kestrel",
+        "id": "op_0_blaze_the_igniting_spark",
+        "name": "Blaze the Igniting Spark",
+        "rarity": 6,
+        "profession": "Caster",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Blaze_the_Igniting_Spark_icon.png/60px-Blaze_the_Igniting_Spark_icon.png?c75bfc"
+      },
+      {
+        "id": "op_1_entelechia",
+        "name": "Entelechia",
+        "rarity": 6,
+        "profession": "Guard",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Entelechia_icon.png/60px-Entelechia_icon.png?e27069"
+      },
+      {
+        "id": "op_2_leizi_the_thunderbringer",
+        "name": "Leizi the Thunderbringer",
+        "rarity": 6,
+        "profession": "Guard",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Leizi_the_Thunderbringer_icon.png/60px-Leizi_the_Thunderbringer_icon.png?acc84b"
+      },
+      {
+        "id": "op_3_pramanix_the_prerita",
+        "name": "Pramanix the Prerita",
+        "rarity": 6,
+        "profession": "Caster",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Pramanix_the_Prerita_icon.png/60px-Pramanix_the_Prerita_icon.png?10c8fb"
+      },
+      {
+        "id": "op_4_qiubai",
+        "name": "Qiubai",
+        "rarity": 6,
+        "profession": "Guard",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Qiubai_icon.png/60px-Qiubai_icon.png?6f7017"
+      },
+      {
+        "id": "op_5_typhon",
+        "name": "Typhon",
         "rarity": 6,
         "profession": "Sniper",
         "isLimited": false,
-        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_340_shwaz.png"
+        "avatar": "https://arknights.wiki.gg/images/thumb/Typhon_icon.png/60px-Typhon_icon.png?3bf745"
       },
       {
-        "id": "char_4126_scout",
-        "name": "Orehound",
+        "id": "op_6_perfumer_the_distilled",
+        "name": "Perfumer the Distilled",
+        "rarity": 5,
+        "profession": "Supporter",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Perfumer_the_Distilled_icon.png/60px-Perfumer_the_Distilled_icon.png?b036c7"
+      },
+      {
+        "id": "op_7_spuria",
+        "name": "Spuria",
+        "rarity": 5,
+        "profession": "Specialist",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Spuria_icon.png/60px-Spuria_icon.png?fb9ed7"
+      },
+      {
+        "id": "op_8_vetochki",
+        "name": "Vetochki",
+        "rarity": 5,
+        "profession": "Defender",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Vetochki_icon.png/60px-Vetochki_icon.png?2598d2"
+      },
+      {
+        "id": "op_9_taraxacum",
+        "name": "Taraxacum",
+        "rarity": 5,
+        "profession": "Medic",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Taraxacum_icon.png/60px-Taraxacum_icon.png?53e9b6"
+      },
+      {
+        "id": "op_10_figurino",
+        "name": "Figurino",
+        "rarity": 5,
+        "profession": "Specialist",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Figurino_icon.png/60px-Figurino_icon.png?6394f7"
+      },
+      {
+        "id": "op_11_cantabile",
+        "name": "Cantabile",
         "rarity": 5,
         "profession": "Vanguard",
         "isLimited": false,
-        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_222_bpipe.png"
+        "avatar": "https://arknights.wiki.gg/images/thumb/Cantabile_icon.png/60px-Cantabile_icon.png?d638bf"
       }
     ]
   },
   {
-    "id": "banner_cn_2026_02_cny",
-    "name": "Here A People Sows",
-    "nameZh": "怀黍离",
+    "id": "banner_2",
+    "name": "Hunters of the Umbral Wilds",
+    "title": "[Limited Headhunting - Crossover] Hunters of the Umbral Wilds",
+    "bannerImg": "https://arknights.wiki.gg/images/thumb/CN_Hunters_of_the_Umbral_Wilds_banner.png/1024px-CN_Hunters_of_the_Umbral_Wilds_banner.png?bbb444",
+    "bannerImage": "https://arknights.wiki.gg/images/thumb/CN_Hunters_of_the_Umbral_Wilds_banner.png/1024px-CN_Hunters_of_the_Umbral_Wilds_banner.png?bbb444",
     "type": "limited",
-    "category": "Sui Spring Festival",
-    "cnStartDate": "2026-02-01T16:00:00+08:00",
-    "cnEndDate": "2026-02-15T03:59:00+08:00",
+    "category": "Limited",
+    "cnStartDate": "2026-06-01",
+    "cnEndDate": "2026-06-15",
     "sparkCost": 300,
-    "freePulls": 24,
-    "description": "Spring Festival limited event featuring the Sui sibling Shu and Zuo Le.",
+    "freePulls": 0,
+    "description": "",
+    "operators": [
+      {
+        "name": "Violet Mizutsune Orchid",
+        "rarity": 6,
+        "profession": "Sniper",
+        "icon": "https://arknights.wiki.gg/images/thumb/Violet_Mizutsune_Orchid_icon.png/60px-Violet_Mizutsune_Orchid_icon.png?367c40"
+      },
+      {
+        "name": "Zinogre S Catapult",
+        "rarity": 5,
+        "profession": "Guard",
+        "icon": "https://arknights.wiki.gg/images/thumb/Zinogre_S_Catapult_icon.png/60px-Zinogre_S_Catapult_icon.png?e012c8"
+      }
+    ],
     "featuredOperators": [
       {
-        "id": "char_1033_shu",
-        "name": "Shu",
+        "id": "op_0_violet_mizutsune_orchid",
+        "name": "Violet Mizutsune Orchid",
         "rarity": 6,
-        "profession": "Defender",
+        "profession": "Sniper",
         "isLimited": true,
-        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_2014_nian.png"
+        "avatar": "https://arknights.wiki.gg/images/thumb/Violet_Mizutsune_Orchid_icon.png/60px-Violet_Mizutsune_Orchid_icon.png?367c40"
       },
       {
-        "id": "char_1034_zuole",
-        "name": "Zuo Le",
-        "rarity": 6,
-        "profession": "Guard",
-        "isLimited": false,
-        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_293_thorns.png"
-      },
-      {
-        "id": "char_1035_grain",
-        "name": "Grain Buds",
+        "id": "op_1_zinogre_s_catapult",
+        "name": "Zinogre S Catapult",
         "rarity": 5,
+        "profession": "Guard",
+        "isLimited": true,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Zinogre_S_Catapult_icon.png/60px-Zinogre_S_Catapult_icon.png?e012c8"
+      }
+    ]
+  },
+  {
+    "id": "banner_3",
+    "name": "Sharpened by Flame Rerun",
+    "title": "[Limited Headhunting - Triumphant Hunt] Sharpened by Flame Rerun",
+    "bannerImg": "https://arknights.wiki.gg/images/thumb/CN_Sharpened_by_Flame_Rerun_banner.png/1024px-CN_Sharpened_by_Flame_Rerun_banner.png?ee1a94",
+    "bannerImage": "https://arknights.wiki.gg/images/thumb/CN_Sharpened_by_Flame_Rerun_banner.png/1024px-CN_Sharpened_by_Flame_Rerun_banner.png?ee1a94",
+    "type": "limited",
+    "category": "Limited",
+    "cnStartDate": "2026-06-15",
+    "cnEndDate": "2026-06-29",
+    "sparkCost": 300,
+    "freePulls": 0,
+    "description": "",
+    "operators": [
+      {
+        "name": "Kirin R Yato",
+        "rarity": 6,
+        "profession": "Specialist",
+        "icon": "https://arknights.wiki.gg/images/thumb/Kirin_R_Yato_icon.png/60px-Kirin_R_Yato_icon.png?ae276a"
+      },
+      {
+        "name": "Rathalos S Noir Corne",
+        "rarity": 5,
+        "profession": "Guard",
+        "icon": "https://arknights.wiki.gg/images/thumb/Rathalos_S_Noir_Corne_icon.png/60px-Rathalos_S_Noir_Corne_icon.png?ab8633"
+      }
+    ],
+    "featuredOperators": [
+      {
+        "id": "op_0_kirin_r_yato",
+        "name": "Kirin R Yato",
+        "rarity": 6,
+        "profession": "Specialist",
+        "isLimited": true,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Kirin_R_Yato_icon.png/60px-Kirin_R_Yato_icon.png?ae276a"
+      },
+      {
+        "id": "op_1_rathalos_s_noir_corne",
+        "name": "Rathalos S Noir Corne",
+        "rarity": 5,
+        "profession": "Guard",
+        "isLimited": true,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Rathalos_S_Noir_Corne_icon.png/60px-Rathalos_S_Noir_Corne_icon.png?ab8633"
+      }
+    ]
+  },
+  {
+    "id": "banner_4",
+    "name": "Joint Operation #22",
+    "title": "[Standard Headhunting] Joint Operation #22",
+    "bannerImg": "https://arknights.wiki.gg/images/thumb/CN_Joint_Operation_22_banner.png/1024px-CN_Joint_Operation_22_banner.png?fc2bc8",
+    "bannerImage": "https://arknights.wiki.gg/images/thumb/CN_Joint_Operation_22_banner.png/1024px-CN_Joint_Operation_22_banner.png?fc2bc8",
+    "type": "joint",
+    "category": "Joint Operation",
+    "cnStartDate": "2026-06-26",
+    "cnEndDate": "2026-07-10",
+    "sparkCost": 0,
+    "freePulls": 0,
+    "description": "Only the following 6★ and 5★ Operators that will appear in a pull on this banner.",
+    "operators": [
+      {
+        "name": "Ines",
+        "rarity": 6,
+        "profession": "Vanguard",
+        "icon": "https://arknights.wiki.gg/images/thumb/Ines_icon.png/60px-Ines_icon.png?90244c"
+      },
+      {
+        "name": "Ho'olheyak",
+        "rarity": 6,
+        "profession": "Caster",
+        "icon": "https://arknights.wiki.gg/images/thumb/Ho%27olheyak_icon.png/60px-Ho%27olheyak_icon.png?e3337c"
+      },
+      {
+        "name": "Nasti",
+        "rarity": 6,
+        "profession": "Supporter",
+        "icon": "https://arknights.wiki.gg/images/thumb/Nasti_icon.png/60px-Nasti_icon.png?ca4aac"
+      },
+      {
+        "name": "Lemuen",
+        "rarity": 6,
+        "profession": "Sniper",
+        "icon": "https://arknights.wiki.gg/images/thumb/Lemuen_icon.png/60px-Lemuen_icon.png?dfb617"
+      },
+      {
+        "name": "Ripresa",
+        "rarity": 5,
+        "profession": "Caster",
+        "icon": "https://arknights.wiki.gg/images/thumb/Ripresa_icon.png/60px-Ripresa_icon.png?dc6db2"
+      },
+      {
+        "name": "Melanite",
+        "rarity": 5,
+        "profession": "Sniper",
+        "icon": "https://arknights.wiki.gg/images/thumb/Melanite_icon.png/60px-Melanite_icon.png?f0ab76"
+      },
+      {
+        "name": "Santalla",
+        "rarity": 5,
+        "profession": "Caster",
+        "icon": "https://arknights.wiki.gg/images/thumb/Santalla_icon.png/60px-Santalla_icon.png?a7521d"
+      },
+      {
+        "name": "Snow Hunter",
+        "rarity": 5,
+        "profession": "Sniper",
+        "icon": "https://arknights.wiki.gg/images/thumb/Snow_Hunter_icon.png/60px-Snow_Hunter_icon.png?defc2a"
+      },
+      {
+        "name": "Gracebearer",
+        "rarity": 5,
+        "profession": "Guard",
+        "icon": "https://arknights.wiki.gg/images/thumb/Gracebearer_icon.png/60px-Gracebearer_icon.png?1b8c30"
+      },
+      {
+        "name": "Firewhistle",
+        "rarity": 5,
+        "profession": "Defender",
+        "icon": "https://arknights.wiki.gg/images/thumb/Firewhistle_icon.png/60px-Firewhistle_icon.png?8b542b"
+      }
+    ],
+    "featuredOperators": [
+      {
+        "id": "op_0_ines",
+        "name": "Ines",
+        "rarity": 6,
+        "profession": "Vanguard",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Ines_icon.png/60px-Ines_icon.png?90244c"
+      },
+      {
+        "id": "op_1_ho_olheyak",
+        "name": "Ho'olheyak",
+        "rarity": 6,
+        "profession": "Caster",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Ho%27olheyak_icon.png/60px-Ho%27olheyak_icon.png?e3337c"
+      },
+      {
+        "id": "op_2_nasti",
+        "name": "Nasti",
+        "rarity": 6,
         "profession": "Supporter",
         "isLimited": false,
-        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_242_otter.png"
+        "avatar": "https://arknights.wiki.gg/images/thumb/Nasti_icon.png/60px-Nasti_icon.png?ca4aac"
+      },
+      {
+        "id": "op_3_lemuen",
+        "name": "Lemuen",
+        "rarity": 6,
+        "profession": "Sniper",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Lemuen_icon.png/60px-Lemuen_icon.png?dfb617"
+      },
+      {
+        "id": "op_4_ripresa",
+        "name": "Ripresa",
+        "rarity": 5,
+        "profession": "Caster",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Ripresa_icon.png/60px-Ripresa_icon.png?dc6db2"
+      },
+      {
+        "id": "op_5_melanite",
+        "name": "Melanite",
+        "rarity": 5,
+        "profession": "Sniper",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Melanite_icon.png/60px-Melanite_icon.png?f0ab76"
+      },
+      {
+        "id": "op_6_santalla",
+        "name": "Santalla",
+        "rarity": 5,
+        "profession": "Caster",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Santalla_icon.png/60px-Santalla_icon.png?a7521d"
+      },
+      {
+        "id": "op_7_snow_hunter",
+        "name": "Snow Hunter",
+        "rarity": 5,
+        "profession": "Sniper",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Snow_Hunter_icon.png/60px-Snow_Hunter_icon.png?defc2a"
+      },
+      {
+        "id": "op_8_gracebearer",
+        "name": "Gracebearer",
+        "rarity": 5,
+        "profession": "Guard",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Gracebearer_icon.png/60px-Gracebearer_icon.png?1b8c30"
+      },
+      {
+        "id": "op_9_firewhistle",
+        "name": "Firewhistle",
+        "rarity": 5,
+        "profession": "Defender",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Firewhistle_icon.png/60px-Firewhistle_icon.png?8b542b"
       }
     ]
   },
   {
-    "id": "banner_cn_2026_01_collab",
-    "name": "Through the Looking Glass",
-    "nameZh": "镜中奇遇",
-    "type": "collab",
-    "category": "Collaboration",
-    "cnStartDate": "2026-01-10T16:00:00+08:00",
-    "cnEndDate": "2026-01-24T03:59:00+08:00",
-    "sparkCost": 120,
-    "freePulls": 10,
-    "description": "Special Collaboration event with limited rate-up crossover characters.",
+    "id": "banner_5",
+    "name": "Deterministic Chaos",
+    "title": "[Standard Headhunting - Limited-Time] Deterministic Chaos",
+    "bannerImg": "https://arknights.wiki.gg/images/thumb/CN_Deterministic_Chaos_banner.png/1024px-CN_Deterministic_Chaos_banner.png?4fedf7",
+    "bannerImage": "https://arknights.wiki.gg/images/thumb/CN_Deterministic_Chaos_banner.png/1024px-CN_Deterministic_Chaos_banner.png?4fedf7",
+    "type": "limited",
+    "category": "Limited",
+    "cnStartDate": "2026-07-10",
+    "cnEndDate": "2026-07-24",
+    "sparkCost": 300,
+    "freePulls": 0,
+    "description": "",
+    "operators": [
+      {
+        "name": "Aphrissa",
+        "rarity": 6,
+        "profession": "Caster",
+        "icon": "https://arknights.wiki.gg/images/thumb/Aphrissa_icon.png/60px-Aphrissa_icon.png?e3d735"
+      },
+      {
+        "name": "Pedro",
+        "rarity": 5,
+        "profession": "Supporter",
+        "icon": "https://arknights.wiki.gg/images/thumb/Pedro_icon.png/60px-Pedro_icon.png?159a7e"
+      },
+      {
+        "name": "Wulfenite",
+        "rarity": 5,
+        "profession": "Specialist",
+        "icon": "https://arknights.wiki.gg/images/thumb/Wulfenite_icon.png/60px-Wulfenite_icon.png?5b3197"
+      }
+    ],
     "featuredOperators": [
       {
-        "id": "char_collab_marcille",
-        "name": "Marcille",
+        "id": "op_0_aphrissa",
+        "name": "Aphrissa",
         "rarity": 6,
         "profession": "Caster",
         "isLimited": true,
-        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_113_cqbw.png"
+        "avatar": "https://arknights.wiki.gg/images/thumb/Aphrissa_icon.png/60px-Aphrissa_icon.png?e3d735"
       },
       {
-        "id": "char_collab_laios",
-        "name": "Laios",
+        "id": "op_1_pedro",
+        "name": "Pedro",
         "rarity": 5,
-        "profession": "Guard",
+        "profession": "Supporter",
         "isLimited": true,
-        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_172_svrash.png"
+        "avatar": "https://arknights.wiki.gg/images/thumb/Pedro_icon.png/60px-Pedro_icon.png?159a7e"
       },
       {
-        "id": "char_collab_chilchuck",
-        "name": "Chilchuck",
+        "id": "op_2_wulfenite",
+        "name": "Wulfenite",
         "rarity": 5,
         "profession": "Specialist",
         "isLimited": true,
-        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_214_kafka.png"
+        "avatar": "https://arknights.wiki.gg/images/thumb/Wulfenite_icon.png/60px-Wulfenite_icon.png?5b3197"
       }
     ]
   },
   {
-    "id": "banner_cn_2025_11_leithanien",
-    "name": "Zwillingstürme im Herbst",
-    "nameZh": "秋风崔嵬双子塔",
+    "id": "banner_6",
+    "name": "Dithyramb Unending Rerun",
+    "title": "[Standard Headhunting - Limited-Time] Dithyramb Unending Rerun",
+    "bannerImg": "https://arknights.wiki.gg/images/thumb/CN_Dithyramb_Unending_Rerun_banner.png/1024px-CN_Dithyramb_Unending_Rerun_banner.png?771cf9",
+    "bannerImage": "https://arknights.wiki.gg/images/thumb/CN_Dithyramb_Unending_Rerun_banner.png/1024px-CN_Dithyramb_Unending_Rerun_banner.png?771cf9",
     "type": "limited",
-    "category": "Thank-You Celebration",
-    "cnStartDate": "2025-11-01T16:00:00+08:00",
-    "cnEndDate": "2025-11-15T03:59:00+08:00",
+    "category": "Limited",
+    "cnStartDate": "2026-07-20",
+    "cnEndDate": "2026-08-03",
     "sparkCost": 300,
-    "freePulls": 24,
-    "description": "Thank-You Celebration event in Leithanien with Viviana and Virtuosa.",
+    "freePulls": 0,
+    "description": "",
+    "operators": [
+      {
+        "name": "Tragodia",
+        "rarity": 6,
+        "profession": "Supporter",
+        "icon": "https://arknights.wiki.gg/images/thumb/Tragodia_icon.png/60px-Tragodia_icon.png?ca5ecf"
+      },
+      {
+        "name": "Tippi",
+        "rarity": 5,
+        "profession": "Specialist",
+        "icon": "https://arknights.wiki.gg/images/thumb/Tippi_icon.png/60px-Tippi_icon.png?b7b064"
+      },
+      {
+        "name": "Alanna",
+        "rarity": 5,
+        "profession": "Supporter",
+        "icon": "https://arknights.wiki.gg/images/thumb/Alanna_icon.png/60px-Alanna_icon.png?c0a959"
+      }
+    ],
     "featuredOperators": [
       {
-        "id": "char_1032_virtuosa",
-        "name": "Virtuosa",
+        "id": "op_0_tragodia",
+        "name": "Tragodia",
         "rarity": 6,
         "profession": "Supporter",
         "isLimited": true,
-        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_248_mgllan.png"
+        "avatar": "https://arknights.wiki.gg/images/thumb/Tragodia_icon.png/60px-Tragodia_icon.png?ca5ecf"
       },
       {
-        "id": "char_1031_viviana",
-        "name": "Viviana",
-        "rarity": 6,
-        "profession": "Guard",
-        "isLimited": false,
-        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_1012_skadi2.png"
-      },
-      {
-        "id": "char_1030_bassi",
-        "name": "Bassline",
+        "id": "op_1_tippi",
+        "name": "Tippi",
         "rarity": 5,
-        "profession": "Defender",
-        "isLimited": false,
-        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_198_blackd.png"
+        "profession": "Specialist",
+        "isLimited": true,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Tippi_icon.png/60px-Tippi_icon.png?b7b064"
+      },
+      {
+        "id": "op_2_alanna",
+        "name": "Alanna",
+        "rarity": 5,
+        "profession": "Supporter",
+        "isLimited": true,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Alanna_icon.png/60px-Alanna_icon.png?c0a959"
       }
     ]
   },
   {
-    "id": "banner_cn_2025_09_siesta",
-    "name": "So Long, Adele",
-    "nameZh": "火山旅梦",
+    "id": "banner_7",
+    "name": "Trails End Winds Rest",
+    "title": "[Limited Headhunting - Carnival] Trails End Winds Rest",
+    "bannerImg": "https://arknights.wiki.gg/images/thumb/CN_Trails_End_Winds_Rest_banner.png/1024px-CN_Trails_End_Winds_Rest_banner.png?300024",
+    "bannerImage": "https://arknights.wiki.gg/images/thumb/CN_Trails_End_Winds_Rest_banner.png/1024px-CN_Trails_End_Winds_Rest_banner.png?300024",
     "type": "limited",
-    "category": "Summer Carnival",
-    "cnStartDate": "2025-08-01T16:00:00+08:00",
-    "cnEndDate": "2025-08-15T03:59:00+08:00",
+    "category": "Limited",
+    "cnStartDate": "2026-08-01",
+    "cnEndDate": "2026-08-15",
     "sparkCost": 300,
     "freePulls": 24,
-    "description": "Summer Carnival limited event in Siesta featuring Eyjafjalla the Hvit Aska and Swire the Elegant Wit.",
+    "description": "",
+    "operators": [
+      {
+        "name": "Angelina the Mellow Wish",
+        "rarity": 6,
+        "profession": "Specialist",
+        "icon": "https://arknights.wiki.gg/images/thumb/Angelina_the_Mellow_Wish_icon.png/60px-Angelina_the_Mellow_Wish_icon.png?b3aeab"
+      },
+      {
+        "name": "Thumpy",
+        "rarity": 6,
+        "profession": "Defender",
+        "icon": "https://arknights.wiki.gg/images/thumb/Thumpy_icon.png/60px-Thumpy_icon.png?3cc169"
+      },
+      {
+        "name": "Jacinta",
+        "rarity": 5,
+        "profession": "Vanguard",
+        "icon": "https://arknights.wiki.gg/images/thumb/Jacinta_icon.png/60px-Jacinta_icon.png?9f0089"
+      },
+      {
+        "name": "Pepe",
+        "rarity": 6,
+        "profession": "Guard",
+        "icon": "https://arknights.wiki.gg/images/thumb/Pepe_icon.png/60px-Pepe_icon.png?c410c5"
+      },
+      {
+        "name": "Hoshiguma the Breacher",
+        "rarity": 6,
+        "profession": "Defender",
+        "icon": "https://arknights.wiki.gg/images/thumb/Hoshiguma_the_Breacher_icon.png/60px-Hoshiguma_the_Breacher_icon.png?3093b5"
+      },
+      {
+        "name": "Eyjafjalla the Hvít Aska",
+        "rarity": 6,
+        "profession": "Medic",
+        "icon": "https://arknights.wiki.gg/images/thumb/Eyjafjalla_the_Hv%C3%ADt_Aska_icon.png/60px-Eyjafjalla_the_Hv%C3%ADt_Aska_icon.png?b082f0"
+      }
+    ],
     "featuredOperators": [
       {
-        "id": "char_1036_eyjafjalla2",
+        "id": "op_0_angelina_the_mellow_wish",
+        "name": "Angelina the Mellow Wish",
+        "rarity": 6,
+        "profession": "Specialist",
+        "isLimited": true,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Angelina_the_Mellow_Wish_icon.png/60px-Angelina_the_Mellow_Wish_icon.png?b3aeab"
+      },
+      {
+        "id": "op_1_thumpy",
+        "name": "Thumpy",
+        "rarity": 6,
+        "profession": "Defender",
+        "isLimited": true,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Thumpy_icon.png/60px-Thumpy_icon.png?3cc169"
+      },
+      {
+        "id": "op_2_jacinta",
+        "name": "Jacinta",
+        "rarity": 5,
+        "profession": "Vanguard",
+        "isLimited": true,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Jacinta_icon.png/60px-Jacinta_icon.png?9f0089"
+      },
+      {
+        "id": "op_3_pepe",
+        "name": "Pepe",
+        "rarity": 6,
+        "profession": "Guard",
+        "isLimited": true,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Pepe_icon.png/60px-Pepe_icon.png?c410c5"
+      },
+      {
+        "id": "op_4_hoshiguma_the_breacher",
+        "name": "Hoshiguma the Breacher",
+        "rarity": 6,
+        "profession": "Defender",
+        "isLimited": true,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Hoshiguma_the_Breacher_icon.png/60px-Hoshiguma_the_Breacher_icon.png?3093b5"
+      },
+      {
+        "id": "op_5_eyjafjalla_the_hv_t_aska",
         "name": "Eyjafjalla the Hvít Aska",
         "rarity": 6,
         "profession": "Medic",
         "isLimited": true,
-        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_180_amgoat.png"
-      },
+        "avatar": "https://arknights.wiki.gg/images/thumb/Eyjafjalla_the_Hv%C3%ADt_Aska_icon.png/60px-Eyjafjalla_the_Hv%C3%ADt_Aska_icon.png?b082f0"
+      }
+    ]
+  },
+  {
+    "id": "banner_8",
+    "name": "Joint Operation #23",
+    "title": "[Standard Headhunting] Joint Operation #23",
+    "bannerImg": "https://arknights.wiki.gg/images/thumb/CN_Joint_Operation_23_banner.png/1024px-CN_Joint_Operation_23_banner.png?c5badd",
+    "bannerImage": "https://arknights.wiki.gg/images/thumb/CN_Joint_Operation_23_banner.png/1024px-CN_Joint_Operation_23_banner.png?c5badd",
+    "type": "joint",
+    "category": "Joint Operation",
+    "cnStartDate": "2026-08-18",
+    "cnEndDate": "2026-09-01",
+    "sparkCost": 0,
+    "freePulls": 0,
+    "description": "Only the following 6★ and 5★ Operators that will appear in a pull on this banner.",
+    "operators": [
       {
-        "id": "char_1033_swire2",
-        "name": "Swire the Elegant Wit",
+        "name": "Ch'en the Dawnstreak",
         "rarity": 6,
-        "profession": "Specialist",
-        "isLimited": false,
-        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_308_swire.png"
+        "profession": "Guard",
+        "icon": "https://arknights.wiki.gg/images/thumb/Ch%27en_the_Dawnstreak_icon.png/60px-Ch%27en_the_Dawnstreak_icon.png?defcce"
       },
       {
-        "id": "char_1034_poncirus",
+        "name": "Haruka",
+        "rarity": 6,
+        "profession": "Supporter",
+        "icon": "https://arknights.wiki.gg/images/thumb/Haruka_icon.png/60px-Haruka_icon.png?dcbfa2"
+      },
+      {
+        "name": "Necrass",
+        "rarity": 6,
+        "profession": "Caster",
+        "icon": "https://arknights.wiki.gg/images/thumb/Necrass_icon.png/60px-Necrass_icon.png?c0e375"
+      },
+      {
+        "name": "Vulpisfoglia",
+        "rarity": 6,
+        "profession": "Vanguard",
+        "icon": "https://arknights.wiki.gg/images/thumb/Vulpisfoglia_icon.png/60px-Vulpisfoglia_icon.png?a996d4"
+      },
+      {
+        "name": "Ukusik",
+        "rarity": 5,
+        "profession": "Medic",
+        "icon": "https://arknights.wiki.gg/images/thumb/Ukusik_icon.png/60px-Ukusik_icon.png?3f573c"
+      },
+      {
+        "name": "Poncirus",
+        "rarity": 5,
+        "profession": "Vanguard",
+        "icon": "https://arknights.wiki.gg/images/thumb/Poncirus_icon.png/60px-Poncirus_icon.png?113875"
+      },
+      {
+        "name": "Nowell",
+        "rarity": 5,
+        "profession": "Medic",
+        "icon": "https://arknights.wiki.gg/images/thumb/Nowell_icon.png/60px-Nowell_icon.png?957315"
+      },
+      {
+        "name": "Grain Buds",
+        "rarity": 5,
+        "profession": "Supporter",
+        "icon": "https://arknights.wiki.gg/images/thumb/Grain_Buds_icon.png/60px-Grain_Buds_icon.png?469f83"
+      },
+      {
+        "name": "Almond",
+        "rarity": 5,
+        "profession": "Specialist",
+        "icon": "https://arknights.wiki.gg/images/thumb/Almond_icon.png/60px-Almond_icon.png?9b73e4"
+      },
+      {
+        "name": "Figurino",
+        "rarity": 5,
+        "profession": "Specialist",
+        "icon": "https://arknights.wiki.gg/images/thumb/Figurino_icon.png/60px-Figurino_icon.png?6394f7"
+      }
+    ],
+    "featuredOperators": [
+      {
+        "id": "op_0_ch_en_the_dawnstreak",
+        "name": "Ch'en the Dawnstreak",
+        "rarity": 6,
+        "profession": "Guard",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Ch%27en_the_Dawnstreak_icon.png/60px-Ch%27en_the_Dawnstreak_icon.png?defcce"
+      },
+      {
+        "id": "op_1_haruka",
+        "name": "Haruka",
+        "rarity": 6,
+        "profession": "Supporter",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Haruka_icon.png/60px-Haruka_icon.png?dcbfa2"
+      },
+      {
+        "id": "op_2_necrass",
+        "name": "Necrass",
+        "rarity": 6,
+        "profession": "Caster",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Necrass_icon.png/60px-Necrass_icon.png?c0e375"
+      },
+      {
+        "id": "op_3_vulpisfoglia",
+        "name": "Vulpisfoglia",
+        "rarity": 6,
+        "profession": "Vanguard",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Vulpisfoglia_icon.png/60px-Vulpisfoglia_icon.png?a996d4"
+      },
+      {
+        "id": "op_4_ukusik",
+        "name": "Ukusik",
+        "rarity": 5,
+        "profession": "Medic",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Ukusik_icon.png/60px-Ukusik_icon.png?3f573c"
+      },
+      {
+        "id": "op_5_poncirus",
         "name": "Poncirus",
         "rarity": 5,
         "profession": "Vanguard",
         "isLimited": false,
-        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_222_bpipe.png"
+        "avatar": "https://arknights.wiki.gg/images/thumb/Poncirus_icon.png/60px-Poncirus_icon.png?113875"
+      },
+      {
+        "id": "op_6_nowell",
+        "name": "Nowell",
+        "rarity": 5,
+        "profession": "Medic",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Nowell_icon.png/60px-Nowell_icon.png?957315"
+      },
+      {
+        "id": "op_7_grain_buds",
+        "name": "Grain Buds",
+        "rarity": 5,
+        "profession": "Supporter",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Grain_Buds_icon.png/60px-Grain_Buds_icon.png?469f83"
+      },
+      {
+        "id": "op_8_almond",
+        "name": "Almond",
+        "rarity": 5,
+        "profession": "Specialist",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Almond_icon.png/60px-Almond_icon.png?9b73e4"
+      },
+      {
+        "id": "op_9_figurino",
+        "name": "Figurino",
+        "rarity": 5,
+        "profession": "Specialist",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Figurino_icon.png/60px-Figurino_icon.png?6394f7"
+      }
+    ]
+  },
+  {
+    "id": "banner_9",
+    "name": "Some Evening of White and Mystic Blue",
+    "title": "[Limited Headhunting - Crossover] Some Evening of White and Mystic Blue",
+    "bannerImg": "https://arknights.wiki.gg/images/thumb/CN_Some_Evening_of_White_and_Mystic_Blue_banner.png/1024px-CN_Some_Evening_of_White_and_Mystic_Blue_banner.png?f415b3",
+    "bannerImage": "https://arknights.wiki.gg/images/thumb/CN_Some_Evening_of_White_and_Mystic_Blue_banner.png/1024px-CN_Some_Evening_of_White_and_Mystic_Blue_banner.png?f415b3",
+    "type": "limited",
+    "category": "Limited",
+    "cnStartDate": "2026-09-04",
+    "cnEndDate": "2026-09-18",
+    "sparkCost": 300,
+    "freePulls": 0,
+    "description": "",
+    "operators": [
+      {
+        "name": "Makoto Yuki",
+        "rarity": 6,
+        "profession": "Specialist",
+        "icon": "https://arknights.wiki.gg/images/thumb/Makoto_Yuki_icon.png/60px-Makoto_Yuki_icon.png?7d735a"
+      },
+      {
+        "name": "Yukari Takeba",
+        "rarity": 5,
+        "profession": "Supporter",
+        "icon": "https://arknights.wiki.gg/images/thumb/Yukari_Takeba_icon.png/60px-Yukari_Takeba_icon.png?d73c7b"
+      },
+      {
+        "name": "Aegis",
+        "rarity": 5,
+        "profession": "Sniper",
+        "icon": "https://arknights.wiki.gg/images/thumb/Aegis_icon.png/60px-Aegis_icon.png?51ea4c"
+      }
+    ],
+    "featuredOperators": [
+      {
+        "id": "op_0_makoto_yuki",
+        "name": "Makoto Yuki",
+        "rarity": 6,
+        "profession": "Specialist",
+        "isLimited": true,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Makoto_Yuki_icon.png/60px-Makoto_Yuki_icon.png?7d735a"
+      },
+      {
+        "id": "op_1_yukari_takeba",
+        "name": "Yukari Takeba",
+        "rarity": 5,
+        "profession": "Supporter",
+        "isLimited": true,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Yukari_Takeba_icon.png/60px-Yukari_Takeba_icon.png?d73c7b"
+      },
+      {
+        "id": "op_2_aegis",
+        "name": "Aegis",
+        "rarity": 5,
+        "profession": "Sniper",
+        "isLimited": true,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Aegis_icon.png/60px-Aegis_icon.png?51ea4c"
+      }
+    ]
+  },
+  {
+    "id": "banner_10",
+    "name": "Orienteering #8",
+    "title": "[Standard Headhunting] Orienteering #8",
+    "bannerImg": "https://arknights.wiki.gg/images/thumb/CN_Orienteering_8_banner.png/1024px-CN_Orienteering_8_banner.png?5ad8b5",
+    "bannerImage": "https://arknights.wiki.gg/images/thumb/CN_Orienteering_8_banner.png/1024px-CN_Orienteering_8_banner.png?5ad8b5",
+    "type": "orienteering",
+    "category": "Orienteering",
+    "cnStartDate": "2026-09-29",
+    "cnEndDate": "2026-10-13",
+    "sparkCost": 0,
+    "freePulls": 0,
+    "description": "Choose three of the following 6★ Operators; only these 6★ that will appear in a pull on this banner. Choose three of the following 5★ Operators; they have a 60% chance to be the 5★ that appears in a pull on this banner.",
+    "operators": [
+      {
+        "name": "Mon3tr",
+        "rarity": 6,
+        "profession": "Medic",
+        "icon": "https://arknights.wiki.gg/images/thumb/Mon3tr_icon.png/60px-Mon3tr_icon.png?986adf"
+      },
+      {
+        "name": "Mantra",
+        "rarity": 6,
+        "profession": "Caster",
+        "icon": "https://arknights.wiki.gg/images/thumb/Mantra_icon.png/60px-Mantra_icon.png?12d6e6"
+      },
+      {
+        "name": "Pramanix the Prerita",
+        "rarity": 6,
+        "profession": "Caster",
+        "icon": "https://arknights.wiki.gg/images/thumb/Pramanix_the_Prerita_icon.png/60px-Pramanix_the_Prerita_icon.png?10c8fb"
+      },
+      {
+        "name": "Bellone",
+        "rarity": 6,
+        "profession": "Guard",
+        "icon": "https://arknights.wiki.gg/images/thumb/Bellone_icon.png/60px-Bellone_icon.png?a79ae4"
+      },
+      {
+        "name": "Degenbrecher",
+        "rarity": 6,
+        "profession": "Guard",
+        "icon": "https://arknights.wiki.gg/images/thumb/Degenbrecher_icon.png/60px-Degenbrecher_icon.png?8585c0"
+      },
+      {
+        "name": "Blaze the Igniting Spark",
+        "rarity": 6,
+        "profession": "Caster",
+        "icon": "https://arknights.wiki.gg/images/thumb/Blaze_the_Igniting_Spark_icon.png/60px-Blaze_the_Igniting_Spark_icon.png?c75bfc"
+      },
+      {
+        "name": "Mitm",
+        "rarity": 5,
+        "profession": "Vanguard",
+        "icon": "https://arknights.wiki.gg/images/thumb/Mitm_icon.png/60px-Mitm_icon.png?3e408a"
+      },
+      {
+        "name": "Kichisei",
+        "rarity": 5,
+        "profession": "Sniper",
+        "icon": "https://arknights.wiki.gg/images/thumb/Kichisei_icon.png/60px-Kichisei_icon.png?e217e2"
+      },
+      {
+        "name": "Surfer",
+        "rarity": 5,
+        "profession": "Vanguard",
+        "icon": "https://arknights.wiki.gg/images/thumb/Surfer_icon.png/60px-Surfer_icon.png?ac79ac"
+      },
+      {
+        "name": "Paprika",
+        "rarity": 5,
+        "profession": "Medic",
+        "icon": "https://arknights.wiki.gg/images/thumb/Paprika_icon.png/60px-Paprika_icon.png?ef8e50"
+      },
+      {
+        "name": "Cairn",
+        "rarity": 5,
+        "profession": "Defender",
+        "icon": "https://arknights.wiki.gg/images/thumb/Cairn_icon.png/60px-Cairn_icon.png?27669f"
+      },
+      {
+        "name": "Ripresa",
+        "rarity": 5,
+        "profession": "Caster",
+        "icon": "https://arknights.wiki.gg/images/thumb/Ripresa_icon.png/60px-Ripresa_icon.png?dc6db2"
+      }
+    ],
+    "featuredOperators": [
+      {
+        "id": "op_0_mon3tr",
+        "name": "Mon3tr",
+        "rarity": 6,
+        "profession": "Medic",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Mon3tr_icon.png/60px-Mon3tr_icon.png?986adf"
+      },
+      {
+        "id": "op_1_mantra",
+        "name": "Mantra",
+        "rarity": 6,
+        "profession": "Caster",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Mantra_icon.png/60px-Mantra_icon.png?12d6e6"
+      },
+      {
+        "id": "op_2_pramanix_the_prerita",
+        "name": "Pramanix the Prerita",
+        "rarity": 6,
+        "profession": "Caster",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Pramanix_the_Prerita_icon.png/60px-Pramanix_the_Prerita_icon.png?10c8fb"
+      },
+      {
+        "id": "op_3_bellone",
+        "name": "Bellone",
+        "rarity": 6,
+        "profession": "Guard",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Bellone_icon.png/60px-Bellone_icon.png?a79ae4"
+      },
+      {
+        "id": "op_4_degenbrecher",
+        "name": "Degenbrecher",
+        "rarity": 6,
+        "profession": "Guard",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Degenbrecher_icon.png/60px-Degenbrecher_icon.png?8585c0"
+      },
+      {
+        "id": "op_5_blaze_the_igniting_spark",
+        "name": "Blaze the Igniting Spark",
+        "rarity": 6,
+        "profession": "Caster",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Blaze_the_Igniting_Spark_icon.png/60px-Blaze_the_Igniting_Spark_icon.png?c75bfc"
+      },
+      {
+        "id": "op_6_mitm",
+        "name": "Mitm",
+        "rarity": 5,
+        "profession": "Vanguard",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Mitm_icon.png/60px-Mitm_icon.png?3e408a"
+      },
+      {
+        "id": "op_7_kichisei",
+        "name": "Kichisei",
+        "rarity": 5,
+        "profession": "Sniper",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Kichisei_icon.png/60px-Kichisei_icon.png?e217e2"
+      },
+      {
+        "id": "op_8_surfer",
+        "name": "Surfer",
+        "rarity": 5,
+        "profession": "Vanguard",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Surfer_icon.png/60px-Surfer_icon.png?ac79ac"
+      },
+      {
+        "id": "op_9_paprika",
+        "name": "Paprika",
+        "rarity": 5,
+        "profession": "Medic",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Paprika_icon.png/60px-Paprika_icon.png?ef8e50"
+      },
+      {
+        "id": "op_10_cairn",
+        "name": "Cairn",
+        "rarity": 5,
+        "profession": "Defender",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Cairn_icon.png/60px-Cairn_icon.png?27669f"
+      },
+      {
+        "id": "op_11_ripresa",
+        "name": "Ripresa",
+        "rarity": 5,
+        "profession": "Caster",
+        "isLimited": false,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Ripresa_icon.png/60px-Ripresa_icon.png?dc6db2"
+      }
+    ]
+  },
+  {
+    "id": "banner_11",
+    "name": "Drifter of the Depth",
+    "title": "[Standard Headhunting - Limited-Time] Drifter of the Depth",
+    "bannerImg": "https://arknights.wiki.gg/images/thumb/CN_Drifter_of_the_Depth_banner.png/1024px-CN_Drifter_of_the_Depth_banner.png?30f680",
+    "bannerImage": "https://arknights.wiki.gg/images/thumb/CN_Drifter_of_the_Depth_banner.png/1024px-CN_Drifter_of_the_Depth_banner.png?30f680",
+    "type": "limited",
+    "category": "Limited",
+    "cnStartDate": "2026-10-09",
+    "cnEndDate": "2026-10-23",
+    "sparkCost": 300,
+    "freePulls": 0,
+    "description": "",
+    "operators": [
+      {
+        "name": "Clementia",
+        "rarity": 6,
+        "profession": "Guard",
+        "icon": "https://arknights.wiki.gg/images/thumb/Clementia_icon.png/60px-Clementia_icon.png?f236d6"
+      },
+      {
+        "name": "De Toledo",
+        "rarity": 5,
+        "profession": "Supporter",
+        "icon": "https://arknights.wiki.gg/images/thumb/De_Toledo_icon.png/60px-De_Toledo_icon.png?9e6837"
+      },
+      {
+        "name": "Firewhistle",
+        "rarity": 5,
+        "profession": "Defender",
+        "icon": "https://arknights.wiki.gg/images/thumb/Firewhistle_icon.png/60px-Firewhistle_icon.png?8b542b"
+      }
+    ],
+    "featuredOperators": [
+      {
+        "id": "op_0_clementia",
+        "name": "Clementia",
+        "rarity": 6,
+        "profession": "Guard",
+        "isLimited": true,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Clementia_icon.png/60px-Clementia_icon.png?f236d6"
+      },
+      {
+        "id": "op_1_de_toledo",
+        "name": "De Toledo",
+        "rarity": 5,
+        "profession": "Supporter",
+        "isLimited": true,
+        "avatar": "https://arknights.wiki.gg/images/thumb/De_Toledo_icon.png/60px-De_Toledo_icon.png?9e6837"
+      },
+      {
+        "id": "op_2_firewhistle",
+        "name": "Firewhistle",
+        "rarity": 5,
+        "profession": "Defender",
+        "isLimited": true,
+        "avatar": "https://arknights.wiki.gg/images/thumb/Firewhistle_icon.png/60px-Firewhistle_icon.png?8b542b"
       }
     ]
   }

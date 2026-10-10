@@ -1,56 +1,82 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import rawBanners from '~/assets/data/banners.json'
-import type { BannerData, BannerWithGlobalDates } from '~/types'
+import fallbackBanners from '~/assets/data/banners.json'
 
-// Props allowing custom initial offset or custom banners
+interface RateUpOperator {
+  name: string
+  rarity: number
+  profession?: string
+  icon: string
+}
+
+interface BannerItem {
+  id: string
+  name: string
+  title: string
+  bannerImg: string
+  bannerImage?: string
+  type: string
+  category: string
+  cnStartDate: string
+  cnEndDate: string
+  sparkCost?: number
+  freePulls?: number
+  description?: string
+  operators: RateUpOperator[]
+}
+
+// Props
 const props = withDefaults(
   defineProps<{
     initialOffsetDays?: number
-    banners?: BannerData[]
   }>(),
   {
     initialOffsetDays: 175,
-    banners: () => rawBanners as BannerData[],
   }
 )
 
-// Reactive offset (default 175 days as requested)
+// Reactive State
 const offsetDays = ref(props.initialOffsetDays)
-const selectedFilter = ref<'all' | 'limited' | 'collab' | 'standard'>('all')
-const searchQuery = ref('')
-const sortOrder = ref<'asc' | 'desc'>('asc')
+const selectedCategory = ref<string>('all')
+const searchQuery = ref<string>('')
+const sortAscending = ref<boolean>(true) // true: oldest at top, newest at bottom (matching wiki default)
 
-const now = new Date()
+// Fetch banners from server API which parses arknights.wiki.gg/wiki/Headhunting/Banners/Upcoming
+const { data: apiResponse, pending: isLoading, refresh } = await useFetch('/api/banners', {
+  default: () => ({
+    source: 'local-fallback',
+    updatedAt: new Date().toISOString(),
+    banners: fallbackBanners as BannerItem[],
+  }),
+})
 
-/**
- * Calculates estimated Global release date based on CN date and day offset
- */
+const rawBanners = computed<BannerItem[]>(() => {
+  return (apiResponse.value?.banners as BannerItem[]) || (fallbackBanners as BannerItem[])
+})
+
+// Date helpers
 const addDays = (dateStr: string, days: number): Date => {
   const d = new Date(dateStr)
   d.setDate(d.getDate() + days)
   return d
 }
 
-/**
- * Formats a date into a clean YYYY-MM-DD representation
- */
-const formatDate = (date: Date | string): string => {
-  const d = typeof date === 'string' ? new Date(date) : date
-  return d.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
+const formatDate = (d: Date | string): string => {
+  const dateObj = typeof d === 'string' ? new Date(d) : d
+  if (isNaN(dateObj.getTime())) return ''
+  const year = dateObj.getFullYear()
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0')
+  const day = String(dateObj.getDate()).padStart(2, '0')
+  return `${year}/${month}/${day}`
 }
 
-/**
- * Banners computed with Global dates and status
- */
-const processedBanners = computed<BannerWithGlobalDates[]>(() => {
-  return props.banners.map((banner) => {
-    const globalStart = addDays(banner.cnStartDate, offsetDays.value)
-    const globalEnd = addDays(banner.cnEndDate, offsetDays.value)
+const now = new Date()
+
+// Processed banners with Global dates and status
+const processedBanners = computed(() => {
+  return rawBanners.value.map((b) => {
+    const globalStart = addDays(b.cnStartDate, offsetDays.value)
+    const globalEnd = b.cnEndDate ? addDays(b.cnEndDate, offsetDays.value) : addDays(b.cnStartDate, offsetDays.value + 14)
 
     let status: 'upcoming' | 'active' | 'passed' = 'upcoming'
     let daysUntilGlobal = 0
@@ -60,733 +86,871 @@ const processedBanners = computed<BannerWithGlobalDates[]>(() => {
       daysUntilGlobal = 0
     } else if (now >= globalStart && now <= globalEnd) {
       status = 'active'
-      daysUntilGlobal = Math.ceil(
-        (globalEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-      )
+      daysUntilGlobal = Math.ceil((globalEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
     } else {
       status = 'upcoming'
-      daysUntilGlobal = Math.ceil(
-        (globalStart.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-      )
+      daysUntilGlobal = Math.ceil((globalStart.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
     }
+
+    // Split operators by rarity
+    const sixStarOps = (b.operators || []).filter((op) => op.rarity === 6)
+    const fiveStarOps = (b.operators || []).filter((op) => op.rarity === 5)
+    const otherOps = (b.operators || []).filter((op) => op.rarity < 5)
 
     return {
-      ...banner,
-      estimatedGlobalStartDate: globalStart,
-      estimatedGlobalEndDate: globalEnd,
+      ...b,
+      globalStartDate: globalStart,
+      globalEndDate: globalEnd,
       daysUntilGlobal,
       status,
+      sixStarOps,
+      fiveStarOps,
+      otherOps,
     }
   })
 })
 
-/**
- * Filtered and sorted banners
- */
+// Filtered and sorted banners
+// Default sort: oldest at the top (ascending by cnStartDate), newest at the bottom
 const filteredBanners = computed(() => {
-  let list = processedBanners.value
+  let list = [...processedBanners.value]
 
-  // Type Filter
-  if (selectedFilter.value !== 'all') {
-    list = list.filter((b) => b.type === selectedFilter.value)
+  // Category filter
+  if (selectedCategory.value !== 'all') {
+    list = list.filter((b) => {
+      if (selectedCategory.value === 'limited') {
+        return b.type === 'limited' || b.category === 'Limited'
+      }
+      if (selectedCategory.value === 'crossover') {
+        return b.type === 'crossover' || b.category === 'Collab'
+      }
+      if (selectedCategory.value === 'joint') {
+        return b.type === 'joint' || b.category === 'Joint Operation'
+      }
+      if (selectedCategory.value === 'orienteering') {
+        return b.type === 'orienteering' || b.category === 'Orienteering'
+      }
+      if (selectedCategory.value === 'standard') {
+        return b.type === 'standard' || b.category === 'Standard'
+      }
+      return true
+    })
   }
 
-  // Search query (banner name or operator name)
+  // Search filter
   if (searchQuery.value.trim()) {
-    const q = searchQuery.value.toLowerCase().trim()
-    list = list.filter(
-      (b) =>
-        b.name.toLowerCase().includes(q) ||
-        (b.nameZh && b.nameZh.toLowerCase().includes(q)) ||
-        b.featuredOperators.some((op) => op.name.toLowerCase().includes(q))
-    )
+    const q = searchQuery.value.trim().toLowerCase()
+    list = list.filter((b) => {
+      const matchTitle = b.title.toLowerCase().includes(q) || b.name.toLowerCase().includes(q)
+      const matchOp = b.operators?.some((op) => op.name.toLowerCase().includes(q))
+      return matchTitle || matchOp
+    })
   }
 
-  // Sort by Global Start Date
-  return list.slice().sort((a, b) => {
-    const timeA = a.estimatedGlobalStartDate.getTime()
-    const timeB = b.estimatedGlobalStartDate.getTime()
-    return sortOrder.value === 'asc' ? timeA - timeB : timeB - timeA
+  // Sort: sortAscending = true -> oldest at top, newest at bottom (wiki order)
+  list.sort((a, b) => {
+    const timeA = new Date(a.cnStartDate).getTime()
+    const timeB = new Date(b.cnStartDate).getTime()
+    return sortAscending.value ? timeA - timeB : timeB - timeA
   })
+
+  return list
 })
+
+// Fallback image helper
+const onImageError = (e: Event) => {
+  const target = e.target as HTMLImageElement
+  if (target) {
+    target.src = 'https://raw.githubusercontent.com/Aceship/Arknight-Images/master/ui/banner/banner_placeholder.png'
+  }
+}
 </script>
 
 <template>
-  <div class="ak-timeline">
-    <!-- Header / Controls Bar -->
-    <header class="ak-timeline__controls">
-      <div class="ak-timeline__info">
-        <h2 class="ak-timeline__title">CN → GLOBAL BANNER SCHEDULE</h2>
-        <span class="ak-timeline__offset-badge">
-          GLOBAL OFFSET: {{ offsetDays }} DAYS
-        </span>
-      </div>
-
-      <div class="ak-timeline__filter-row">
-        <!-- Search -->
-        <div class="ak-search">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search banner or operator..."
-            class="ak-search__input"
-          />
+  <div class="ak-banner-timeline">
+    <!-- Header Control Strip -->
+    <div class="ak-timeline-controls">
+      <div class="ak-controls-top">
+        <div class="ak-source-badge">
+          <span class="ak-source-dot" :class="{ 'ak-source-dot--live': apiResponse?.source === 'wiki.gg' }" />
+          <span class="ak-source-text">
+            DATA SOURCE: <strong>arknights.wiki.gg</strong>
+            <span v-if="apiResponse?.source === 'wiki.gg'"> (LIVE)</span>
+            <span v-else> (LOCAL CACHE)</span>
+          </span>
         </div>
 
-        <!-- Type Filter Tabs -->
-        <div class="ak-filter-tabs">
+        <div class="ak-controls-actions">
           <button
-            type="button"
-            class="ak-filter-tab"
-            :class="{ 'ak-filter-tab--active': selectedFilter === 'all' }"
-            @click="selectedFilter = 'all'"
+            class="ak-btn-refresh"
+            :disabled="isLoading"
+            @click="() => refresh()"
           >
-            ALL
+            <span v-if="isLoading" class="ak-spinner" />
+            <span v-else>↻</span>
+            REFRESH FROM WIKI
+          </button>
+        </div>
+      </div>
+
+      <!-- Offset & Filters Toolbar -->
+      <div class="ak-toolbar-row">
+        <!-- Offset Adjuster -->
+        <div class="ak-offset-adjuster">
+          <span class="ak-offset-label">GLOBAL OFFSET:</span>
+          <button class="ak-offset-step" @click="offsetDays = Math.max(0, offsetDays - 5)">-5d</button>
+          <div class="ak-offset-value">
+            <strong>{{ offsetDays }}</strong> DAYS
+          </div>
+          <button class="ak-offset-step" @click="offsetDays += 5">+5d</button>
+          <button
+            v-if="offsetDays !== 175"
+            class="ak-offset-reset"
+            @click="offsetDays = 175"
+          >
+            RESET (175d)
+          </button>
+        </div>
+
+        <!-- Sort Toggle -->
+        <div class="ak-sort-toggle">
+          <button
+            class="ak-sort-btn"
+            :class="{ 'ak-sort-btn--active': sortAscending }"
+            @click="sortAscending = !sortAscending"
+            :title="sortAscending ? 'Oldest at top, newest at bottom (Wiki order)' : 'Newest at top, oldest at bottom'"
+          >
+            <span class="ak-sort-icon">{{ sortAscending ? '⬇' : '⬆' }}</span>
+            <span>{{ sortAscending ? 'OLDEST AT TOP (WIKI ORDER)' : 'NEWEST AT TOP' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Category Filter Tabs & Search -->
+      <div class="ak-filter-row">
+        <div class="ak-category-tabs">
+          <button
+            class="ak-cat-btn"
+            :class="{ 'ak-cat-btn--active': selectedCategory === 'all' }"
+            @click="selectedCategory = 'all'"
+          >
+            ALL ({{ rawBanners.length }})
           </button>
           <button
-            type="button"
-            class="ak-filter-tab"
-            :class="{ 'ak-filter-tab--active': selectedFilter === 'limited' }"
-            @click="selectedFilter = 'limited'"
+            class="ak-cat-btn ak-cat-btn--limited"
+            :class="{ 'ak-cat-btn--active': selectedCategory === 'limited' }"
+            @click="selectedCategory = 'limited'"
           >
             LIMITED
           </button>
           <button
-            type="button"
-            class="ak-filter-tab"
-            :class="{ 'ak-filter-tab--active': selectedFilter === 'collab' }"
-            @click="selectedFilter = 'collab'"
+            class="ak-cat-btn ak-cat-btn--collab"
+            :class="{ 'ak-cat-btn--active': selectedCategory === 'crossover' }"
+            @click="selectedCategory = 'crossover'"
           >
-            COLLAB
+            CROSSOVER
           </button>
           <button
-            type="button"
-            class="ak-filter-tab"
-            :class="{ 'ak-filter-tab--active': selectedFilter === 'standard' }"
-            @click="selectedFilter = 'standard'"
+            class="ak-cat-btn ak-cat-btn--joint"
+            :class="{ 'ak-cat-btn--active': selectedCategory === 'joint' }"
+            @click="selectedCategory = 'joint'"
           >
-            STANDARD
+            JOINT OPERATION
+          </button>
+          <button
+            class="ak-cat-btn ak-cat-btn--orienteering"
+            :class="{ 'ak-cat-btn--active': selectedCategory === 'orienteering' }"
+            @click="selectedCategory = 'orienteering'"
+          >
+            ORIENTEERING
           </button>
         </div>
 
-        <!-- Offset Slider Tool -->
-        <div class="ak-offset-adjuster">
-          <label for="offsetRange" class="ak-offset-adjuster__label">
-            Offset: <strong>{{ offsetDays }}d</strong>
-          </label>
+        <div class="ak-search-wrap">
           <input
-            id="offsetRange"
-            v-model.number="offsetDays"
-            type="range"
-            min="150"
-            max="200"
-            step="1"
-            class="ak-offset-adjuster__range"
+            v-model="searchQuery"
+            type="text"
+            class="ak-search-input"
+            placeholder="Search banner or operator..."
           />
-        </div>
-      </div>
-    </header>
-
-    <!-- Timeline Body -->
-    <div v-if="filteredBanners.length > 0" class="ak-timeline__track">
-      <div
-        v-for="banner in filteredBanners"
-        :key="banner.id"
-        class="ak-timeline-item"
-        :class="`ak-timeline-item--${banner.status}`"
-      >
-        <!-- Timeline Node Dot -->
-        <div class="ak-timeline-item__connector">
-          <div class="ak-timeline-item__node" />
-          <div class="ak-timeline-item__line" />
-        </div>
-
-        <!-- Date Column -->
-        <div class="ak-timeline-item__date-col">
-          <div class="ak-date-badge">
-            <span class="ak-date-badge__label">EST. GLOBAL</span>
-            <span class="ak-date-badge__date">
-              {{ formatDate(banner.estimatedGlobalStartDate) }}
-            </span>
-          </div>
-          <div class="ak-date-badge ak-date-badge--secondary">
-            <span class="ak-date-badge__label">CN ORIGINAL</span>
-            <span class="ak-date-badge__date">
-              {{ formatDate(banner.cnStartDate) }}
-            </span>
-          </div>
-        </div>
-
-        <!-- Card Content -->
-        <div class="ak-banner-card" :class="`ak-banner-card--${banner.type}`">
-          <!-- Card Header -->
-          <div class="ak-banner-card__header">
-            <div class="ak-banner-card__tags">
-              <span class="ak-tag ak-tag--type">{{ banner.category }}</span>
-              <span
-                v-if="banner.status === 'active'"
-                class="ak-tag ak-tag--status ak-tag--status-active"
-              >
-                ● ACTIVE (ENDS IN {{ banner.daysUntilGlobal }}D)
-              </span>
-              <span
-                v-else-if="banner.status === 'upcoming'"
-                class="ak-tag ak-tag--status ak-tag--status-upcoming"
-              >
-                IN ~{{ banner.daysUntilGlobal }} DAYS
-              </span>
-              <span v-else class="ak-tag ak-tag--status ak-tag--status-passed">
-                CONCLUDED
-              </span>
-            </div>
-
-            <div class="ak-banner-card__perks">
-              <span v-if="banner.freePulls > 0" class="ak-perk ak-perk--free">
-                🎁 {{ banner.freePulls }} FREE PULLS
-              </span>
-              <span class="ak-perk ak-perk--spark">
-                ⚡ {{ banner.sparkCost }} SPARK
-              </span>
-            </div>
-          </div>
-
-          <!-- Banner Title -->
-          <div class="ak-banner-card__title-box">
-            <h3 class="ak-banner-card__title">{{ banner.name }}</h3>
-            <span v-if="banner.nameZh" class="ak-banner-card__subtitle">
-              {{ banner.nameZh }}
-            </span>
-          </div>
-
-          <p class="ak-banner-card__desc">{{ banner.description }}</p>
-
-          <!-- Featured Operators Section -->
-          <div class="ak-banner-card__operators">
-            <span class="ak-banner-card__operators-label">RATE-UP OPERATORS:</span>
-            <div class="ak-operator-list">
-              <div
-                v-for="op in banner.featuredOperators"
-                :key="op.id"
-                class="ak-op-badge"
-                :class="[
-                  `ak-op-badge--r${op.rarity}`,
-                  { 'ak-op-badge--limited': op.isLimited },
-                ]"
-              >
-                <div class="ak-op-badge__avatar">
-                  <img
-                    v-if="op.avatar"
-                    :src="op.avatar"
-                    :alt="op.name"
-                    loading="lazy"
-                    @error="($event.target as HTMLElement).style.display = 'none'"
-                  />
-                  <div class="ak-op-badge__rarity-stars">
-                    {{ '★'.repeat(op.rarity) }}
-                  </div>
-                </div>
-                <div class="ak-op-badge__info">
-                  <span class="ak-op-badge__name">{{ op.name }}</span>
-                  <span class="ak-op-badge__class">
-                    {{ op.profession }}
-                    <strong v-if="op.isLimited" class="ak-op-badge__limited-flag">
-                      [LIMITED]
-                    </strong>
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
 
-    <!-- Empty State -->
-    <div v-else class="ak-timeline__empty">
-      <p>NO BANNERS MATCH CURRENT FILTER CRITERIA</p>
+    <!-- Wiki-Styled Banner Table -->
+    <div class="ak-wiki-table-wrap">
+      <table class="ak-wiki-table">
+        <thead>
+          <tr>
+            <th class="ak-th-banner">Banner</th>
+            <th class="ak-th-operators">Rate-Up Operators</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="b in filteredBanners"
+            :key="b.id"
+            class="ak-wiki-row"
+          >
+            <!-- Left Column: Banner -->
+            <td class="ak-wiki-col-banner">
+              <div class="ak-banner-box">
+                <!-- Cyan/Blue Title Bar -->
+                <div class="ak-banner-title-bar">
+                  {{ b.title }}
+                </div>
+
+                <!-- Banner Graphic Image -->
+                <div class="ak-banner-img-wrap">
+                  <img
+                    :src="b.bannerImg || b.bannerImage"
+                    :alt="b.title"
+                    class="ak-banner-img"
+                    loading="lazy"
+                    @error="onImageError"
+                  />
+                </div>
+
+                <!-- Date Info Block -->
+                <div class="ak-banner-dates-bar">
+                  <div class="ak-date-cn">
+                    <b>CN date:</b> {{ b.cnStartDate.replace(/-/g, '/') }} – {{ (b.cnEndDate || b.cnStartDate).replace(/-/g, '/') }}
+                  </div>
+                  <div class="ak-date-global">
+                    <b>Est. Global:</b> {{ formatDate(b.globalStartDate) }} – {{ formatDate(b.globalEndDate) }}
+                    <span class="ak-days-chip" :class="`ak-days-chip--${b.status}`">
+                      <template v-if="b.status === 'active'">NOW ACTIVE</template>
+                      <template v-else-if="b.status === 'passed'">PASSED</template>
+                      <template v-else>IN ~{{ b.daysUntilGlobal }}d</template>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Right Column: Rate-Up Operators -->
+            <td class="ak-wiki-col-operators">
+              <div class="ak-ops-container">
+                <!-- Description / Instructions if present -->
+                <div v-if="b.description" class="ak-ops-desc">
+                  {{ b.description }}
+                </div>
+
+                <!-- 6-Star Operators Sub-Section (if banner has both 6★ and 5★ with custom texts) -->
+                <div v-if="b.sixStarOps.length > 0" class="ak-ops-tier-block">
+                  <div v-if="b.description && b.title.includes('Orienteering')" class="ak-ops-subheading">
+                    6★ Operators (Choose 3 rate-ups):
+                  </div>
+                  <div class="ak-ops-grid">
+                    <div
+                      v-for="op in b.sixStarOps"
+                      :key="op.name"
+                      class="ak-wiki-op-card"
+                      :title="`${op.name} (6★ ${op.profession || ''})`"
+                    >
+                      <div class="ak-wiki-op-avatar">
+                        <img
+                          :src="op.icon"
+                          :alt="op.name"
+                          loading="lazy"
+                          @error="onImageError"
+                        />
+                      </div>
+                      <div class="ak-wiki-op-bar ak-wiki-op-bar--6" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 5-Star Operators Sub-Section -->
+                <div v-if="b.fiveStarOps.length > 0" class="ak-ops-tier-block">
+                  <div v-if="b.description && b.title.includes('Orienteering')" class="ak-ops-subheading">
+                    5★ Operators (Choose 3 rate-ups):
+                  </div>
+                  <div class="ak-ops-grid">
+                    <div
+                      v-for="op in b.fiveStarOps"
+                      :key="op.name"
+                      class="ak-wiki-op-card"
+                      :title="`${op.name} (5★ ${op.profession || ''})`"
+                    >
+                      <div class="ak-wiki-op-avatar">
+                        <img
+                          :src="op.icon"
+                          :alt="op.name"
+                          loading="lazy"
+                          @error="onImageError"
+                        />
+                      </div>
+                      <div class="ak-wiki-op-bar ak-wiki-op-bar--5" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Other Operators (if any) -->
+                <div v-if="b.otherOps.length > 0" class="ak-ops-tier-block">
+                  <div class="ak-ops-grid">
+                    <div
+                      v-for="op in b.otherOps"
+                      :key="op.name"
+                      class="ak-wiki-op-card"
+                      :title="`${op.name} (${op.rarity}★ ${op.profession || ''})`"
+                    >
+                      <div class="ak-wiki-op-avatar">
+                        <img
+                          :src="op.icon"
+                          :alt="op.name"
+                          loading="lazy"
+                          @error="onImageError"
+                        />
+                      </div>
+                      <div class="ak-wiki-op-bar ak-wiki-op-bar--other" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Empty State -->
+      <div v-if="filteredBanners.length === 0" class="ak-empty-table">
+        <span>🔍</span>
+        <p>No upcoming banners matched your search or category filter.</p>
+      </div>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.ak-timeline {
+.ak-banner-timeline {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  font-family: inherit;
-
-  // Controls Header
-  &__controls {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    padding: 1.5rem;
-    background: rgba($ak-bg-secondary, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(8px);
-    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
-  }
-
-  &__info {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  &__title {
-    font-size: 1.25rem;
-    font-weight: 800;
-    letter-spacing: 2px;
-    margin: 0;
-    color: $ak-text-primary;
-  }
-
-  &__offset-badge {
-    padding: 0.25rem 0.6rem;
-    font-size: 0.75rem;
-    font-family: monospace;
-    font-weight: 700;
-    background: rgba($ak-cyan, 0.15);
-    color: $ak-cyan;
-    border: 1px solid rgba($ak-cyan, 0.4);
-    letter-spacing: 1px;
-  }
-
-  &__filter-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-
-  // Track Layout
-  &__track {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    position: relative;
-  }
-
-  &__empty {
-    padding: 3rem;
-    text-align: center;
-    font-family: monospace;
-    color: $ak-text-muted;
-    border: 1px dashed rgba(255, 255, 255, 0.1);
-  }
-}
-
-// Search Input
-.ak-search {
-  flex: 1;
-  min-width: 220px;
-
-  &__input {
-    width: 100%;
-    padding: 0.5rem 0.85rem;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: $ak-text-primary;
-    font-size: 0.85rem;
-    outline: none;
-    transition: border-color 0.2s ease;
-
-    &:focus {
-      border-color: $ak-cyan;
-      box-shadow: 0 0 8px rgba($ak-cyan, 0.3);
-    }
-  }
-}
-
-// Filter Tabs
-.ak-filter-tabs {
-  display: flex;
-  gap: 0.35rem;
-}
-
-.ak-filter-tab {
-  padding: 0.45rem 0.85rem;
-  font-size: 0.75rem;
-  font-family: monospace;
-  font-weight: 600;
-  letter-spacing: 1px;
-  background: rgba(255, 255, 255, 0.04);
-  color: $ak-text-secondary;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    color: $ak-text-primary;
-    background: rgba(255, 255, 255, 0.08);
-  }
-
-  &--active {
-    background: rgba($ak-cyan, 0.15);
-    color: $ak-cyan;
-    border-color: $ak-cyan;
-  }
-}
-
-// Offset slider tool
-.ak-offset-adjuster {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-family: monospace;
-  font-size: 0.75rem;
-  color: $ak-text-secondary;
-
-  &__label {
-    white-space: nowrap;
-    strong {
-      color: $ak-cyan;
-    }
-  }
-
-  &__range {
-    cursor: pointer;
-    accent-color: $ak-cyan;
-    width: 100px;
-  }
-}
-
-// Timeline Item
-.ak-timeline-item {
-  display: grid;
-  grid-template-columns: 24px 170px 1fr;
   gap: 1.5rem;
-  position: relative;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 20px 1fr;
-    gap: 1rem;
-  }
-
-  &__connector {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  &__node {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: $ak-bg-main;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    margin-top: 1.5rem;
-    z-index: 2;
-    transition: all 0.2s ease;
-  }
-
-  &__line {
-    flex: 1;
-    width: 2px;
-    background: rgba(255, 255, 255, 0.1);
-    margin-top: 4px;
-  }
-
-  &--active &__node {
-    border-color: $ak-green;
-    background: $ak-green;
-    box-shadow: 0 0 10px rgba($ak-green, 0.8);
-  }
-
-  &--upcoming &__node {
-    border-color: $ak-cyan;
-    background: $ak-bg-main;
-    box-shadow: 0 0 8px rgba($ak-cyan, 0.4);
-  }
-
-  // Date column
-  &__date-col {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding-top: 1.25rem;
-
-    @media (max-width: 768px) {
-      grid-column: 2 / -1;
-      flex-direction: row;
-      flex-wrap: wrap;
-      padding-top: 0;
-    }
-  }
 }
 
-.ak-date-badge {
-  display: flex;
-  flex-direction: column;
-  padding: 0.4rem 0.6rem;
-  background: rgba(0, 0, 0, 0.4);
-  border-left: 2px solid $ak-cyan;
-  font-family: monospace;
-
-  &__label {
-    font-size: 0.6rem;
-    letter-spacing: 1px;
-    color: $ak-cyan;
-    font-weight: 700;
-  }
-
-  &__date {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: $ak-text-primary;
-  }
-
-  &--secondary {
-    border-left-color: rgba(255, 255, 255, 0.2);
-
-    .ak-date-badge__label {
-      color: $ak-text-muted;
-    }
-
-    .ak-date-badge__date {
-      color: $ak-text-secondary;
-      font-size: 0.75rem;
-    }
-  }
-}
-
-// Banner Card
-.ak-banner-card {
-  background: rgba(24, 24, 28, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 1.5rem;
+// -----------------------------------------------------------------------------
+// Controls Toolbar
+// -----------------------------------------------------------------------------
+.ak-timeline-controls {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  position: relative;
-  transition: all 0.25s ease;
-  backdrop-filter: blur(6px);
-  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
-
-  &:hover {
-    border-color: rgba(255, 255, 255, 0.2);
-    background: rgba(30, 31, 36, 0.9);
-  }
-
-  &--limited {
-    border-left: 3px solid $ak-rarity-6;
-  }
-
-  &--collab {
-    border-left: 3px solid $ak-purple;
-  }
-
-  &--standard {
-    border-left: 3px solid $ak-cyan;
-  }
-
-  &__header {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  &__tags {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  &__perks {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  &__title-box {
-    display: flex;
-    align-items: baseline;
-    gap: 0.75rem;
-  }
-
-  &__title {
-    font-size: 1.35rem;
-    font-weight: 800;
-    letter-spacing: 1px;
-    margin: 0;
-    color: $ak-text-primary;
-  }
-
-  &__subtitle {
-    font-size: 0.85rem;
-    color: $ak-text-muted;
-    font-family: monospace;
-  }
-
-  &__desc {
-    font-size: 0.875rem;
-    color: $ak-text-secondary;
-    margin: 0;
-    line-height: 1.45;
-  }
-
-  &__operators {
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-    margin-top: 0.25rem;
-  }
-
-  &__operators-label {
-    font-size: 0.65rem;
-    font-family: monospace;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    color: $ak-text-muted;
-  }
+  padding: 1.25rem 1.5rem;
+  background: rgba($ak-bg-secondary, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 4px solid $ak-cyan;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
 }
 
-// Tags & Perks
-.ak-tag {
-  font-size: 0.65rem;
-  font-family: monospace;
-  font-weight: 700;
-  letter-spacing: 1px;
-  padding: 0.2rem 0.5rem;
-
-  &--type {
-    background: rgba(255, 255, 255, 0.08);
-    color: $ak-text-primary;
-  }
-
-  &--status-active {
-    background: rgba($ak-green, 0.15);
-    color: $ak-green;
-    border: 1px solid rgba($ak-green, 0.4);
-  }
-
-  &--status-upcoming {
-    background: rgba($ak-cyan, 0.12);
-    color: $ak-cyan;
-    border: 1px solid rgba($ak-cyan, 0.35);
-  }
-
-  &--status-passed {
-    background: rgba(255, 255, 255, 0.04);
-    color: $ak-text-muted;
-  }
-}
-
-.ak-perk {
-  font-size: 0.7rem;
-  font-family: monospace;
-  font-weight: 700;
-  padding: 0.2rem 0.5rem;
-
-  &--free {
-    background: rgba($ak-amber, 0.15);
-    color: $ak-amber;
-    border: 1px solid rgba($ak-amber, 0.4);
-  }
-
-  &--spark {
-    background: rgba(255, 255, 255, 0.05);
-    color: $ak-text-secondary;
-  }
-}
-
-// Operator Badges
-.ak-operator-list {
+.ak-controls-top {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
   flex-wrap: wrap;
   gap: 0.75rem;
 }
 
-.ak-op-badge {
+.ak-source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: monospace;
+  font-size: 0.72rem;
+  color: $ak-text-secondary;
+}
+
+.ak-source-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $ak-text-muted;
+
+  &--live {
+    background: $ak-green;
+    box-shadow: 0 0 8px $ak-green;
+  }
+}
+
+.ak-btn-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: $ak-text-secondary;
+  font-family: monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    color: $ak-cyan;
+    border-color: $ak-cyan;
+    background: rgba($ak-cyan, 0.1);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.ak-spinner {
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: $ak-cyan;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+// Toolbar row
+.ak-toolbar-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.ak-offset-adjuster {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.4rem 0.65rem;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 0.4rem;
+  font-family: monospace;
+}
+
+.ak-offset-label {
+  font-size: 0.7rem;
+  color: $ak-text-muted;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-right: 0.25rem;
+}
+
+.ak-offset-step {
+  padding: 0.3rem 0.6rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: $ak-text-secondary;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    color: $ak-cyan;
+    border-color: $ak-cyan;
+  }
+}
+
+.ak-offset-value {
+  padding: 0.3rem 0.75rem;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 0.85rem;
+  color: $ak-text-secondary;
+
+  strong {
+    color: $ak-cyan;
+    font-size: 1rem;
+  }
+}
+
+.ak-offset-reset {
+  padding: 0.3rem 0.5rem;
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  color: $ak-text-muted;
+  font-size: 0.68rem;
+  cursor: pointer;
+
+  &:hover {
+    color: $ak-yellow;
+    border-color: $ak-yellow;
+  }
+}
+
+.ak-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: $ak-text-secondary;
+  font-family: monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.55);
+    color: $ak-cyan;
+    border-color: $ak-cyan;
   }
 
-  &--r6 {
-    border-color: rgba($ak-rarity-6, 0.5);
-    .ak-op-badge__rarity-stars {
-      color: $ak-rarity-6;
-    }
+  &--active {
+    border-color: rgba($ak-cyan, 0.4);
+    color: $ak-cyan;
   }
+}
 
-  &--r5 {
-    border-color: rgba($ak-rarity-5, 0.4);
-    .ak-op-badge__rarity-stars {
-      color: $ak-rarity-5;
-    }
-  }
+.ak-sort-icon {
+  font-size: 0.85rem;
+}
 
-  &--limited {
-    background: linear-gradient(
-      90deg,
-      rgba($ak-rarity-6, 0.12) 0%,
-      rgba(0, 0, 0, 0.35) 100%
-    );
-  }
+// Category filter row
+.ak-filter-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
 
-  &__avatar {
-    width: 38px;
-    height: 38px;
-    position: relative;
-    background: #101012;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
+.ak-category-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
 
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-  }
+.ak-cat-btn {
+  padding: 0.35rem 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: $ak-text-secondary;
+  font-family: monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
 
-  &__rarity-stars {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    font-size: 0.5rem;
-    line-height: 1;
-    background: rgba(0, 0, 0, 0.7);
-    text-align: center;
-    letter-spacing: -1px;
-  }
-
-  &__info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-  }
-
-  &__name {
-    font-size: 0.825rem;
-    font-weight: 700;
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
     color: $ak-text-primary;
   }
 
-  &__class {
-    font-size: 0.65rem;
-    color: $ak-text-muted;
-    font-family: monospace;
+  &--active {
+    background: rgba($ak-cyan, 0.15);
+    border-color: $ak-cyan;
+    color: $ak-cyan;
   }
 
-  &__limited-flag {
-    color: $ak-rarity-6;
-    font-weight: 800;
+  &--limited.ak-cat-btn--active {
+    background: rgba($ak-red, 0.15);
+    border-color: $ak-red;
+    color: $ak-red;
+  }
+
+  &--collab.ak-cat-btn--active {
+    background: rgba($ak-purple, 0.15);
+    border-color: $ak-purple;
+    color: $ak-purple;
+  }
+
+  &--joint.ak-cat-btn--active {
+    background: rgba($ak-amber, 0.15);
+    border-color: $ak-amber;
+    color: $ak-amber;
+  }
+
+  &--orienteering.ak-cat-btn--active {
+    background: rgba($ak-yellow, 0.15);
+    border-color: $ak-yellow;
+    color: $ak-yellow;
+  }
+}
+
+.ak-search-wrap {
+  min-width: 240px;
+  flex: 1;
+  max-width: 320px;
+}
+
+.ak-search-input {
+  width: 100%;
+  padding: 0.45rem 0.8rem;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: $ak-text-primary;
+  font-size: 0.78rem;
+  font-family: monospace;
+  outline: none;
+
+  &:focus {
+    border-color: $ak-cyan;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Wiki Table (Screenshot Style)
+// -----------------------------------------------------------------------------
+.ak-wiki-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0d0e11;
+}
+
+.ak-wiki-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: inherit;
+
+  thead tr {
+    background: #17181d;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+
+    th {
+      padding: 0.85rem 1rem;
+      font-family: monospace;
+      font-size: 0.85rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: $ak-text-primary;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+  }
+}
+
+.ak-th-banner {
+  width: 44%;
+  min-width: 360px;
+}
+
+.ak-th-operators {
+  width: 56%;
+  min-width: 420px;
+}
+
+.ak-wiki-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.015);
+  }
+}
+
+// Left Column: Banner box
+.ak-wiki-col-banner {
+  vertical-align: top;
+  padding: 0.85rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ak-banner-box {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 512px;
+  margin: 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #000;
+}
+
+// Blue title bar from screenshot
+.ak-banner-title-bar {
+  background-color: #00a2ff;
+  color: #000000;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 0.84rem;
+  padding: 0.35rem 0.65rem;
+  text-align: center;
+  letter-spacing: 0.3px;
+  line-height: 1.25;
+}
+
+.ak-banner-img-wrap {
+  width: 100%;
+  background: #000;
+  overflow: hidden;
+}
+
+.ak-banner-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+// Date block below image
+.ak-banner-dates-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  background: #0a0b0e;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: monospace;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.ak-date-cn {
+  color: $ak-text-primary;
+  b {
+    color: #fff;
+    margin-right: 0.25rem;
+  }
+}
+
+.ak-date-global {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  color: $ak-text-secondary;
+  font-size: 0.7rem;
+
+  b {
+    color: $ak-cyan;
+  }
+}
+
+.ak-days-chip {
+  padding: 0.1rem 0.35rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  border-radius: 2px;
+
+  &--upcoming {
+    background: rgba($ak-cyan, 0.2);
+    color: $ak-cyan;
+    border: 1px solid rgba($ak-cyan, 0.4);
+  }
+
+  &--active {
+    background: rgba($ak-green, 0.2);
+    color: $ak-green;
+    border: 1px solid rgba($ak-green, 0.4);
+    animation: pulse 1s infinite alternate;
+  }
+
+  &--passed {
+    background: rgba(255, 255, 255, 0.05);
+    color: $ak-text-muted;
+  }
+}
+
+// Right Column: Rate-Up Operators
+.ak-wiki-col-operators {
+  vertical-align: top;
+  padding: 1.25rem 1.5rem;
+  background: #141519;
+}
+
+.ak-ops-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.ak-ops-desc {
+  font-size: 0.8rem;
+  color: $ak-text-secondary;
+  line-height: 1.4;
+  margin-bottom: 0.25rem;
+}
+
+.ak-ops-tier-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ak-ops-subheading {
+  font-family: monospace;
+  font-size: 0.72rem;
+  color: $ak-text-muted;
+  font-weight: 700;
+}
+
+.ak-ops-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+// Square operator card matching wiki screenshot
+.ak-wiki-op-card {
+  display: flex;
+  flex-direction: column;
+  width: 60px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.ak-wiki-op-avatar {
+  width: 60px;
+  height: 60px;
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+  }
+}
+
+// Colored bottom bar under operator
+.ak-wiki-op-bar {
+  height: 3px;
+  width: 60px;
+
+  &--6 {
+    background-color: #FFC800; // Gold/Yellow bar for 6-star as in screenshot
+  }
+
+  &--5 {
+    background-color: #FFFFA9; // Light yellow/cream bar for 5-star as in screenshot
+  }
+
+  &--other {
+    background-color: $ak-rarity-4;
+  }
+}
+
+.ak-empty-table {
+  padding: 4rem 2rem;
+  text-align: center;
+  color: $ak-text-muted;
+  font-family: monospace;
+  font-size: 0.85rem;
+
+  span {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
   }
 }
 </style>
