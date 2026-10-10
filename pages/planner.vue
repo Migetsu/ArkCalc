@@ -9,6 +9,7 @@ import OperatorCardSkeleton from '~/components/ui/OperatorCardSkeleton.vue'
 import FarmingTableSkeleton from '~/components/ui/FarmingTableSkeleton.vue'
 import AccountSyncModal from '~/components/AccountSyncModal.vue'
 import PlanShareModal from '~/components/PlanShareModal.vue'
+import EventShopModal from '~/components/EventShopModal.vue'
 import operatorsData from '~/assets/data/operators.json'
 import materialsData from '~/assets/data/materials.json'
 import { aggregateMaterialRequirements, calculateMaterialDeltas } from '~/utils/materialCalculator'
@@ -50,6 +51,8 @@ const router = useRouter()
 
 const isSyncModalOpen = ref(false)
 const isShareModalOpen = ref(false)
+const isEventShopModalOpen = ref(false)
+const isSyncingEvents = ref(false)
 const isLoadingDemo = ref(false)
 
 const loadDemoData = async () => {
@@ -807,6 +810,71 @@ const toggleInspectMaterial = (itemId: string) => {
 const adjustInventory = (itemId: string, delta: number) => {
   userStore.adjustItemQuantity(itemId, delta)
 }
+
+// Calculate AP and missions saved by guaranteed event shop & milestone rewards
+const totalSanitySaved = computed(() => {
+  if (!includeEventRewards.value) return 0
+  let sanity = 0
+  for (const m of calculatedDeltas.value) {
+    if (m.eventRewards && m.eventRewards > 0 && m.bestStage?.apPerDrop) {
+      const deficitWithoutEvent = Math.max(0, m.required - m.owned)
+      const savedUnits = Math.min(deficitWithoutEvent, m.eventRewards)
+      sanity += Math.round(savedUnits * m.bestStage.apPerDrop)
+    }
+  }
+  return sanity
+})
+
+const totalRunsSaved = computed(() => {
+  if (!includeEventRewards.value) return 0
+  let runs = 0
+  for (const m of calculatedDeltas.value) {
+    if (m.eventRewards && m.eventRewards > 0 && m.bestStage && m.bestStage.dropRate > 0) {
+      const deficitWithoutEvent = Math.max(0, m.required - m.owned)
+      const savedUnits = Math.min(deficitWithoutEvent, m.eventRewards)
+      runs += Math.ceil(savedUnits / m.bestStage.dropRate)
+    }
+  }
+  return runs
+})
+
+const syncWikiEvents = async (force = true) => {
+  isSyncingEvents.value = true
+  if (force) {
+    toast.info('Запрос актуальных магазинов ивентов с arknights.wiki.gg...', {
+      title: 'WIKI.GG SYNC',
+      tag: 'NET // PARSE',
+    })
+  }
+  try {
+    const res = await $fetch<{
+      source: string
+      enrichedCount?: number
+      updatedAt: string
+      events: ArknightsEvent[]
+    }>(`/api/events?force=${force}`)
+
+    if (res && res.events) {
+      eventsData.value = res
+      toast.success(
+        res.source === 'wiki.gg-live'
+          ? `Данные магазинов обновлены из arknights.wiki.gg! Загружено наград: ${res.enrichedCount || 1}`
+          : 'Синхронизировано с базой данных ивентов PRTS',
+        {
+          title: 'WIKI SYNCHRONIZED',
+          tag: 'PRTS // LIVE',
+        }
+      )
+    }
+  } catch (err: any) {
+    console.warn('[Planner] Live wiki sync error:', err)
+    toast.error('Не удалось обновить данные с wiki.gg. Используется локальный кэш.', {
+      title: 'SYNC WARNING',
+    })
+  } finally {
+    isSyncingEvents.value = false
+  }
+}
 </script>
 
 <template>
@@ -847,11 +915,13 @@ const adjustInventory = (itemId: string, delta: number) => {
         <div
           class="ak-stat-pill"
           :class="includeEventRewards ? 'ak-stat-pill--purple' : ''"
-          :title="includeEventRewards ? `Event reduction active: ${selectedEventName} (-${totalEventBonusItemsApplied} items)` : 'Event shop deduction disabled'"
+          :title="includeEventRewards ? `Event reduction active: ${selectedEventName} (-${totalEventBonusItemsApplied} items, -${totalSanitySaved} AP)` : 'Event shop deduction disabled'"
+          style="cursor: pointer;"
+          @click="isEventShopModalOpen = true"
         >
-          <span class="ak-stat-pill__label">EVENT SHOP DEDUCTION</span>
+          <span class="ak-stat-pill__label">EVENT SAVINGS</span>
           <span class="ak-stat-pill__val">
-            {{ includeEventRewards ? (totalEventBonusItemsApplied > 0 ? `-${totalEventBonusItemsApplied} DEDUCTED` : 'ACTIVE') : 'OFF' }}
+            {{ includeEventRewards ? (totalSanitySaved > 0 ? `-${totalSanitySaved.toLocaleString()} AP` : (totalEventBonusItemsApplied > 0 ? `-${totalEventBonusItemsApplied} ITEMS` : 'ACTIVE')) : 'OFF' }}
           </span>
         </div>
       </div>
@@ -1517,6 +1587,16 @@ const adjustInventory = (itemId: string, delta: number) => {
             <div class="ak-event-hud__title-group">
               <span class="ak-panel__badge ak-panel__badge--purple">PRTS // EVENT INTELLIGENCE</span>
               <h3>GUARANTEED EVENT SHOP & MILESTONE REWARDS</h3>
+              <span
+                class="ak-event-source-badge"
+                :class="eventsData?.source === 'wiki.gg-live' ? 'ak-event-source-badge--live' : ''"
+                :title="eventsData?.source === 'wiki.gg-live' ? 'Parsed live from arknights.wiki.gg MediaWiki API' : 'Loaded from offline fallback dataset'"
+              >
+                {{ eventsData?.source === 'wiki.gg-live' ? '● WIKI.GG LIVE' : 'PRTS CACHE' }}
+              </span>
+              <span v-if="totalSanitySaved > 0 && includeEventRewards" class="ak-event-saved-pill">
+                ⚡ СЭКОНОМЛЕНО: -{{ totalSanitySaved.toLocaleString() }} AP (~{{ totalRunsSaved }} заходов)
+              </span>
             </div>
             
             <div class="ak-event-hud__controls">
@@ -1544,6 +1624,28 @@ const adjustInventory = (itemId: string, delta: number) => {
                   {{ ev.name }} [{{ ev.status.toUpperCase() }}]
                 </option>
               </select>
+
+              <!-- Shop Inspector Modal Trigger -->
+              <button
+                type="button"
+                class="ak-btn-hud-action"
+                title="Открыть подробный инспектор магазина ивента"
+                @click="isEventShopModalOpen = true"
+              >
+                🛒 ИНСПЕКТОР
+              </button>
+
+              <!-- Live Wiki Sync Button -->
+              <button
+                type="button"
+                class="ak-btn-hud-action ak-btn-hud-action--sync"
+                :disabled="isSyncingEvents"
+                title="Синхронизировать товары магазина с arknights.wiki.gg"
+                @click="syncWikiEvents(true)"
+              >
+                <span :class="{ 'ak-spin': isSyncingEvents }">⟳</span>
+                <span>{{ isSyncingEvents ? 'СИНХРОНИЗАЦИЯ...' : 'СИНХРОНИЗИРОВАТЬ' }}</span>
+              </button>
             </div>
           </div>
 
@@ -1551,7 +1653,7 @@ const adjustInventory = (itemId: string, delta: number) => {
             <p class="ak-event-hud__desc">
               Guaranteed materials from <strong>{{ selectedEventName }}</strong> are automatically deducted from your material deficits so you don't over-farm before event stores open.
               <span v-if="totalEventBonusItemsApplied > 0" class="ak-event-hud__highlight-stat">
-                (Saved: <strong>{{ totalEventBonusItemsApplied }}</strong> items from {{ activeEventsCount }} events)
+                (Saved: <strong>{{ totalEventBonusItemsApplied }}</strong> items from {{ activeEventsCount }} events<span v-if="totalSanitySaved > 0">, ~<strong>{{ totalSanitySaved.toLocaleString() }}</strong> Sanity</span>)
               </span>
             </p>
 
@@ -1564,6 +1666,8 @@ const adjustInventory = (itemId: string, delta: number) => {
                   class="ak-event-chip"
                   :class="`ak-event-chip--tier${rew.tier}`"
                   :title="`Guaranteed incoming reward: ${rew.name}`"
+                  @click="isEventShopModalOpen = true"
+                  style="cursor: pointer;"
                 >
                   <span class="ak-event-chip__count">+{{ rew.count }}</span>
                   <span class="ak-event-chip__name">{{ rew.name }}</span>
@@ -1954,6 +2058,22 @@ const adjustInventory = (itemId: string, delta: number) => {
       :operators-catalog="allOperators"
       @close="isShareModalOpen = false"
       @import="handleImportPlan"
+    />
+
+    <!-- Guaranteed Event Shop & Milestone Rewards Inspector Modal -->
+    <EventShopModal
+      :is-open="isEventShopModalOpen"
+      :events-list="eventsList"
+      :selected-event-id="selectedEventId"
+      :user-inventory="userStore.inventory"
+      :needed-materials="aggregatedNeeds.materials"
+      :total-sanity-saved="totalSanitySaved"
+      :total-runs-saved="totalRunsSaved"
+      :source="eventsData?.source"
+      :is-syncing="isSyncingEvents"
+      @close="isEventShopModalOpen = false"
+      @update:selected-event-id="selectedEventId = $event"
+      @sync="syncWikiEvents(true)"
     />
   </div>
 </template>
@@ -4184,5 +4304,88 @@ const adjustInventory = (itemId: string, delta: number) => {
   border: 1px solid rgba(#a855f7, 0.3);
   padding: 0.05rem 0.35rem;
   border-radius: 2px;
+}
+
+.ak-event-source-badge {
+  font-family: monospace;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 0.15rem 0.45rem;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: $ak-text-muted;
+  letter-spacing: 0.5px;
+
+  &--live {
+    background: rgba($ak-green, 0.15);
+    border-color: rgba($ak-green, 0.4);
+    color: $ak-green;
+    text-shadow: 0 0 6px rgba($ak-green, 0.4);
+  }
+}
+
+.ak-event-saved-pill {
+  font-family: monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.2rem 0.55rem;
+  background: rgba($ak-green, 0.15);
+  border: 1px solid rgba($ak-green, 0.4);
+  color: $ak-green;
+  letter-spacing: 0.5px;
+  border-radius: 2px;
+}
+
+.ak-btn-hud-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.38rem 0.75rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: $ak-text-primary;
+  font-family: monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.35);
+  }
+
+  &--sync {
+    background: rgba(#a855f7, 0.15);
+    border-color: rgba(#a855f7, 0.4);
+    color: #e9d5ff;
+
+    &:hover:not(:disabled) {
+      background: #9333ea;
+      color: #fff;
+      box-shadow: 0 0 8px rgba(#a855f7, 0.4);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.ak-spin {
+  animation: ak-spin-anim 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes ak-spin-anim {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
