@@ -1,0 +1,314 @@
+[
+  {
+    "id": "char_4025_aprot",
+    "name": "Młynar",
+    "rarity": 6,
+    "profession": "Guard",
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_4025_aprot.png",
+    "eliteCosts": {
+      "e1": {
+        "lmd": 30000,
+        "exp": 111100,
+        "materials": [
+          { "id": "32001", "count": 5 },
+          { "id": "30083", "count": 8 },
+          { "id": "30063", "count": 5 }
+        ]
+      },
+      "e2": {
+        "lmd": 180000,
+        "exp": 247000,
+        "materials": [
+          { "id": "32001", "count": 4 },
+          { "id": "31014", "count": 4 },
+          { "id": "30094", "count": 6 }
+        ]
+      }
+    },
+    "skillMasteryCosts": {
+      "s3": [
+        { "m": 1, "materials": [{ "id": "3303", "count": 8 }, { "id": "30094", "count": 4 }, { "id": "30033", "count": 7 }] },
+        { "m": 2, "materials": [{ "id": "3303", "count": 12 }, { "id": "30084", "count": 4 }, { "id": "30104", "count": 4 }] },
+        { "m": 3, "materials": [{ "id": "3303", "count": 15 }, { "id": "31014", "count": 6 }, { "id": "30094", "count": 6 }] }
+      ]
+    },
+    "moduleCosts": {
+      "stage1": { "lmd": 40000, "materials": [{ "id": "mod_unlock_token", "count": 4 }, { "id": "30014", "count": 2 }] },
+      "stage2": { "lmd": 60000, "materials": [{ "id": "mod_unlock_token", "count": 2 }, { "id": "31014", "count": 1 }] },
+      "stage3": { "lmd": 100000, "materials": [{ "id": "mod_unlock_token", "count": 2 }, { "id": "31024", "count": 2 }] }
+    }
+  },
+  {
+    "id": "char_350_surtr",
+    "name": "Surtr",
+    "rarity": 6,
+    "profession": "Guard",
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_350_surtr.png",
+    "eliteCosts": {
+      "e1": {
+        "lmd": 30000,
+        "exp": 111100,
+        "materials": [
+          { "id": "32001", "count": 5 },
+          { "id": "30073", "count": 7 },
+          { "id": "30013", "count": 8 }
+        ]
+      },
+      "e2": {
+        "lmd": 180000,
+        "exp": 247000,
+        "materials": [
+          { "id": "32001", "count": 4 },
+          { "id": "31034", "count": 4 },
+          { "id": "30074", "count": 7 }
+        ]
+      }
+    },
+    "skillMasteryCosts": {
+      "s3": [
+        { "m": 1, "materials": [{ "id": "3303", "count": 8 }, { "id": "30074", "count": 4 }, { "id": "30053", "count": 7 }] },
+        { "m": 2, "materials": [{ "id": "3303", "count": 12 }, { "id": "30044", "count": 4 }, { "id": "30084", "count": 4 }] },
+        { "m": 3, "materials": [{ "id": "3303", "count": 15 }, { "id": "31034", "count": 6 }, { "id": "30074", "count": 5 }] }
+      ]
+    },
+    "moduleCosts": {
+      "stage1": { "lmd": 40000, "materials": [{ "id": "mod_unlock_token", "count": 4 }, { "id": "30054", "count": 2 }] },
+      "stage2": { "lmd": 60000, "materials": [{ "id": "mod_unlock_token", "count": 2 }, { "id": "31034", "count": 1 }] },
+      "stage3": { "lmd": 100000, "materials": [{ "id": "mod_unlock_token", "count": 2 }, { "id": "31044", "count": 2 }] }
+    }
+  },
+  {
+    "id": "char_1028_texas2",
+    "name": "Texas the Omertosa",
+    "rarity": 6,
+    "profession": "Specialist",
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_1028_texas2.png",
+    "eliteCosts": {
+      "e1": {
+        "lmd": 30000,
+        "exp": 111100,
+        "materials": [
+          { "id": "32008", "count": 5 },
+          { "id": "30043", "count": 7 },
+          { "id": "30023", "count": 7 }
+        ]
+      },
+      "e2": {
+        "lmd": 180000,
+        "exp": 247000,
+        "materials": [
+          { "id": "32008", "count": 4 },
+          { "id": "31044", "count": 4 },
+          { "id": "30104", "count": 6 }
+        ]
+      }
+    },
+    "skillMasteryCosts": {
+      "s3": [
+        { "m": 1, "materials": [{ "id": "3303", "count": 8 }, { "id": "30064", "count": 3 }, { "id": "30043", "count": 6 }] },
+        { "m": 2, "materials": [{ "id": "3303", "count": 12 }, { "id": "30024", "count": 4 }, { "id": "30094", "count": 4 }] },
+        { "m": 3, "materials": [{ "id": "3303", "count": 15 }, { "id": "31044", "count": 6 }, { "id": "30084", "count": 5 }] }
+      ]
+    },
+    "moduleCosts": {
+      "stage1": { "lmd": 40000, "materials": [{ "id": "mod_unlock_token", "count": 4 }, { "id": "30044", "count": 2 }] },
+      "stage2": { "lmd": 60000, "materials": [{ "id": "mod_unlock_token", "count": 2 }, { "id": "31044", "count": 1 }] },
+      "stage3": { "lmd": 100000, "materials": [{ "id": "mod_unlock_token", "count": 2 }, { "id": "31014", "count": 2 }] }
+    }
+  },
+  {
+    "id": "char_1033_shu",
+    "name": "Shu",
+    "rarity": 6,
+    "profession": "Defender",
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_2014_nian.png",
+    "eliteCosts": {
+      "e1": {
+        "lmd": 30000,
+        "exp": 111100,
+        "materials": [
+          { "id": "32003", "count": 5 },
+          { "id": "30013", "count": 9 },
+          { "id": "30033", "count": 5 }
+        ]
+      },
+      "e2": {
+        "lmd": 180000,
+        "exp": 247000,
+        "materials": [
+          { "id": "32003", "count": 4 },
+          { "id": "31054", "count": 4 },
+          { "id": "30014", "count": 8 }
+        ]
+      }
+    },
+    "skillMasteryCosts": {
+      "s3": [
+        { "m": 1, "materials": [{ "id": "3303", "count": 8 }, { "id": "30014", "count": 4 }, { "id": "30073", "count": 5 }] },
+        { "m": 2, "materials": [{ "id": "3303", "count": 12 }, { "id": "30094", "count": 4 }, { "id": "30034", "count": 4 }] },
+        { "m": 3, "materials": [{ "id": "3303", "count": 15 }, { "id": "31054", "count": 6 }, { "id": "30014", "count": 6 }] }
+      ]
+    },
+    "moduleCosts": {
+      "stage1": { "lmd": 40000, "materials": [{ "id": "mod_unlock_token", "count": 4 }, { "id": "30014", "count": 2 }] },
+      "stage2": { "lmd": 60000, "materials": [{ "id": "mod_unlock_token", "count": 2 }, { "id": "31054", "count": 1 }] },
+      "stage3": { "lmd": 100000, "materials": [{ "id": "mod_unlock_token", "count": 2 }, { "id": "31024", "count": 2 }] }
+    }
+  },
+  {
+    "id": "char_1032_virtuosa",
+    "name": "Virtuosa",
+    "rarity": 6,
+    "profession": "Supporter",
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_248_mgllan.png",
+    "eliteCosts": {
+      "e1": {
+        "lmd": 30000,
+        "exp": 111100,
+        "materials": [
+          { "id": "32005", "count": 5 },
+          { "id": "30053", "count": 7 },
+          { "id": "30073", "count": 6 }
+        ]
+      },
+      "e2": {
+        "lmd": 180000,
+        "exp": 247000,
+        "materials": [
+          { "id": "32005", "count": 4 },
+          { "id": "31024", "count": 4 },
+          { "id": "30054", "count": 7 }
+        ]
+      }
+    },
+    "skillMasteryCosts": {
+      "s3": [
+        { "m": 1, "materials": [{ "id": "3303", "count": 8 }, { "id": "30054", "count": 4 }, { "id": "30023", "count": 6 }] },
+        { "m": 2, "materials": [{ "id": "3303", "count": 12 }, { "id": "30074", "count": 4 }, { "id": "30044", "count": 4 }] },
+        { "m": 3, "materials": [{ "id": "3303", "count": 15 }, { "id": "31024", "count": 6 }, { "id": "30054", "count": 6 }] }
+      ]
+    },
+    "moduleCosts": {
+      "stage1": { "lmd": 40000, "materials": [{ "id": "mod_unlock_token", "count": 4 }, { "id": "30054", "count": 2 }] },
+      "stage2": { "lmd": 60000, "materials": [{ "id": "mod_unlock_token", "count": 2 }, { "id": "31024", "count": 1 }] },
+      "stage3": { "lmd": 100000, "materials": [{ "id": "mod_unlock_token", "count": 2 }, { "id": "31034", "count": 2 }] }
+    }
+  },
+  {
+    "id": "char_180_amgoat",
+    "name": "Eyjafjalla",
+    "rarity": 6,
+    "profession": "Caster",
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_180_amgoat.png",
+    "eliteCosts": {
+      "e1": {
+        "lmd": 30000,
+        "exp": 111100,
+        "materials": [
+          { "id": "32006", "count": 5 },
+          { "id": "30023", "count": 7 },
+          { "id": "30043", "count": 5 }
+        ]
+      },
+      "e2": {
+        "lmd": 180000,
+        "exp": 247000,
+        "materials": [
+          { "id": "32006", "count": 4 },
+          { "id": "31014", "count": 4 },
+          { "id": "30074", "count": 6 }
+        ]
+      }
+    },
+    "skillMasteryCosts": {
+      "s3": [
+        { "m": 1, "materials": [{ "id": "3303", "count": 8 }, { "id": "30074", "count": 4 }, { "id": "30083", "count": 7 }] },
+        { "m": 2, "materials": [{ "id": "3303", "count": 12 }, { "id": "30084", "count": 4 }, { "id": "30094", "count": 4 }] },
+        { "m": 3, "materials": [{ "id": "3303", "count": 15 }, { "id": "31014", "count": 6 }, { "id": "30074", "count": 6 }] }
+      ]
+    },
+    "moduleCosts": {
+      "stage1": { "lmd": 40000, "materials": [{ "id": "mod_unlock_token", "count": 4 }, { "id": "30024", "count": 2 }] },
+      "stage2": { "lmd": 60000, "materials": [{ "id": "mod_unlock_token", "count": 2 }, { "id": "31014", "count": 1 }] },
+      "stage3": { "lmd": 100000, "materials": [{ "id": "mod_unlock_token", "count": 2 }, { "id": "31044", "count": 2 }] }
+    }
+  },
+  {
+    "id": "char_003_kalts",
+    "name": "Kal'tsit",
+    "rarity": 6,
+    "profession": "Medic",
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_003_kalts.png",
+    "eliteCosts": {
+      "e1": {
+        "lmd": 30000,
+        "exp": 111100,
+        "materials": [
+          { "id": "32004", "count": 5 },
+          { "id": "30063", "count": 6 },
+          { "id": "30013", "count": 8 }
+        ]
+      },
+      "e2": {
+        "lmd": 180000,
+        "exp": 247000,
+        "materials": [
+          { "id": "32004", "count": 4 },
+          { "id": "31044", "count": 4 },
+          { "id": "30094", "count": 6 }
+        ]
+      }
+    },
+    "skillMasteryCosts": {
+      "s3": [
+        { "m": 1, "materials": [{ "id": "3303", "count": 8 }, { "id": "30064", "count": 4 }, { "id": "30033", "count": 5 }] },
+        { "m": 2, "materials": [{ "id": "3303", "count": 12 }, { "id": "30084", "count": 4 }, { "id": "30044", "count": 4 }] },
+        { "m": 3, "materials": [{ "id": "3303", "count": 15 }, { "id": "31044", "count": 6 }, { "id": "30094", "count": 6 }] }
+      ]
+    },
+    "moduleCosts": {
+      "stage1": { "lmd": 40000, "materials": [{ "id": "mod_unlock_token", "count": 4 }, { "id": "30064", "count": 2 }] },
+      "stage2": { "lmd": 60000, "materials": [{ "id": "mod_unlock_token", "count": 2 }, { "id": "31044", "count": 1 }] },
+      "stage3": { "lmd": 100000, "materials": [{ "id": "mod_unlock_token", "count": 2 }, { "id": "31014", "count": 2 }] }
+    }
+  },
+  {
+    "id": "char_222_bpipe",
+    "name": "Bagpipe",
+    "rarity": 6,
+    "profession": "Vanguard",
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_222_bpipe.png",
+    "eliteCosts": {
+      "e1": {
+        "lmd": 30000,
+        "exp": 111100,
+        "materials": [
+          { "id": "32007", "count": 5 },
+          { "id": "30043", "count": 7 },
+          { "id": "30083", "count": 6 }
+        ]
+      },
+      "e2": {
+        "lmd": 180000,
+        "exp": 247000,
+        "materials": [
+          { "id": "32007", "count": 4 },
+          { "id": "31014", "count": 4 },
+          { "id": "30074", "count": 6 }
+        ]
+      }
+    },
+    "skillMasteryCosts": {
+      "s3": [
+        { "m": 1, "materials": [{ "id": "3303", "count": 8 }, { "id": "30044", "count": 3 }, { "id": "30023", "count": 5 }] },
+        { "m": 2, "materials": [{ "id": "3303", "count": 12 }, { "id": "30094", "count": 4 }, { "id": "30074", "count": 4 }] },
+        { "m": 3, "materials": [{ "id": "3303", "count": 15 }, { "id": "31014", "count": 6 }, { "id": "30084", "count": 5 }] }
+      ]
+    },
+    "moduleCosts": {
+      "stage1": { "lmd": 40000, "materials": [{ "id": "mod_unlock_token", "count": 4 }, { "id": "30044", "count": 2 }] },
+      "stage2": { "lmd": 60000, "materials": [{ "id": "mod_unlock_token", "count": 2 }, { "id": "31014", "count": 1 }] },
+      "stage3": { "lmd": 100000, "materials": [{ "id": "mod_unlock_token", "count": 2 }, { "id": "31024", "count": 2 }] }
+    }
+  }
+]
