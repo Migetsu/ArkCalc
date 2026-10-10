@@ -185,6 +185,9 @@ const materialsCatalog = materialsData as Array<{
 // Operator selection & filtering
 const searchQuery = ref('')
 const selectedProfession = ref<string>('ALL')
+const selectedRarity = ref<number | 'ALL'>('ALL')
+const filterOnlyPlanned = ref<boolean>(false)
+const filterOnlyOwned = ref<boolean>(false)
 const selectedOperatorId = ref<string>((operatorsData[0] as OperatorData)?.id || '')
 
 const professions = [
@@ -199,16 +202,55 @@ const professions = [
   'Vanguard',
 ]
 
+const rarities = [
+  { label: 'ALL', value: 'ALL', class: 'all' },
+  { label: '6★', value: 6, class: 'r6' },
+  { label: '5★', value: 5, class: 'r5' },
+  { label: '4★', value: 4, class: 'r4' },
+  { label: '3★', value: 3, class: 'r3' },
+  { label: '1-2★', value: 1, class: 'r1' },
+] as const
+
+const hasActiveFilters = computed(() => {
+  return (
+    Boolean(searchQuery.value.trim()) ||
+    selectedProfession.value !== 'ALL' ||
+    selectedRarity.value !== 'ALL' ||
+    filterOnlyPlanned.value ||
+    filterOnlyOwned.value
+  )
+})
+
+const clearFilters = () => {
+  searchQuery.value = ''
+  selectedProfession.value = 'ALL'
+  selectedRarity.value = 'ALL'
+  filterOnlyPlanned.value = false
+  filterOnlyOwned.value = false
+}
+
 const filteredOperators = computed(() => {
-  return allOperators.value.filter((op) => {
-    const matchProf =
-      selectedProfession.value === 'ALL' ||
-      op.profession.toLowerCase() === selectedProfession.value.toLowerCase()
-    const matchSearch =
-      !searchQuery.value.trim() ||
-      op.name.toLowerCase().includes(searchQuery.value.toLowerCase().trim())
-    return matchProf && matchSearch
-  })
+  const query = searchQuery.value.toLowerCase().trim()
+  const prof = selectedProfession.value.toLowerCase()
+  const rarity = selectedRarity.value
+
+  return allOperators.value
+    .filter((op) => {
+      const matchProf = prof === 'all' || op.profession.toLowerCase() === prof
+      const matchSearch = !query || op.name.toLowerCase().includes(query)
+      const matchRarity =
+        rarity === 'ALL' ||
+        (rarity === 1 ? op.rarity <= 2 : op.rarity === rarity)
+      const matchPlanned = !filterOnlyPlanned.value || plannerStore.hasTarget(op.id)
+      const matchOwned = !filterOnlyOwned.value || Boolean(userStore.getOperator(op.id))
+
+      return matchProf && matchSearch && matchRarity && matchPlanned && matchOwned
+    })
+    .sort((a, b) => {
+      // Sort by rarity descending, then name alphabetically
+      if (b.rarity !== a.rarity) return b.rarity - a.rarity
+      return a.name.localeCompare(b.name)
+    })
 })
 
 const currentOperator = computed(() => {
@@ -217,6 +259,21 @@ const currentOperator = computed(() => {
     allOperators.value[0] ||
     (operatorsData[0] as OperatorData)
   )
+})
+
+// Roster check for current inspected operator
+const currentRosterData = computed(() => {
+  if (!currentOperator.value) return null
+  return userStore.getOperator(currentOperator.value.id) || null
+})
+
+const isCurrentOperatorOwned = computed(() => {
+  return Boolean(currentRosterData.value)
+})
+
+const isAlreadyPlanned = computed(() => {
+  if (!currentOperator.value) return false
+  return plannerStore.hasTarget(currentOperator.value.id)
 })
 
 // -----------------------------------------------------------------------------
@@ -257,7 +314,129 @@ const operatorModules = computed(() => {
   return op.modules
 })
 
-// Whenever operator changes, populate from userStore.roster if owned
+// Max limits and milestone caps per rarity
+const maxElite = computed(() => {
+  const r = currentOperator.value?.rarity || 6
+  if (r >= 4) return 2
+  if (r === 3) return 1
+  return 0
+})
+
+const eliteOptions = computed(() => {
+  const m = maxElite.value
+  return m === 2 ? [0, 1, 2] : m === 1 ? [0, 1] : [0]
+})
+
+const getMaxLevelForElite = (elite: number, rarity: number) => {
+  if (rarity === 6) {
+    if (elite === 0) return 50
+    if (elite === 1) return 80
+    return 90
+  }
+  if (rarity === 5) {
+    if (elite === 0) return 50
+    if (elite === 1) return 70
+    return 80
+  }
+  if (rarity === 4) {
+    if (elite === 0) return 45
+    if (elite === 1) return 60
+    return 70
+  }
+  if (rarity === 3) {
+    if (elite === 0) return 40
+    return 55
+  }
+  return 30
+}
+
+const maxCurrentLevel = computed(() => {
+  return getMaxLevelForElite(currentElite.value, currentOperator.value?.rarity || 6)
+})
+
+const maxTargetLevel = computed(() => {
+  return getMaxLevelForElite(targetElite.value, currentOperator.value?.rarity || 6)
+})
+
+const targetLevelMin = computed(() => {
+  return targetElite.value === currentElite.value ? currentLevel.value : 1
+})
+
+const targetLevelJumps = computed(() => {
+  const max = maxTargetLevel.value
+  const set = new Set<number>()
+  if (max >= 50) set.add(50)
+  if (max >= 60) set.add(60)
+  if (max >= 70) set.add(70)
+  if (max >= 80) set.add(80)
+  set.add(max)
+  return Array.from(set).sort((a, b) => a - b)
+})
+
+// Setter for Elite milestone
+const setElite = (type: 'current' | 'target', e: number) => {
+  if (type === 'current') {
+    currentElite.value = e
+    if (targetElite.value < e) {
+      targetElite.value = e
+    }
+    if (currentLevel.value > maxCurrentLevel.value) {
+      currentLevel.value = maxCurrentLevel.value
+    }
+  } else {
+    if (e >= currentElite.value) {
+      targetElite.value = e
+      if (targetLevel.value > maxTargetLevel.value) {
+        targetLevel.value = maxTargetLevel.value
+      }
+    }
+  }
+}
+
+// Quick goal presets helper
+const applyGoalPreset = (preset: 'e2max' | 'e2_60_m3' | 'e1max') => {
+  const op = currentOperator.value
+  if (!op) return
+
+  if (preset === 'e2max') {
+    targetElite.value = Math.min(2, maxElite.value)
+    targetLevel.value = maxTargetLevel.value
+    if (op.rarity >= 4) {
+      targetMastery.value = 3
+    }
+    if (operatorModules.value.length > 0 && selectedModuleId.value !== 'none') {
+      targetModule.value = 3
+    }
+  } else if (preset === 'e2_60_m3') {
+    targetElite.value = Math.min(2, maxElite.value)
+    targetLevel.value = Math.min(60, maxTargetLevel.value)
+    if (op.rarity >= 4) {
+      targetMastery.value = 3
+    }
+    if (operatorModules.value.length > 0 && selectedModuleId.value !== 'none') {
+      targetModule.value = 1
+    }
+  } else if (preset === 'e1max') {
+    targetElite.value = Math.min(1, maxElite.value)
+    targetLevel.value = getMaxLevelForElite(1, op.rarity)
+    targetMastery.value = 0
+    targetModule.value = 0
+  }
+
+  if (targetElite.value < currentElite.value) {
+    targetElite.value = currentElite.value
+  }
+  if (targetElite.value === currentElite.value && targetLevel.value < currentLevel.value) {
+    targetLevel.value = currentLevel.value
+  }
+
+  toast.info(`Пресет ${preset.toUpperCase()} применён для ${op.name}`, {
+    title: 'PRESET APPLIED',
+    tag: 'PLN // PRESET',
+  })
+}
+
+// Intelligent Operator Goal Hydration
 const syncFromRoster = (operatorId: string) => {
   const owned = userStore.getOperator(operatorId)
   if (owned) {
@@ -276,6 +455,37 @@ const syncFromRoster = (operatorId: string) => {
   }
 }
 
+const loadOperatorGoals = (opId: string) => {
+  const existingTarget = plannerStore.getTarget(opId)
+  if (existingTarget) {
+    currentElite.value = existingTarget.currentElite
+    targetElite.value = existingTarget.targetElite
+    currentLevel.value = existingTarget.currentLevel
+    targetLevel.value = existingTarget.targetLevel
+    selectedSkillIndex.value =
+      existingTarget.selectedSkillIndex ?? Math.max(0, operatorSkills.value.length - 1)
+    currentMastery.value = existingTarget.currentMastery
+    targetMastery.value = existingTarget.targetMastery
+    selectedModuleId.value =
+      existingTarget.selectedModuleId ?? (operatorModules.value[0]?.moduleId || 'none')
+    currentModule.value = existingTarget.currentModule
+    targetModule.value = existingTarget.targetModule
+  } else {
+    syncFromRoster(opId)
+    // Default targets for unadded operator
+    targetElite.value = Math.min(2, maxElite.value)
+    targetLevel.value = maxTargetLevel.value
+    targetMastery.value = (currentOperator.value?.rarity || 6) >= 4 ? 3 : 0
+    targetModule.value =
+      operatorModules.value.length > 0 && selectedModuleId.value !== 'none' ? 3 : 0
+  }
+}
+
+const selectOperator = (opId: string) => {
+  selectedOperatorId.value = opId
+  loadOperatorGoals(opId)
+}
+
 watch(currentOperator, (op) => {
   if (!op) return
   // Auto-select last skill by default (S3 for 6★/5★, S2 for 4★, S1 for 3★)
@@ -287,11 +497,11 @@ watch(currentOperator, (op) => {
   } else {
     selectedModuleId.value = 'none'
   }
-  syncFromRoster(op.id)
+  loadOperatorGoals(op.id)
 }, { immediate: true })
 
 watch([selectedSkillIndex, selectedModuleId], () => {
-  if (currentOperator.value) {
+  if (currentOperator.value && !isAlreadyPlanned.value) {
     syncFromRoster(currentOperator.value.id)
   }
 })
@@ -664,20 +874,58 @@ const adjustInventory = (itemId: string, delta: number) => {
       <!-- Left Column: Operator Selection & Goal Configuration -->
       <aside class="ak-planner__left">
         <!-- Panel 1: Operator Selector -->
-        <div class="ak-panel">
-          <div class="ak-panel__head">
-            <span class="ak-panel__badge">01</span>
-            <h3>SELECT OPERATOR</h3>
+        <div class="ak-panel ak-op-selector-panel">
+          <div class="ak-panel__head ak-panel__head--flex">
+            <div class="ak-panel__head-title">
+              <span class="ak-panel__badge">01</span>
+              <h3>SELECT OPERATOR</h3>
+            </div>
+            <div class="ak-op-counter-badge">
+              <span class="ak-op-counter-badge__count">{{ filteredOperators.length }}</span>
+              <span class="ak-op-counter-badge__total">/ {{ allOperators.length }}</span>
+            </div>
           </div>
 
-          <!-- Search & Profession Filters -->
+          <!-- Search & Filter Controls -->
           <div class="ak-filter-group">
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Search operator..."
-              class="ak-search-input"
-            />
+            <!-- Search Bar with Quick Clear -->
+            <div class="ak-search-bar">
+              <span class="ak-search-bar__icon">🔍</span>
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Поиск оперативника (напр. Degenbrecher, Thorns)..."
+                class="ak-search-input"
+              />
+              <button
+                v-if="searchQuery"
+                type="button"
+                class="ak-search-clear-btn"
+                title="Очистить поиск"
+                @click="searchQuery = ''"
+              >
+                ✕
+              </button>
+            </div>
+
+            <!-- Rarity Filter Pills -->
+            <div class="ak-rarity-bar">
+              <button
+                v-for="r in rarities"
+                :key="`rarity-${r.value}`"
+                type="button"
+                class="ak-rarity-btn"
+                :class="[
+                  `ak-rarity-btn--${r.class || 'all'}`,
+                  { 'ak-rarity-btn--active': selectedRarity === r.value },
+                ]"
+                @click="selectedRarity = r.value"
+              >
+                {{ r.label }}
+              </button>
+            </div>
+
+            <!-- Profession Filter Bar -->
             <div class="ak-professions-bar">
               <button
                 v-for="prof in professions"
@@ -690,27 +938,77 @@ const adjustInventory = (itemId: string, delta: number) => {
                 {{ prof }}
               </button>
             </div>
+
+            <!-- Fast Toggle Flags (In Plan, In Roster) & Clear Filter Button -->
+            <div class="ak-filter-toggles-row">
+              <div class="ak-filter-toggles">
+                <button
+                  type="button"
+                  class="ak-toggle-chip"
+                  :class="{ 'ak-toggle-chip--active': filterOnlyPlanned }"
+                  @click="filterOnlyPlanned = !filterOnlyPlanned"
+                >
+                  <span class="ak-toggle-chip__dot"></span>
+                  <span>В ПЛАНЕ ({{ plannedTargets.length }})</span>
+                </button>
+                <button
+                  type="button"
+                  class="ak-toggle-chip"
+                  :class="{ 'ak-toggle-chip--active': filterOnlyOwned }"
+                  @click="filterOnlyOwned = !filterOnlyOwned"
+                >
+                  <span class="ak-toggle-chip__dot"></span>
+                  <span>ТОЛЬКО НА СКЛАДЕ</span>
+                </button>
+              </div>
+
+              <button
+                v-if="hasActiveFilters"
+                type="button"
+                class="ak-filter-reset-link"
+                @click="clearFilters"
+              >
+                СБРОС ФИЛЬТРОВ ✕
+              </button>
+            </div>
           </div>
 
-          <!-- Operator Thumbnails Grid -->
+          <!-- Operator Grid -->
           <div class="ak-op-selector-grid">
             <OperatorCardSkeleton
               v-if="operatorStore.isLoading && filteredOperators.length === 0"
-              :count="8"
+              :count="10"
             />
+            <div
+              v-else-if="filteredOperators.length === 0"
+              class="ak-no-ops-found"
+            >
+              <p class="ak-no-ops-found__text">Оперативники не найдены по текущим фильтрам</p>
+              <button
+                type="button"
+                class="ak-btn-mini ak-btn-mini--cyan"
+                @click="clearFilters"
+              >
+                Сбросить фильтры
+              </button>
+            </div>
             <template v-else>
               <button
                 v-for="op in filteredOperators"
                 :key="op.id"
                 type="button"
                 class="ak-op-card"
-                :class="{
-                  'ak-op-card--active': selectedOperatorId === op.id,
-                  'ak-op-card--planned': plannedTargets.some((t) => t.operatorId === op.id),
-                }"
-                @click="selectedOperatorId = op.id"
+                :class="[
+                  `ak-op-card--r${op.rarity}`,
+                  {
+                    'ak-op-card--active': selectedOperatorId === op.id,
+                    'ak-op-card--planned': plannedTargets.some((t) => t.operatorId === op.id),
+                  },
+                ]"
+                :title="`${op.name} (${op.rarity}★ ${op.profession})`"
+                @click="selectOperator(op.id)"
               >
-                <div class="ak-op-card__avatar">
+                <div class="ak-op-card__avatar-wrap">
                   <img
                     :src="op.avatar"
                     :alt="op.name"
@@ -718,7 +1016,22 @@ const adjustInventory = (itemId: string, delta: number) => {
                     decoding="async"
                     @error="($event.target as HTMLImageElement).src = '/images/operators/placeholder.png'"
                   />
-                  <span class="ak-op-card__stars">{{ '★'.repeat(op.rarity) }}</span>
+                  <!-- Badges on avatar -->
+                  <span class="ak-op-card__rarity-tag">{{ op.rarity }}★</span>
+                  <span
+                    v-if="plannedTargets.some((t) => t.operatorId === op.id)"
+                    class="ak-op-card__plan-badge"
+                    title="В текущем плане"
+                  >
+                    ✓ PLAN
+                  </span>
+                  <span
+                    v-if="userStore.getOperator(op.id)"
+                    class="ak-op-card__roster-badge"
+                    title="Есть на аккаунте"
+                  >
+                    OWNED
+                  </span>
                 </div>
                 <span class="ak-op-card__name">{{ op.name }}</span>
               </button>
@@ -726,69 +1039,238 @@ const adjustInventory = (itemId: string, delta: number) => {
           </div>
         </div>
 
-        <!-- Panel 2: Goal Configuration for Selected Operator -->
-        <div class="ak-panel">
-          <div class="ak-panel__head">
-            <span class="ak-panel__badge">02</span>
-            <h3>UPGRADE GOALS // {{ currentOperator?.name }}</h3>
+        <!-- Panel 2: Goal Configuration & Dossier for Selected Operator -->
+        <div class="ak-panel ak-goal-panel">
+          <div class="ak-panel__head ak-panel__head--flex">
+            <div>
+              <span class="ak-panel__badge">02</span>
+              <h3>UPGRADE GOALS // {{ currentOperator?.name }}</h3>
+            </div>
+            <span
+              v-if="isAlreadyPlanned"
+              class="ak-status-pill ak-status-pill--active"
+            >
+              В ПЛАНЕ ПРОКАЧКИ
+            </span>
           </div>
 
+          <!-- Operator Tactical Dossier Card -->
+          <div class="ak-op-dossier" :class="`ak-op-dossier--r${currentOperator?.rarity || 6}`">
+            <div class="ak-op-dossier__avatar-box">
+              <img
+                :src="currentOperator?.avatar"
+                :alt="currentOperator?.name"
+                class="ak-op-dossier__avatar"
+                loading="lazy"
+                decoding="async"
+                @error="($event.target as HTMLImageElement).src = '/images/operators/placeholder.png'"
+              />
+              <span class="ak-op-dossier__rarity-stars">{{ '★'.repeat(currentOperator?.rarity || 6) }}</span>
+            </div>
+
+            <div class="ak-op-dossier__info">
+              <div class="ak-op-dossier__tags-row">
+                <span class="ak-op-dossier__class-pill">{{ currentOperator?.profession?.toUpperCase() }}</span>
+                <span
+                  v-if="isCurrentOperatorOwned"
+                  class="ak-op-dossier__roster-pill ak-op-dossier__roster-pill--owned"
+                  title="Данные синхронизированы из вашего аккаунта"
+                >
+                  НА АККАУНТЕ: E{{ currentRosterData?.elite }} · Lv{{ currentRosterData?.level }}
+                </span>
+                <span v-else class="ak-op-dossier__roster-pill">
+                  НЕТ НА АККАУНТЕ
+                </span>
+              </div>
+
+              <h2 class="ak-op-dossier__name">{{ currentOperator?.name }}</h2>
+
+              <div class="ak-op-dossier__target-preview">
+                <span class="ak-op-dossier__preview-label">ЦЕЛЬ:</span>
+                <span class="ak-op-dossier__preview-val">
+                  E{{ currentElite }}→<strong>E{{ targetElite }}</strong> · Lv{{ currentLevel }}→<strong>{{ targetLevel }}</strong>
+                  <template v-if="(currentOperator?.rarity || 6) >= 4">
+                    · S{{ selectedSkillIndex + 1 }} <strong>M{{ targetMastery }}</strong>
+                  </template>
+                  <template v-if="selectedModuleId !== 'none' && targetModule > 0">
+                    · Mod <strong>Lv{{ targetModule }}</strong>
+                  </template>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Goal Presets Bar -->
+          <div class="ak-presets-bar">
+            <span class="ak-presets-bar__label">БЫСТРЫЕ ПРЕСЕТЫ:</span>
+            <div class="ak-presets-bar__chips">
+              <button
+                v-if="maxElite >= 2"
+                type="button"
+                class="ak-preset-chip ak-preset-chip--gold"
+                @click="applyGoalPreset('e2max')"
+              >
+                ★ E2 MAX (Lv{{ maxTargetLevel }})
+              </button>
+              <button
+                v-if="maxElite >= 2"
+                type="button"
+                class="ak-preset-chip"
+                @click="applyGoalPreset('e2_60_m3')"
+              >
+                E2 Lv60 M3
+              </button>
+              <button
+                v-if="maxElite >= 1"
+                type="button"
+                class="ak-preset-chip"
+                @click="applyGoalPreset('e1max')"
+              >
+                E1 MAX
+              </button>
+              <button
+                v-if="isCurrentOperatorOwned"
+                type="button"
+                class="ak-preset-chip ak-preset-chip--roster"
+                title="Сбросить текущие параметры к значениям вашего ростера"
+                @click="syncFromRoster(currentOperator.id)"
+              >
+                ↺ ИЗ РОСТЕРА
+              </button>
+            </div>
+          </div>
+
+          <!-- Goal Progression Blocks -->
           <div class="ak-goal-settings">
-            <!-- Elite Level -->
-            <div class="ak-setting-row">
-              <span class="ak-setting-label">Elite Promotion</span>
-              <div class="ak-range-selector">
-                <div class="ak-selector-box">
-                  <span class="ak-sub-label">Current:</span>
-                  <select v-model.number="currentElite" class="ak-mini-select">
-                    <option :value="0">Elite 0</option>
-                    <option :value="1">Elite 1</option>
-                    <option :value="2">Elite 2</option>
-                  </select>
+            <!-- 1. Elite Promotion Milestone -->
+            <div class="ak-goal-block">
+              <div class="ak-goal-block__title">
+                <span class="ak-goal-block__icon">🎖️</span>
+                <span class="ak-goal-block__label">ELITE PROMOTION (ЭЛИТА)</span>
+              </div>
+
+              <div class="ak-milestone-row">
+                <div class="ak-milestone-group">
+                  <span class="ak-milestone-label">ТЕКУЩАЯ:</span>
+                  <div class="ak-segmented-bar">
+                    <button
+                      v-for="e in eliteOptions"
+                      :key="`cur-e-${e}`"
+                      type="button"
+                      class="ak-seg-btn"
+                      :class="{ 'ak-seg-btn--active': currentElite === e }"
+                      @click="setElite('current', e)"
+                    >
+                      E{{ e }}
+                    </button>
+                  </div>
                 </div>
-                <span class="ak-arrow">→</span>
-                <div class="ak-selector-box">
-                  <span class="ak-sub-label">Target:</span>
-                  <select v-model.number="targetElite" class="ak-mini-select">
-                    <option :value="0">Elite 0</option>
-                    <option :value="1">Elite 1</option>
-                    <option :value="2">Elite 2</option>
-                  </select>
+
+                <span class="ak-milestone-arrow">➜</span>
+
+                <div class="ak-milestone-group">
+                  <span class="ak-milestone-label">ЦЕЛЕВАЯ:</span>
+                  <div class="ak-segmented-bar">
+                    <button
+                      v-for="e in eliteOptions"
+                      :key="`tgt-e-${e}`"
+                      type="button"
+                      class="ak-seg-btn"
+                      :class="{
+                        'ak-seg-btn--active': targetElite === e,
+                        'ak-seg-btn--disabled': e < currentElite,
+                      }"
+                      :disabled="e < currentElite"
+                      @click="setElite('target', e)"
+                    >
+                      E{{ e }}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Operator Level -->
-            <div class="ak-setting-row">
-              <span class="ak-setting-label">Level Range</span>
-              <div class="ak-range-selector">
-                <div class="ak-selector-box">
-                  <span class="ak-sub-label">Lvl {{ currentLevel }}</span>
+            <!-- 2. Level Progression -->
+            <div class="ak-goal-block">
+              <div class="ak-goal-block__title">
+                <span class="ak-goal-block__icon">📊</span>
+                <span class="ak-goal-block__label">LEVEL PROGRESSION (УРОВЕНЬ)</span>
+              </div>
+
+              <div class="ak-level-row">
+                <!-- Current Level -->
+                <div class="ak-level-col">
+                  <div class="ak-level-header">
+                    <span class="ak-milestone-label">ТЕКУЩИЙ</span>
+                    <div class="ak-level-input-box">
+                      <input
+                        v-model.number="currentLevel"
+                        type="number"
+                        min="1"
+                        :max="maxCurrentLevel"
+                        class="ak-level-num-input"
+                      />
+                      <span class="ak-level-max">/ {{ maxCurrentLevel }}</span>
+                    </div>
+                  </div>
                   <input
                     v-model.number="currentLevel"
                     type="range"
                     min="1"
-                    max="90"
+                    :max="maxCurrentLevel"
                     class="ak-range-slider"
                   />
                 </div>
-                <span class="ak-arrow">→</span>
-                <div class="ak-selector-box">
-                  <span class="ak-sub-label">Lvl {{ targetLevel }}</span>
+
+                <span class="ak-milestone-arrow">➜</span>
+
+                <!-- Target Level -->
+                <div class="ak-level-col">
+                  <div class="ak-level-header">
+                    <span class="ak-milestone-label">ЦЕЛЕВОЙ</span>
+                    <div class="ak-level-input-box">
+                      <input
+                        v-model.number="targetLevel"
+                        type="number"
+                        :min="targetLevelMin"
+                        :max="maxTargetLevel"
+                        class="ak-level-num-input"
+                      />
+                      <span class="ak-level-max">/ {{ maxTargetLevel }}</span>
+                    </div>
+                  </div>
                   <input
                     v-model.number="targetLevel"
                     type="range"
-                    min="1"
-                    max="90"
+                    :min="targetLevelMin"
+                    :max="maxTargetLevel"
                     class="ak-range-slider"
                   />
+                  <!-- Quick Level Jumps -->
+                  <div class="ak-level-quick-jumps">
+                    <button
+                      v-for="lvl in targetLevelJumps"
+                      :key="lvl"
+                      type="button"
+                      class="ak-jump-btn"
+                      :class="{ 'ak-jump-btn--active': targetLevel === lvl }"
+                      @click="targetLevel = lvl"
+                    >
+                      {{ lvl === maxTargetLevel ? 'MAX' : lvl }}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Selectable Skill Tabs (S1, S2, S3) -->
-            <div class="ak-setting-row ak-setting-row--stack">
-              <span class="ak-setting-label">Select Skill to Upgrade</span>
+            <!-- 3. Skill & Mastery Selection -->
+            <div v-if="operatorSkills.length > 0" class="ak-goal-block">
+              <div class="ak-goal-block__title">
+                <span class="ak-goal-block__icon">⚡</span>
+                <span class="ak-goal-block__label">SKILL MASTERY (НАВЫК И МАСТЕРСТВО)</span>
+              </div>
+
+              <!-- Skill Selection Tabs -->
               <div class="ak-skill-tabs">
                 <button
                   v-for="(sk, sIdx) in operatorSkills"
@@ -802,81 +1284,144 @@ const adjustInventory = (itemId: string, delta: number) => {
                   <span class="ak-skill-tab-btn__name" :title="sk.name">{{ sk.name }}</span>
                 </button>
               </div>
-            </div>
 
-            <!-- Skill Mastery Range for Selected Skill -->
-            <div class="ak-setting-row">
-              <span class="ak-setting-label">Mastery Goal (S{{ selectedSkillIndex + 1 }})</span>
-              <div class="ak-range-selector">
-                <div class="ak-selector-box">
-                  <span class="ak-sub-label">Current:</span>
-                  <select v-model.number="currentMastery" class="ak-mini-select">
-                    <option :value="0">Rank 7 (M0)</option>
-                    <option :value="1">Mastery 1</option>
-                    <option :value="2">Mastery 2</option>
-                    <option :value="3">Mastery 3</option>
-                  </select>
+              <!-- Mastery Milestones (4★+) -->
+              <div v-if="(currentOperator?.rarity || 6) >= 4" class="ak-milestone-row">
+                <div class="ak-milestone-group">
+                  <span class="ak-milestone-label">ТЕКУЩЕЕ:</span>
+                  <div class="ak-segmented-bar">
+                    <button
+                      v-for="m in [0, 1, 2, 3]"
+                      :key="`cur-m-${m}`"
+                      type="button"
+                      class="ak-seg-btn ak-seg-btn--mastery"
+                      :class="{ 'ak-seg-btn--active': currentMastery === m }"
+                      @click="currentMastery = m"
+                    >
+                      {{ m === 0 ? 'Rank 7' : `M${m}` }}
+                    </button>
+                  </div>
                 </div>
-                <span class="ak-arrow">→</span>
-                <div class="ak-selector-box">
-                  <span class="ak-sub-label">Target:</span>
-                  <select v-model.number="targetMastery" class="ak-mini-select">
-                    <option :value="0">Rank 7 (M0)</option>
-                    <option :value="1">Mastery 1</option>
-                    <option :value="2">Mastery 2</option>
-                    <option :value="3">Mastery 3</option>
-                  </select>
-                </div>
-              </div>
-            </div>
 
-            <!-- Selectable Combat Module -->
-            <div class="ak-setting-row ak-setting-row--stack">
-              <span class="ak-setting-label">Select Module to Upgrade</span>
-              <div v-if="operatorModules.length > 0" class="ak-module-select-wrap">
-                <select v-model="selectedModuleId" class="ak-select">
-                  <option value="none">No Module Upgrade</option>
-                  <option
-                    v-for="mod in operatorModules"
-                    :key="mod.moduleId"
-                    :value="mod.moduleId"
-                  >
-                    [{{ mod.typeName }}] {{ mod.name }}
-                  </option>
-                </select>
-              </div>
-              <span v-else class="ak-no-module-text">No combat modules available for this operator</span>
-            </div>
+                <span class="ak-milestone-arrow">➜</span>
 
-            <!-- Module Stage Range (if module selected) -->
-            <div v-if="selectedModuleId !== 'none'" class="ak-setting-row">
-              <span class="ak-setting-label">Module Stage</span>
-              <div class="ak-range-selector">
-                <div class="ak-selector-box">
-                  <span class="ak-sub-label">Current:</span>
-                  <select v-model.number="currentModule" class="ak-mini-select">
-                    <option :value="0">Stage 0 (Locked)</option>
-                    <option :value="1">Stage 1</option>
-                    <option :value="2">Stage 2</option>
-                    <option :value="3">Stage 3</option>
-                  </select>
-                </div>
-                <span class="ak-arrow">→</span>
-                <div class="ak-selector-box">
-                  <span class="ak-sub-label">Target:</span>
-                  <select v-model.number="targetModule" class="ak-mini-select">
-                    <option :value="0">Stage 0 (Locked)</option>
-                    <option :value="1">Stage 1</option>
-                    <option :value="2">Stage 2</option>
-                    <option :value="3">Stage 3</option>
-                  </select>
+                <div class="ak-milestone-group">
+                  <span class="ak-milestone-label">ЦЕЛЕВОЕ:</span>
+                  <div class="ak-segmented-bar">
+                    <button
+                      v-for="m in [0, 1, 2, 3]"
+                      :key="`tgt-m-${m}`"
+                      type="button"
+                      class="ak-seg-btn ak-seg-btn--mastery"
+                      :class="{
+                        'ak-seg-btn--active': targetMastery === m,
+                        'ak-seg-btn--disabled': m < currentMastery,
+                      }"
+                      :disabled="m < currentMastery"
+                      @click="targetMastery = m"
+                    >
+                      {{ m === 0 ? 'Rank 7' : `M${m}` }}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <button type="button" class="ak-btn-primary" @click="addCurrentToPlan">
-              + ADD / UPDATE IN PLAN
-            </button>
+            <!-- 4. Combat Modules Selection -->
+            <div v-if="operatorModules.length > 0" class="ak-goal-block">
+              <div class="ak-goal-block__title">
+                <span class="ak-goal-block__icon">🧩</span>
+                <span class="ak-goal-block__label">COMBAT MODULE (БОЕВОЙ МОДУЛЬ)</span>
+              </div>
+
+              <!-- Module Selection Pills -->
+              <div class="ak-module-pills">
+                <button
+                  type="button"
+                  class="ak-module-pill"
+                  :class="{ 'ak-module-pill--active': selectedModuleId === 'none' }"
+                  @click="selectedModuleId = 'none'"
+                >
+                  <span class="ak-module-pill__code">OFF</span>
+                  <span class="ak-module-pill__name">Без модуля</span>
+                </button>
+                <button
+                  v-for="mod in operatorModules"
+                  :key="mod.moduleId"
+                  type="button"
+                  class="ak-module-pill"
+                  :class="{ 'ak-module-pill--active': selectedModuleId === mod.moduleId }"
+                  @click="selectedModuleId = mod.moduleId"
+                >
+                  <span class="ak-module-pill__code">{{ mod.typeName || mod.typeCode }}</span>
+                  <span class="ak-module-pill__name" :title="mod.name">{{ mod.name }}</span>
+                </button>
+              </div>
+
+              <!-- Module Stages Milestones -->
+              <div v-if="selectedModuleId !== 'none'" class="ak-milestone-row">
+                <div class="ak-milestone-group">
+                  <span class="ak-milestone-label">ТЕКУЩИЙ:</span>
+                  <div class="ak-segmented-bar">
+                    <button
+                      v-for="stg in [0, 1, 2, 3]"
+                      :key="`cur-mod-${stg}`"
+                      type="button"
+                      class="ak-seg-btn"
+                      :class="{ 'ak-seg-btn--active': currentModule === stg }"
+                      @click="currentModule = stg"
+                    >
+                      {{ stg === 0 ? 'Locked' : `Stage ${stg}` }}
+                    </button>
+                  </div>
+                </div>
+
+                <span class="ak-milestone-arrow">➜</span>
+
+                <div class="ak-milestone-group">
+                  <span class="ak-milestone-label">ЦЕЛЕВОЙ:</span>
+                  <div class="ak-segmented-bar">
+                    <button
+                      v-for="stg in [0, 1, 2, 3]"
+                      :key="`tgt-mod-${stg}`"
+                      type="button"
+                      class="ak-seg-btn"
+                      :class="{
+                        'ak-seg-btn--active': targetModule === stg,
+                        'ak-seg-btn--disabled': stg < currentModule,
+                      }"
+                      :disabled="stg < currentModule"
+                      @click="targetModule = stg"
+                    >
+                      {{ stg === 0 ? 'Locked' : `Stage ${stg}` }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Goal Action Buttons Row -->
+            <div class="ak-goal-actions">
+              <button
+                type="button"
+                class="ak-btn-save-plan"
+                :class="{ 'ak-btn-save-plan--update': isAlreadyPlanned }"
+                @click="addCurrentToPlan"
+              >
+                <span class="ak-btn-save-plan__icon">{{ isAlreadyPlanned ? '✓' : '+' }}</span>
+                <span>{{ isAlreadyPlanned ? 'ОБНОВИТЬ ЦЕЛЬ В ПЛАНЕ' : 'ДОБАВИТЬ В ПЛАН ПРОКАЧКИ' }}</span>
+              </button>
+
+              <button
+                v-if="isAlreadyPlanned"
+                type="button"
+                class="ak-btn-remove-plan"
+                title="Удалить из плана прокачки"
+                @click="removeTarget(currentOperator.id)"
+              >
+                ✕ УДАЛИТЬ
+              </button>
+            </div>
           </div>
         </div>
 
@@ -912,6 +1457,8 @@ const adjustInventory = (itemId: string, delta: number) => {
               v-for="target in plannedTargets"
               :key="target.operatorId"
               class="ak-target-chip"
+              :class="{ 'ak-target-chip--active': selectedOperatorId === target.operatorId }"
+              @click="selectOperator(target.operatorId)"
             >
               <img
                 :src="target.operator.avatar"
@@ -930,7 +1477,7 @@ const adjustInventory = (itemId: string, delta: number) => {
                 type="button"
                 class="ak-target-chip__del"
                 title="Remove operator from plan"
-                @click="removeTarget(target.operatorId)"
+                @click.stop="removeTarget(target.operatorId)"
               >
                 ✕
               </button>
@@ -949,7 +1496,7 @@ const adjustInventory = (itemId: string, delta: number) => {
 
           <div class="ak-empty-plan-box">
             <p class="ak-empty-plan-box__text">
-              В плане пока нет выбранных целей. Добавьте оперативника выше или импортируйте сохранённый план:
+              В плане пока нет выбранных целей. Выберите оперативника выше или импортируйте сохранённый план:
             </p>
             <button
               type="button"
@@ -1464,8 +2011,12 @@ const adjustInventory = (itemId: string, delta: number) => {
 
   &__layout {
     display: grid;
-    grid-template-columns: 420px 1fr;
+    grid-template-columns: minmax(420px, 480px) 1fr;
     gap: 2rem;
+
+    @media (max-width: 1200px) {
+      grid-template-columns: 420px 1fr;
+    }
 
     @media (max-width: 1024px) {
       grid-template-columns: 1fr;
@@ -1592,35 +2143,193 @@ const adjustInventory = (itemId: string, delta: number) => {
   }
 }
 
-// Operator selector filters
+// =============================================================================
+// Redesigned Operator Selector Panel (Panel 1)
+// =============================================================================
+.ak-op-selector-panel {
+  .ak-panel__head-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.ak-op-counter-badge {
+  font-family: monospace;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+
+  &__count {
+    color: $ak-cyan;
+    font-weight: 800;
+  }
+
+  &__total {
+    color: $ak-text-muted;
+  }
+}
+
 .ak-filter-group {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.65rem;
+}
+
+// Search bar
+.ak-search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  &__icon {
+    position: absolute;
+    left: 0.75rem;
+    font-size: 0.75rem;
+    color: $ak-text-muted;
+    pointer-events: none;
+  }
 }
 
 .ak-search-input {
   width: 100%;
-  padding: 0.5rem 0.75rem;
-  background: rgba(0, 0, 0, 0.4);
+  padding: 0.55rem 2rem 0.55rem 2rem;
+  background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: $ak-text-primary;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
+  font-family: inherit;
   outline: none;
+  transition: all 0.2s ease;
+
+  &::placeholder {
+    color: $ak-text-muted;
+    font-size: 0.78rem;
+  }
 
   &:focus {
     border-color: $ak-cyan;
+    background: rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 10px rgba($ak-cyan, 0.2);
   }
 }
 
+.ak-search-clear-btn {
+  position: absolute;
+  right: 0.65rem;
+  background: transparent;
+  border: none;
+  color: $ak-text-muted;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.75rem;
+
+  &:hover {
+    color: $ak-red;
+  }
+}
+
+// Rarity filter buttons
+.ak-rarity-bar {
+  display: flex;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.ak-rarity-btn {
+  flex: 1;
+  padding: 0.3rem 0.2rem;
+  font-size: 0.68rem;
+  font-family: monospace;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: $ak-text-secondary;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: $ak-text-primary;
+  }
+
+  &--r6 {
+    color: #ff9d5c;
+    &:hover, &--active {
+      border-color: $ak-rarity-6;
+    }
+  }
+
+  &--r5 {
+    color: #ffd166;
+    &:hover, &--active {
+      border-color: $ak-rarity-5;
+    }
+  }
+
+  &--r4 {
+    color: #d8b4fe;
+    &:hover, &--active {
+      border-color: $ak-rarity-4;
+    }
+  }
+
+  &--r3 {
+    color: #7dd3fc;
+    &:hover, &--active {
+      border-color: $ak-rarity-3;
+    }
+  }
+
+  &--active {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: #fff;
+    box-shadow: inset 0 0 6px rgba(255, 255, 255, 0.2);
+  }
+
+  &--r6.ak-rarity-btn--active {
+    background: rgba($ak-rarity-6, 0.2);
+    border-color: $ak-rarity-6;
+    color: #fff;
+    box-shadow: 0 0 8px rgba($ak-rarity-6, 0.4);
+  }
+
+  &--r5.ak-rarity-btn--active {
+    background: rgba($ak-rarity-5, 0.2);
+    border-color: $ak-rarity-5;
+    color: #fff;
+    box-shadow: 0 0 8px rgba($ak-rarity-5, 0.4);
+  }
+
+  &--r4.ak-rarity-btn--active {
+    background: rgba($ak-rarity-4, 0.2);
+    border-color: $ak-rarity-4;
+    color: #fff;
+    box-shadow: 0 0 8px rgba($ak-rarity-4, 0.4);
+  }
+
+  &--r3.ak-rarity-btn--active {
+    background: rgba($ak-rarity-3, 0.2);
+    border-color: $ak-rarity-3;
+    color: #fff;
+    box-shadow: 0 0 8px rgba($ak-rarity-3, 0.4);
+  }
+}
+
+// Profession buttons bar
 .ak-professions-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: 0.3rem;
 }
 
 .ak-prof-btn {
-  padding: 0.25rem 0.5rem;
+  padding: 0.22rem 0.45rem;
   font-size: 0.65rem;
   font-family: monospace;
   background: rgba(255, 255, 255, 0.04);
@@ -1638,158 +2347,662 @@ const adjustInventory = (itemId: string, delta: number) => {
     background: rgba($ak-cyan, 0.15);
     color: $ak-cyan;
     border-color: $ak-cyan;
+    box-shadow: 0 0 6px rgba($ak-cyan, 0.2);
   }
 }
 
-// Operator selector grid
-.ak-op-selector-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.5rem;
-  max-height: 240px;
-  overflow-y: auto;
-  padding-right: 0.25rem;
-
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-  }
-}
-
-.ak-op-card {
+// Fast toggle chips row
+.ak-filter-toggles-row {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.4rem;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding-top: 0.2rem;
+}
+
+.ak-filter-toggles {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.ak-toggle-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.65rem;
+  font-family: monospace;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: $ak-text-muted;
   cursor: pointer;
   transition: all 0.2s ease;
 
-  &__avatar {
-    width: 48px;
-    height: 48px;
+  &__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transition: background 0.2s ease;
+  }
+
+  &:hover {
+    color: $ak-text-primary;
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  &--active {
+    background: rgba($ak-green, 0.12);
+    border-color: $ak-green;
+    color: #e6fffa;
+
+    .ak-toggle-chip__dot {
+      background: $ak-green;
+      box-shadow: 0 0 6px $ak-green;
+    }
+  }
+}
+
+.ak-filter-reset-link {
+  background: transparent;
+  border: none;
+  color: $ak-amber;
+  font-family: monospace;
+  font-size: 0.65rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+
+  &:hover {
+    color: lighten($ak-amber, 15%);
+    text-decoration: underline;
+  }
+}
+
+// Operator Selector Grid
+.ak-op-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  gap: 0.45rem;
+  max-height: 290px;
+  overflow-y: auto;
+  padding-right: 0.35rem;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 2px;
+    &:hover {
+      background: rgba($ak-cyan, 0.6);
+    }
+  }
+}
+
+.ak-no-ops-found {
+  grid-column: 1 / -1;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  text-align: center;
+
+  &__text {
+    font-size: 0.78rem;
+    color: $ak-text-secondary;
+    margin: 0;
+  }
+}
+
+// Individual Operator Card
+.ak-op-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.35rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top-width: 2px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  overflow: hidden;
+
+  &--r6 {
+    border-top-color: $ak-rarity-6;
+  }
+  &--r5 {
+    border-top-color: $ak-rarity-5;
+  }
+  &--r4 {
+    border-top-color: $ak-rarity-4;
+  }
+  &--r3 {
+    border-top-color: $ak-rarity-3;
+  }
+  &--r2, &--r1 {
+    border-top-color: #888;
+  }
+
+  &__avatar-wrap {
+    width: 100%;
+    aspect-ratio: 1;
     position: relative;
     overflow: hidden;
-    background: #111;
+    background: #0d0e12;
+    margin-bottom: 0.25rem;
 
     img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      transition: transform 0.2s ease;
     }
   }
 
-  &__stars {
+  &__rarity-tag {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    font-size: 0.45rem;
-    color: $ak-rarity-6;
-    background: rgba(0, 0, 0, 0.7);
-    text-align: center;
-    line-height: 1;
+    top: 2px;
+    right: 2px;
+    font-size: 0.55rem;
+    font-family: monospace;
+    font-weight: 800;
+    padding: 0.05rem 0.25rem;
+    background: rgba(0, 0, 0, 0.75);
+    color: #ffc400;
+    border-radius: 1px;
+    line-height: 1.1;
+  }
+
+  &__plan-badge {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    font-size: 0.5rem;
+    font-family: monospace;
+    font-weight: 800;
+    padding: 0.05rem 0.25rem;
+    background: rgba($ak-green, 0.9);
+    color: #000;
+    border-radius: 1px;
+    line-height: 1.1;
+  }
+
+  &__roster-badge {
+    position: absolute;
+    bottom: 2px;
+    left: 2px;
+    font-size: 0.48rem;
+    font-family: monospace;
+    font-weight: 800;
+    padding: 0.05rem 0.25rem;
+    background: rgba($ak-cyan, 0.85);
+    color: #000;
+    border-radius: 1px;
+    line-height: 1.1;
   }
 
   &__name {
-    font-size: 0.65rem;
+    font-size: 0.68rem;
     color: $ak-text-secondary;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
     font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
   }
 
   &:hover {
     background: rgba(255, 255, 255, 0.06);
-  }
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
 
-  &--active {
-    border-color: $ak-cyan;
-    background: rgba($ak-cyan, 0.12);
+    .ak-op-card__avatar-wrap img {
+      transform: scale(1.06);
+    }
+
     .ak-op-card__name {
-      color: $ak-cyan;
+      color: $ak-text-primary;
     }
   }
 
-  &--planned {
+  &--active {
+    border-color: $ak-cyan !important;
+    background: rgba($ak-cyan, 0.12) !important;
+    box-shadow: 0 0 12px rgba($ak-cyan, 0.35);
+
+    .ak-op-card__name {
+      color: $ak-cyan;
+      font-weight: 800;
+    }
+  }
+
+  &--planned:not(&--active) {
     border-bottom: 2px solid $ak-green;
   }
 }
 
-// Goal Settings
-.ak-goal-settings {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+// =============================================================================
+// Redesigned Tactical Dossier & Milestone Goals (Panel 2)
+// =============================================================================
+.ak-goal-panel {
+  gap: 1.1rem;
 }
 
-.ak-setting-row {
+.ak-status-pill {
+  font-family: monospace;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.15rem 0.5rem;
+  letter-spacing: 0.5px;
+  background: rgba($ak-green, 0.15);
+  color: $ak-green;
+  border: 1px solid rgba($ak-green, 0.35);
+}
+
+// Operator Dossier Card
+.ak-op-dossier {
+  display: flex;
+  gap: 1rem;
+  padding: 0.85rem;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left-width: 3px;
+  position: relative;
+  overflow: hidden;
+
+  &--r6 {
+    border-left-color: $ak-rarity-6;
+    background: linear-gradient(90deg, rgba($ak-rarity-6, 0.08) 0%, rgba(0, 0, 0, 0.45) 50%);
+  }
+  &--r5 {
+    border-left-color: $ak-rarity-5;
+    background: linear-gradient(90deg, rgba($ak-rarity-5, 0.08) 0%, rgba(0, 0, 0, 0.45) 50%);
+  }
+  &--r4 {
+    border-left-color: $ak-rarity-4;
+  }
+  &--r3 {
+    border-left-color: $ak-rarity-3;
+  }
+
+  &__avatar-box {
+    width: 68px;
+    height: 68px;
+    position: relative;
+    flex-shrink: 0;
+    background: #111;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    overflow: hidden;
+  }
+
+  &__avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__rarity-stars {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    font-size: 0.5rem;
+    color: #ffc400;
+    background: rgba(0, 0, 0, 0.8);
+    text-align: center;
+    line-height: 1.2;
+    padding: 0.05rem 0;
+  }
+
+  &__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+    gap: 0.3rem;
+  }
+
+  &__tags-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+  }
+
+  &__class-pill {
+    font-family: monospace;
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: $ak-cyan;
+    background: rgba($ak-cyan, 0.12);
+    border: 1px solid rgba($ak-cyan, 0.25);
+    padding: 0.05rem 0.35rem;
+    letter-spacing: 0.5px;
+  }
+
+  &__roster-pill {
+    font-family: monospace;
+    font-size: 0.62rem;
+    color: $ak-text-muted;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.05rem 0.35rem;
+
+    &--owned {
+      color: $ak-green;
+      background: rgba($ak-green, 0.1);
+      border: 1px solid rgba($ak-green, 0.25);
+      font-weight: 700;
+    }
+  }
+
+  &__name {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: $ak-text-primary;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.5px;
+  }
+
+  &__target-preview {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: monospace;
+    font-size: 0.72rem;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.2rem 0.4rem;
+    border-radius: 2px;
+  }
+
+  &__preview-label {
+    color: $ak-text-muted;
+    font-size: 0.65rem;
+  }
+
+  &__preview-val {
+    color: $ak-cyan;
+    strong {
+      color: #fff;
+    }
+  }
+}
+
+// Quick Presets Bar
+.ak-presets-bar {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+
+  &__label {
+    font-size: 0.65rem;
+    font-family: monospace;
+    color: $ak-text-muted;
+    letter-spacing: 0.5px;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
 }
 
-.ak-setting-label {
-  font-size: 0.75rem;
-  font-family: monospace;
+.ak-preset-chip {
+  padding: 0.25rem 0.55rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: $ak-text-secondary;
+  font-family: monospace;
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #fff;
+  }
+
+  &--gold {
+    color: #ffd166;
+    border-color: rgba(#ffd166, 0.3);
+    &:hover {
+      background: rgba(#ffd166, 0.15);
+      border-color: #ffd166;
+    }
+  }
+
+  &--roster {
+    color: $ak-cyan;
+    border-color: rgba($ak-cyan, 0.3);
+    &:hover {
+      background: rgba($ak-cyan, 0.15);
+      border-color: $ak-cyan;
+    }
+  }
 }
 
-.ak-range-selector {
+// Goal progression blocks
+.ak-goal-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+
+.ak-goal-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  &__icon {
+    font-size: 0.75rem;
+  }
+
+  &__label {
+    font-size: 0.7rem;
+    font-family: monospace;
+    font-weight: 800;
+    color: $ak-text-secondary;
+    letter-spacing: 1px;
+  }
+}
+
+.ak-milestone-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
 }
 
-.ak-selector-box {
+.ak-milestone-group {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  min-width: 140px;
 }
 
-.ak-sub-label {
+.ak-milestone-label {
   font-size: 0.65rem;
-  color: $ak-text-muted;
   font-family: monospace;
+  color: $ak-text-muted;
+  letter-spacing: 0.5px;
 }
 
-.ak-arrow {
+.ak-milestone-arrow {
   color: $ak-cyan;
+  font-size: 0.9rem;
   font-weight: 800;
+  padding: 0 0.2rem;
+  align-self: center;
 }
 
-.ak-mini-select {
-  padding: 0.4rem 0.5rem;
+// Segmented milestone buttons
+.ak-segmented-bar {
+  display: flex;
   background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: $ak-text-primary;
-  font-size: 0.8rem;
-  outline: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2px;
+  gap: 2px;
+}
+
+.ak-seg-btn {
+  flex: 1;
+  padding: 0.35rem 0.4rem;
+  background: transparent;
+  border: none;
+  color: $ak-text-secondary;
+  font-family: monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
   cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+    color: $ak-text-primary;
+  }
+
+  &--active {
+    background: $ak-cyan !important;
+    color: #000 !important;
+    font-weight: 800;
+    box-shadow: 0 0 8px rgba($ak-cyan, 0.4);
+  }
+
+  &--mastery.ak-seg-btn--active {
+    background: #ffab00 !important;
+    color: #000 !important;
+    box-shadow: 0 0 8px rgba(#ffab00, 0.4);
+  }
+
+  &--disabled, &:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+  }
+}
+
+// Level Progression Block
+.ak-level-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.ak-level-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 150px;
+}
+
+.ak-level-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ak-level-input-box {
+  display: flex;
+  align-items: baseline;
+  gap: 0.2rem;
+}
+
+.ak-level-num-input {
+  width: 50px;
+  padding: 0.15rem 0.35rem;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: $ak-cyan;
+  font-family: monospace;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-align: right;
+  outline: none;
 
   &:focus {
     border-color: $ak-cyan;
   }
 }
 
+.ak-level-max {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: $ak-text-muted;
+}
+
+.ak-level-quick-jumps {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.15rem;
+}
+
+.ak-jump-btn {
+  flex: 1;
+  padding: 0.15rem 0.2rem;
+  font-size: 0.62rem;
+  font-family: monospace;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: $ak-text-muted;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: $ak-text-primary;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  &--active {
+    background: rgba($ak-cyan, 0.15);
+    border-color: $ak-cyan;
+    color: $ak-cyan;
+  }
+}
+
 .ak-range-slider {
+  width: 100%;
   accent-color: $ak-cyan;
   cursor: pointer;
 }
 
-// Skill selection tabs
+// Skill Selection Tabs
 .ak-skill-tabs {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.35rem;
   width: 100%;
 }
 
@@ -1798,11 +3011,10 @@ const adjustInventory = (itemId: string, delta: number) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 0.2rem;
   padding: 0.45rem 0.35rem;
   background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: $ak-text-secondary;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1816,7 +3028,7 @@ const adjustInventory = (itemId: string, delta: number) => {
   }
 
   &--active {
-    background: rgba($ak-cyan, 0.18);
+    background: rgba($ak-cyan, 0.15);
     border-color: $ak-cyan;
     color: $ak-cyan;
     box-shadow: inset 0 0 8px rgba($ak-cyan, 0.2);
@@ -1851,52 +3063,123 @@ const adjustInventory = (itemId: string, delta: number) => {
   }
 }
 
-// Module selector
-.ak-module-select-wrap {
-  width: 100%;
+// Module Selection Pills
+.ak-module-pills {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
 
-  .ak-select {
-    width: 100%;
-    padding: 0.45rem 0.6rem;
-    background: rgba(0, 0, 0, 0.45);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: $ak-text-primary;
-    font-size: 0.78rem;
+.ak-module-pill {
+  flex: 1;
+  min-width: 110px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &__code {
     font-family: monospace;
-    outline: none;
-    cursor: pointer;
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #c084fc;
+    background: rgba(#a855f7, 0.15);
+    padding: 0.1rem 0.3rem;
+    border-radius: 2px;
+  }
 
-    &:focus {
-      border-color: $ak-cyan;
+  &__name {
+    font-size: 0.72rem;
+    color: $ak-text-secondary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    text-align: left;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  &--active {
+    background: rgba(#a855f7, 0.15);
+    border-color: #a855f7;
+    .ak-module-pill__name {
+      color: #f3e8ff;
+      font-weight: 700;
     }
   }
 }
 
-.ak-no-module-text {
-  font-size: 0.7rem;
-  font-family: monospace;
-  color: $ak-text-muted;
-  font-style: italic;
-  padding: 0.25rem 0;
+// Goal Action Buttons
+.ak-goal-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
 }
 
-.ak-btn-primary {
-  padding: 0.75rem 1rem;
+.ak-btn-save-plan {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1rem;
   background: rgba($ak-cyan, 0.15);
   border: 1px solid $ak-cyan;
   color: $ak-cyan;
   font-family: monospace;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 1px;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-top: 0.5rem;
+
+  &__icon {
+    font-size: 1rem;
+    font-weight: 800;
+  }
 
   &:hover {
     background: $ak-cyan;
     color: #000;
-    box-shadow: 0 0 12px rgba($ak-cyan, 0.4);
+    box-shadow: 0 0 14px rgba($ak-cyan, 0.45);
+  }
+
+  &--update {
+    background: rgba($ak-green, 0.15);
+    border-color: $ak-green;
+    color: $ak-green;
+
+    &:hover {
+      background: $ak-green;
+      color: #000;
+      box-shadow: 0 0 14px rgba($ak-green, 0.45);
+    }
+  }
+}
+
+.ak-btn-remove-plan {
+  padding: 0.8rem 1rem;
+  background: rgba($ak-red, 0.12);
+  border: 1px solid rgba($ak-red, 0.4);
+  color: $ak-red;
+  font-family: monospace;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: $ak-red;
+    color: #fff;
+    box-shadow: 0 0 10px rgba($ak-red, 0.4);
   }
 }
 
