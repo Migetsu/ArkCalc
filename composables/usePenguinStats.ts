@@ -109,37 +109,67 @@ export const usePenguinStats = () => {
   }
 
   /**
-   * Fetch drop matrix from Penguin Stats
+   * Fetch drop matrix from Penguin Stats with fallback to local proxy
    */
   const fetchMatrix = async (
     server?: string,
     isPersonal = false,
-    force = false
+    force = false,
+    itemFilter?: string[]
   ): Promise<PenguinMatrixItem[]> => {
     const targetServer = normalizePenguinServer(server || currentServer.value)
 
-    if (!force && matrix.value.length > 0 && currentServer.value === targetServer) {
+    if (!force && matrix.value.length > 0 && currentServer.value === targetServer && !itemFilter) {
       return matrix.value
     }
 
     try {
       error.value = null
-      const response = await $fetch<PenguinMatrixResponse | PenguinMatrixItem[]>(
-        `${PENGUIN_API_BASE}/result/matrix`,
-        {
-          query: {
-            server: targetServer,
-            is_personal: isPersonal,
-          },
-        }
-      )
+      let response: any
 
+      const itemFilterParam = itemFilter && itemFilter.length > 0 ? itemFilter.join(',') : undefined
+
+      // Attempt 1: Fetch through local Nitro server proxy (/api/penguin/matrix) to avoid CORS & benefit from caching
+      try {
+        response = await $fetch<PenguinMatrixResponse | PenguinMatrixItem[]>(
+          '/api/penguin/matrix',
+          {
+            query: {
+              server: targetServer,
+              itemFilter: itemFilterParam,
+            },
+          }
+        )
+      } catch {
+        // Attempt 2: Direct query to Penguin API
+        response = await $fetch<PenguinMatrixResponse | PenguinMatrixItem[]>(
+          `${PENGUIN_API_BASE}/result/matrix`,
+          {
+            query: {
+              server: targetServer,
+              is_personal: isPersonal,
+              itemFilter: itemFilterParam,
+            },
+          }
+        )
+      }
+
+      let newItems: PenguinMatrixItem[] = []
       if (Array.isArray(response)) {
-        matrix.value = response
+        newItems = response
       } else if (response && Array.isArray(response.matrix)) {
-        matrix.value = response.matrix
+        newItems = response.matrix
+      }
+
+      if (itemFilterParam) {
+        // Merge item-filtered drops into existing matrix
+        const itemSet = new Set(itemFilter)
+        matrix.value = [
+          ...matrix.value.filter((m) => !itemSet.has(m.itemId)),
+          ...newItems,
+        ]
       } else {
-        matrix.value = []
+        matrix.value = newItems
       }
 
       return matrix.value
@@ -233,7 +263,7 @@ export const usePenguinStats = () => {
    */
   const getBestStagesForItem = (
     itemId: string,
-    minSamples = 50
+    minSamples = 40
   ): FarmStageEfficiency[] => {
     const drops = getMatrixByItem(itemId)
     const result: FarmStageEfficiency[] = []

@@ -19,14 +19,29 @@ const userStore = useUserStore()
 const penguin = usePenguinStats()
 
 // Load Penguin stats items & stages if not already loaded
-onMounted(async () => {
-  if (penguin.items.value.length === 0) {
-    try {
-      await penguin.fetchAll('US', false)
-    } catch {
-      // Graceful fallback if offline or API delay
-    }
+const server = computed(() => userStore.profile.server || 'EN')
+const isMatrixLoading = ref(false)
+
+const refreshPenguinStats = async (force = false) => {
+  isMatrixLoading.value = true
+  try {
+    await penguin.fetchAll(server.value, force)
+  } catch (e) {
+    console.warn('[Planner] Live Penguin stats fetch warning:', e)
+  } finally {
+    isMatrixLoading.value = false
   }
+}
+
+onMounted(async () => {
+  if (penguin.items.value.length === 0 || penguin.matrix.value.length === 0) {
+    await refreshPenguinStats(false)
+  }
+})
+
+// Re-fetch if player changes their server
+watch(server, async (newServer) => {
+  await refreshPenguinStats(true)
 })
 
 // Database of operators & materials
@@ -282,15 +297,19 @@ const calculatedDeltas = computed<MaterialDelta[]>(() => {
 
     // Suggest best stage from Penguin Stats
     let bestStage
-    const bestStages = penguin.getBestStagesForItem(itemId)
-    if (bestStages && bestStages[0]) {
+    const topStages = penguin.getBestStagesForItem(itemId).slice(0, 3)
+    if (topStages.length > 0 && topStages[0]) {
       bestStage = {
-        stageCode: bestStages[0].stageCode,
-        apCost: bestStages[0].apCost,
-        apPerDrop: bestStages[0].apPerDrop,
-        dropRate: bestStages[0].dropRate,
+        stageId: topStages[0].stageId,
+        stageCode: topStages[0].stageCode,
+        apCost: topStages[0].apCost,
+        apPerDrop: topStages[0].apPerDrop,
+        dropRate: topStages[0].dropRate,
+        times: topStages[0].times,
       }
     }
+
+    const totalApToFarm = bestStage && delta > 0 ? Math.round(delta * bestStage.apPerDrop) : 0
 
     list.push({
       itemId,
@@ -303,6 +322,8 @@ const calculatedDeltas = computed<MaterialDelta[]>(() => {
       delta,
       isSufficient: ownedCount >= requiredCount,
       bestStage,
+      bestStages: topStages,
+      totalApToFarm,
     })
   }
 
@@ -329,6 +350,13 @@ const filteredDeltas = computed(() => {
   return list.slice().sort((a, b) => b.delta - a.delta)
 })
 
+// Deficit materials for farming recommendations
+const deficitFarmingPlan = computed(() => {
+  return calculatedDeltas.value
+    .filter((m) => !m.isSufficient && m.delta > 0 && m.bestStage)
+    .sort((a, b) => (b.totalApToFarm || 0) - (a.totalApToFarm || 0))
+})
+
 // Summary metrics
 const totalMissingItemsCount = computed(() => {
   return calculatedDeltas.value.filter((m) => !m.isSufficient).length
@@ -343,6 +371,22 @@ const totalEstimatedSanity = computed(() => {
   }
   return sanity
 })
+
+const totalEstimatedRuns = computed(() => {
+  let runs = 0
+  for (const item of calculatedDeltas.value) {
+    if (item.delta > 0 && item.bestStage && item.bestStage.dropRate > 0) {
+      runs += Math.ceil(item.delta / item.bestStage.dropRate)
+    }
+  }
+  return runs
+})
+
+// Selected material for expanded stage breakdown
+const inspectedMaterialId = ref<string | null>(null)
+const toggleInspectMaterial = (itemId: string) => {
+  inspectedMaterialId.value = inspectedMaterialId.value === itemId ? null : itemId
+}
 
 // Increment / quick edit owned in userStore
 const adjustInventory = (itemId: string, delta: number) => {
@@ -712,13 +756,47 @@ const adjustInventory = (itemId: string, delta: number) => {
                   </div>
                 </div>
 
-                <!-- Best Farming Stage Pill -->
-                <div v-if="mat.bestStage && !mat.isSufficient" class="ak-farming-hint">
-                  <span class="ak-farming-hint__pin">📍 Best Stage:</span>
-                  <strong class="ak-farming-hint__stage">{{ mat.bestStage.stageCode }}</strong>
-                  <span class="ak-farming-hint__eff">
-                    (~{{ mat.bestStage.apPerDrop.toFixed(1) }} AP / drop)
+                <!-- Best Farming Stage Pill with Inspection Toggle -->
+                <div
+                  v-if="mat.bestStage && !mat.isSufficient"
+                  class="ak-farming-hint"
+                  :class="{ 'ak-farming-hint--active': inspectedMaterialId === mat.itemId }"
+                  @click="toggleInspectMaterial(mat.itemId)"
+                >
+                  <div class="ak-farming-hint__left">
+                    <span class="ak-farming-hint__pin">📍 Best:</span>
+                    <strong class="ak-farming-hint__stage">{{ mat.bestStage.stageCode }}</strong>
+                    <span class="ak-farming-hint__eff">
+                      (~{{ mat.bestStage.apPerDrop.toFixed(1) }} AP / drop)
+                    </span>
+                  </div>
+                  <span class="ak-farming-hint__toggle">
+                    {{ inspectedMaterialId === mat.itemId ? '▲' : '▼' }}
                   </span>
+                </div>
+
+                <!-- Expanded Stage Comparison Matrix for this Material -->
+                <div
+                  v-if="inspectedMaterialId === mat.itemId && mat.bestStages && mat.bestStages.length > 0"
+                  class="ak-mat-stages-detail"
+                >
+                  <div class="ak-mat-stages-detail__title">PENGUIN STATS AP EFFICIENCY:</div>
+                  <div
+                    v-for="(st, sIdx) in mat.bestStages"
+                    :key="st.stageId"
+                    class="ak-mat-stage-row"
+                    :class="{ 'ak-mat-stage-row--best': sIdx === 0 }"
+                  >
+                    <div class="ak-mat-stage-code">
+                      <span class="ak-rank-tag">#{{ sIdx + 1 }}</span>
+                      <strong>{{ st.stageCode }}</strong>
+                    </div>
+                    <div class="ak-mat-stage-metrics">
+                      <span class="ak-metric-drop">{{ (st.dropRate * 100).toFixed(1) }}% drop</span>
+                      <span class="ak-metric-ap">{{ st.apCost }} AP</span>
+                      <strong class="ak-metric-ratio">{{ st.apPerDrop.toFixed(1) }} AP/drop</strong>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -732,6 +810,128 @@ const adjustInventory = (itemId: string, delta: number) => {
             <p v-else>
               ✓ ALL REQUIRED MATERIALS ARE FULLY STOCKED IN YOUR DEPOT!
             </p>
+          </div>
+        </div>
+
+        <!-- NEW PANEL: Penguin Stats Optimal Farming Operations Plan -->
+        <div v-if="deficitFarmingPlan.length > 0" class="ak-panel ak-farming-plan-panel">
+          <div class="ak-panel__head ak-panel__head--flex">
+            <div>
+              <span class="ak-panel__badge ak-panel__badge--cyan">PENGUIN // MATRIX</span>
+              <h3>OPTIMAL FARMING RECOMMENDATIONS (SANITY-TO-DROP)</h3>
+            </div>
+            <div class="ak-farming-plan-summary">
+              <span class="ak-fps-item">
+                <span class="ak-fps-label">TOTAL DEFICIT ITEMS:</span>
+                <strong class="ak-fps-val">{{ deficitFarmingPlan.length }}</strong>
+              </span>
+              <span class="ak-fps-item">
+                <span class="ak-fps-label">EST. TOTAL RUNS:</span>
+                <strong class="ak-fps-val">≈ {{ totalEstimatedRuns }}</strong>
+              </span>
+              <span class="ak-fps-item ak-fps-item--cyan">
+                <span class="ak-fps-label">EST. TOTAL SANITY:</span>
+                <strong class="ak-fps-val">{{ totalEstimatedSanity.toLocaleString() }} AP</strong>
+              </span>
+            </div>
+          </div>
+
+          <div class="ak-farming-table-wrap">
+            <table class="ak-farming-table">
+              <thead>
+                <tr>
+                  <th class="ak-th-mat">MATERIAL DEFICIT</th>
+                  <th class="ak-th-stage">RECOMMENDED STAGE</th>
+                  <th class="ak-th-rate">DROP RATE</th>
+                  <th class="ak-th-ratio">SANITY / DROP</th>
+                  <th class="ak-th-runs">EST. RUNS</th>
+                  <th class="ak-th-cost">EST. TOTAL AP</th>
+                  <th class="ak-th-alt">ALT. STAGES</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="item in deficitFarmingPlan"
+                  :key="item.itemId"
+                  class="ak-farming-row"
+                >
+                  <!-- Material Name & Delta -->
+                  <td class="ak-td-mat">
+                    <div class="ak-table-mat">
+                      <img
+                        v-if="item.icon"
+                        :src="item.icon"
+                        :alt="item.name"
+                        class="ak-table-mat__icon"
+                        loading="lazy"
+                      />
+                      <div class="ak-table-mat__info">
+                        <span class="ak-table-mat__name">{{ item.name }}</span>
+                        <span class="ak-table-mat__deficit">Need: {{ item.delta }} (Have: {{ item.owned }})</span>
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- Best Stage -->
+                  <td class="ak-td-stage">
+                    <div class="ak-stage-pill">
+                      <span class="ak-stage-pill__badge">TOP</span>
+                      <strong class="ak-stage-pill__code">{{ item.bestStage?.stageCode }}</strong>
+                      <span class="ak-stage-pill__cost">({{ item.bestStage?.apCost }} AP)</span>
+                    </div>
+                  </td>
+
+                  <!-- Drop Rate -->
+                  <td class="ak-td-rate">
+                    <span class="ak-rate-val">
+                      {{ ((item.bestStage?.dropRate || 0) * 100).toFixed(1) }}%
+                    </span>
+                    <span class="ak-rate-samples">
+                      {{ item.bestStage?.times?.toLocaleString() || 0 }} runs
+                    </span>
+                  </td>
+
+                  <!-- Sanity per drop -->
+                  <td class="ak-td-ratio">
+                    <div class="ak-ratio-box">
+                      <strong class="ak-ratio-num">{{ item.bestStage?.apPerDrop.toFixed(1) }}</strong>
+                      <span class="ak-ratio-unit">AP/item</span>
+                    </div>
+                  </td>
+
+                  <!-- Estimated Runs Needed -->
+                  <td class="ak-td-runs">
+                    <span class="ak-runs-val">
+                      ≈ {{ Math.ceil(item.delta / (item.bestStage?.dropRate || 1)) }}
+                    </span>
+                    <span class="ak-runs-sub">missions</span>
+                  </td>
+
+                  <!-- Estimated Total AP -->
+                  <td class="ak-td-cost">
+                    <strong class="ak-cost-val">
+                      {{ (item.totalApToFarm || 0).toLocaleString() }} AP
+                    </strong>
+                  </td>
+
+                  <!-- Alternative Stages -->
+                  <td class="ak-td-alt">
+                    <div v-if="item.bestStages && item.bestStages.length > 1" class="ak-alt-stages">
+                      <span
+                        v-for="alt in item.bestStages.slice(1, 3)"
+                        :key="alt.stageId"
+                        class="ak-alt-chip"
+                        :title="`${(alt.dropRate * 100).toFixed(1)}% drop rate (${alt.apPerDrop.toFixed(1)} AP/drop)`"
+                      >
+                        {{ alt.stageCode }}
+                        <small>({{ alt.apPerDrop.toFixed(1) }})</small>
+                      </span>
+                    </div>
+                    <span v-else class="ak-no-alt">—</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </main>
@@ -1358,11 +1558,32 @@ const adjustInventory = (itemId: string, delta: number) => {
 .ak-farming-hint {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.35rem;
   font-size: 0.68rem;
   font-family: monospace;
-  padding-top: 0.25rem;
+  padding: 0.35rem 0.4rem 0.25rem;
+  margin-top: 0.25rem;
   border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba($ak-cyan, 0.08);
+  }
+
+  &--active {
+    background: rgba($ak-cyan, 0.12);
+    border-top-color: rgba($ak-cyan, 0.3);
+  }
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    overflow: hidden;
+  }
 
   &__pin {
     color: $ak-text-muted;
@@ -1375,6 +1596,80 @@ const adjustInventory = (itemId: string, delta: number) => {
   &__eff {
     color: $ak-text-secondary;
   }
+
+  &__toggle {
+    font-size: 0.6rem;
+    color: $ak-cyan;
+    opacity: 0.7;
+  }
+}
+
+// Inline Expanded Stages Matrix
+.ak-mat-stages-detail {
+  margin-top: 0.35rem;
+  padding: 0.4rem;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba($ak-cyan, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  &__title {
+    font-family: monospace;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: $ak-cyan;
+    letter-spacing: 0.5px;
+  }
+}
+
+.ak-mat-stage-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.2rem 0.3rem;
+  font-family: monospace;
+  font-size: 0.65rem;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.02);
+
+  &--best {
+    background: rgba($ak-cyan, 0.1);
+    border-left: 2px solid $ak-cyan;
+  }
+}
+
+.ak-mat-stage-code {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+
+  .ak-rank-tag {
+    font-size: 0.55rem;
+    color: $ak-text-muted;
+  }
+
+  strong {
+    color: $ak-text-primary;
+  }
+}
+
+.ak-mat-stage-metrics {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .ak-metric-drop {
+    color: $ak-text-secondary;
+  }
+
+  .ak-metric-ap {
+    color: $ak-text-muted;
+  }
+
+  .ak-metric-ratio {
+    color: $ak-cyan;
+  }
 }
 
 .ak-empty-materials {
@@ -1383,5 +1678,218 @@ const adjustInventory = (itemId: string, delta: number) => {
   font-family: monospace;
   color: $ak-text-muted;
   border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+// -----------------------------------------------------------------------------
+// Dedicated Farming Plan Panel & Table
+// -----------------------------------------------------------------------------
+.ak-farming-plan-panel {
+  margin-top: 1.5rem;
+  border-top: 2px solid rgba($ak-cyan, 0.4);
+}
+
+.ak-panel__badge--cyan {
+  background: rgba($ak-cyan, 0.2);
+  color: $ak-cyan;
+  border: 1px solid rgba($ak-cyan, 0.5);
+}
+
+.ak-farming-plan-summary {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  font-family: monospace;
+  font-size: 0.72rem;
+}
+
+.ak-fps-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+
+  &--cyan {
+    strong {
+      color: $ak-cyan;
+      text-shadow: 0 0 8px rgba($ak-cyan, 0.4);
+    }
+  }
+}
+
+.ak-fps-label {
+  color: $ak-text-muted;
+}
+
+.ak-fps-val {
+  color: $ak-text-primary;
+}
+
+.ak-farming-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ak-farming-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: monospace;
+  font-size: 0.78rem;
+
+  thead tr {
+    background: rgba(0, 0, 0, 0.5);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  }
+
+  th {
+    padding: 0.75rem 1rem;
+    font-size: 0.68rem;
+    letter-spacing: 1px;
+    color: $ak-text-muted;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+  }
+
+  td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+  }
+}
+
+.ak-table-mat {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  &__icon {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  &__name {
+    font-weight: 700;
+    color: $ak-text-primary;
+  }
+
+  &__deficit {
+    font-size: 0.68rem;
+    color: $ak-amber;
+  }
+}
+
+.ak-stage-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba($ak-cyan, 0.08);
+  border: 1px solid rgba($ak-cyan, 0.35);
+
+  &__badge {
+    font-size: 0.55rem;
+    font-weight: 900;
+    padding: 0.1rem 0.25rem;
+    background: $ak-cyan;
+    color: #000;
+  }
+
+  &__code {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: $ak-text-primary;
+  }
+
+  &__cost {
+    font-size: 0.7rem;
+    color: $ak-text-muted;
+  }
+}
+
+.ak-rate-val {
+  font-weight: 700;
+  color: $ak-green;
+  display: block;
+}
+
+.ak-rate-samples {
+  font-size: 0.65rem;
+  color: $ak-text-muted;
+}
+
+.ak-ratio-box {
+  display: flex;
+  flex-direction: column;
+
+  .ak-ratio-num {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: $ak-cyan;
+  }
+
+  .ak-ratio-unit {
+    font-size: 0.62rem;
+    color: $ak-text-muted;
+  }
+}
+
+.ak-runs-val {
+  font-weight: 700;
+  color: $ak-text-primary;
+}
+
+.ak-runs-sub {
+  font-size: 0.65rem;
+  color: $ak-text-muted;
+  display: block;
+}
+
+.ak-cost-val {
+  color: $ak-yellow;
+  font-size: 0.85rem;
+}
+
+.ak-alt-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.ak-alt-chip {
+  padding: 0.2rem 0.4rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.68rem;
+  color: $ak-text-secondary;
+  cursor: help;
+
+  small {
+    color: $ak-text-muted;
+    margin-left: 0.15rem;
+  }
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    color: $ak-text-primary;
+  }
+}
+
+.ak-no-alt {
+  color: $ak-text-muted;
 }
 </style>

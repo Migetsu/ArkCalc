@@ -49,9 +49,20 @@ export interface MaterialDelta {
   delta: number
   isSufficient: boolean
   bestStage?: {
+    stageId?: string
     stageCode: string
     apCost: number
     apPerDrop: number
     dropRate: number
+    times?: number
   }
+  bestStages?: Array<{
+    stageId: string
+    stageCode: string
+    apCost: number
+    apPerDrop: number
+    dropRate: number
+    times: number
+  }>
+  totalApToFarm?: number
 }
