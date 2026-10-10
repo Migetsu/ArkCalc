@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useOperatorDetails } from '~/composables/useOperatorDetails'
 import type { OperatorSkillDetailed, OperatorSkillLevel } from '~/types'
+import RangeViewer from '~/components/wiki/RangeViewer.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -552,7 +553,18 @@ useSeoMeta({
               </div>
             </div>
 
-            <!-- 2. Skills Module Card -->
+            <!-- 2. Tactical Attack Range Matrix Card -->
+            <div class="ak-panel-card ak-panel-card--range">
+              <RangeViewer
+                :range-id="currentPhase?.rangeId"
+                :range-id-e0="operator.phases[0]?.rangeId"
+                :range-id-e2="operator.phases[operator.phases.length - 1]?.rangeId"
+                :operator-name="operator.name"
+                :initial-phase="selectedPhaseIdx === 2 ? 2 : 0"
+              />
+            </div>
+
+            <!-- 3. Skills Module Card -->
             <div class="ak-panel-card ak-panel-card--skills">
               <div class="ak-panel-header">
                 <div class="ak-panel-title">

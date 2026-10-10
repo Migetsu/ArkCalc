@@ -257,6 +257,7 @@ export default defineEventHandler(async (event) => {
           return {
             phase: idx,
             maxLevel: p.maxLevel || (idx === 0 ? 50 : idx === 1 ? 70 : 90),
+            rangeId: p.rangeId || undefined,
             minAttributes: {
               maxHp: minD.maxHp || 0,
               atk: minD.atk || 0,

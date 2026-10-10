@@ -44,6 +44,7 @@ export interface OperatorAttributes {
 export interface OperatorPhase {
   phase: number // 0, 1, 2
   maxLevel: number
+  rangeId?: string
   minAttributes: OperatorAttributes
   maxAttributes: OperatorAttributes
   evolveCost?: Array<{ id: string; count: number; name?: string; icon?: string }>
@@ -81,4 +82,15 @@ export interface OperatorDetailedData extends CatalogOperator {
   phases: OperatorPhase[]
   detailedSkills: OperatorSkillDetailed[]
   talents: OperatorTalent[]
+}
+
+export interface RangeGrid {
+  row: number
+  col: number
+}
+
+export interface RangeData {
+  id: string
+  direction: number
+  grids: RangeGrid[]
 }
