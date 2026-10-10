@@ -32,6 +32,19 @@ export const SERVER_CONFIGS: Record<string, YostarDomainConfig> = {
   },
 }
 
+export const DEFAULT_SERVER_CONFIG: YostarDomainConfig = {
+  yostarDomain: 'https://en-sdk-api.yostarplat.com',
+  networkConfigUrl: 'https://ak-conf.arknights.global/config/prod/official/network_config',
+  versionUrl: 'https://ark-us-static-online.yo-star.com/assetbundle/official/Android/version',
+  pid: 'US-ARKNIGHTS',
+  lang: 'en',
+}
+
+export function getServerConfig(server?: string): YostarDomainConfig {
+  if (!server) return DEFAULT_SERVER_CONFIG
+  return SERVER_CONFIGS[server.toLowerCase()] ?? DEFAULT_SERVER_CONFIG
+}
+
 /**
  * Creates random Arknights device IDs matching Android hardware identifiers.
  */
@@ -52,7 +65,7 @@ export function generateYostarplatHeaders(
   uid: string = '',
   token: string = ''
 ): Record<string, string> {
-  const cfg = SERVER_CONFIGS[server.toLowerCase()] || SERVER_CONFIGS.en
+  const cfg = getServerConfig(server)
   const devId = deviceId || crypto.randomUUID()
 
   const head = {
@@ -101,7 +114,7 @@ export function generateU8Sign(data: Record<string, any>): string {
  * Requests official Yostar verification code to be sent to user's email.
  */
 export async function sendYostarEmailCode(email: string, server: string = 'en'): Promise<{ success: boolean; message: string }> {
-  const cfg = SERVER_CONFIGS[server.toLowerCase()] || SERVER_CONFIGS.en
+  const cfg = getServerConfig(server)
   const bodyObj = { Account: email.trim(), Randstr: '', Ticket: '' }
   const bodyString = JSON.stringify(bodyObj)
   const headers = generateYostarplatHeaders(bodyString, server)
@@ -136,7 +149,7 @@ export async function loginWithYostarEmailCode(
   code: string,
   server: string = 'en'
 ): Promise<{ channelUid: string; token: string }> {
-  const cfg = SERVER_CONFIGS[server.toLowerCase()] || SERVER_CONFIGS.en
+  const cfg = getServerConfig(server)
 
   // 1. Submit Code to get Auth Token
   const authBody = JSON.stringify({ Account: email.trim(), Code: code.trim() })
@@ -203,7 +216,7 @@ export async function fetchLiveArknightsData(
   token: string,
   accountEmail?: string
 ): Promise<any> {
-  const cfg = SERVER_CONFIGS[server.toLowerCase()] || SERVER_CONFIGS.en
+  const cfg = getServerConfig(server)
   const device = createRandomDeviceIds()
 
   // 1. Fetch Network Configuration & Server URLs

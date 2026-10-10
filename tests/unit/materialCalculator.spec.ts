@@ -226,6 +226,7 @@ describe('Material Delta Calculator', () => {
           {
             moduleId: 'mod_x',
             name: 'Module X',
+            typeCode: 'X',
             typeName: 'MOD-X',
             stages: [
               { stage: 1, lmd: 40000, materials: [{ id: 'mod_block', count: 2 }] },
@@ -236,6 +237,7 @@ describe('Material Delta Calculator', () => {
           {
             moduleId: 'mod_y',
             name: 'Module Y',
+            typeCode: 'Y',
             typeName: 'MOD-Y',
             stages: [
               { stage: 1, lmd: 50000, materials: [{ id: '30115', count: 4 }] },

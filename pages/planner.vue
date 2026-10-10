@@ -225,7 +225,9 @@ const syncFromRoster = (operatorId: string) => {
     currentLevel.value = owned.level
     const sKey = `skill_${selectedSkillIndex.value + 1}`
     currentMastery.value = (owned.masteries as Record<string, number>)?.[sKey] ?? 0
-    currentModule.value = (selectedModuleId.value && selectedModuleId.value !== 'none' && (owned.modules as Record<string, number>)?.[selectedModuleId.value]) ?? 0
+    const hasMod = selectedModuleId.value && selectedModuleId.value !== 'none'
+    const modLvl = hasMod ? (owned.modules as Record<string, number>)?.[selectedModuleId.value] : 0
+    currentModule.value = modLvl ?? 0
   } else {
     currentElite.value = 0
     currentLevel.value = 1
@@ -240,7 +242,7 @@ watch(currentOperator, (op) => {
   const sCount = operatorSkills.value.length
   selectedSkillIndex.value = Math.max(0, sCount - 1)
   // Auto-select first combat module if available, otherwise 'none'
-  if (operatorModules.value.length > 0) {
+  if (operatorModules.value.length > 0 && operatorModules.value[0]) {
     selectedModuleId.value = operatorModules.value[0].moduleId
   } else {
     selectedModuleId.value = 'none'

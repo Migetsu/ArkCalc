@@ -58,14 +58,14 @@ function parseWikiShopTable(tableHtml: string): EventRewardItem[] {
 
   for (const r of rows) {
     const rowHtml = r[1]
-    if (rowHtml.includes('<th')) continue
+    if (!rowHtml || rowHtml.includes('<th')) continue
 
     // 1. Match item name
     const nameMatch = rowHtml.match(/data-name="([^"]+)"/i)
       || rowHtml.match(/title="([^"]+)"/i)
       || rowHtml.match(/<a[^>]*>([A-Za-z0-9\-'\s]{3,30})<\/a>/i)
 
-    if (!nameMatch) continue
+    if (!nameMatch || !nameMatch[1]) continue
     const rawName = nameMatch[1].replace(/&#39;/g, "'").replace(/&amp;/g, '&').trim()
 
     // Skip cosmetic outfits and furniture
@@ -74,7 +74,7 @@ function parseWikiShopTable(tableHtml: string): EventRewardItem[] {
     }
 
     // 2. Match item stock
-    const tds = [...rowHtml.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map((c) => c[1].trim())
+    const tds = [...rowHtml.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map((c) => (c[1] ? c[1].trim() : ''))
     const stockText = tds[2] ? tds[2].replace(/<[^>]+>/g, '').trim() : '1'
     let stock = 1
     if (stockText === '∞' || stockText.includes('8734')) {
@@ -90,7 +90,7 @@ function parseWikiShopTable(tableHtml: string): EventRewardItem[] {
       || rowHtml.match(/&#215;(\d+)/i)
       || rowHtml.match(/&times;(\d+)/i)
 
-    const multiplier = amountMatch ? parseInt(amountMatch[1].replace(/,/g, ''), 10) || 1 : 1
+    const multiplier = (amountMatch && amountMatch[1]) ? parseInt(amountMatch[1].replace(/,/g, ''), 10) || 1 : 1
     const totalCount = stock * multiplier
 
     // Map to material ID
