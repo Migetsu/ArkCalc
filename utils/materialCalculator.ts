@@ -49,17 +49,39 @@ export function aggregateMaterialRequirements(targets: TargetPlanItem[]): RawTot
     totalLmd += levelDiff * 2500
     totalExp += levelDiff * 4000
 
-    // 3. Skill Mastery (S3)
-    if (op.skillMasteryCosts?.s3) {
-      for (const step of op.skillMasteryCosts.s3) {
+    // 3. Skill Mastery (Specific selected skill: S1, S2, or S3)
+    let masterySteps: Array<{ m: number; materials: Array<{ id: string; count: number }> }> | undefined
+    if (op.skills && op.skills.length > 0) {
+      const sIdx = target.selectedSkillIndex !== undefined
+        ? target.selectedSkillIndex
+        : Math.max(0, op.skills.length - 1)
+      const selectedSkill = op.skills[sIdx] || op.skills[op.skills.length - 1]
+      masterySteps = selectedSkill?.masteries
+    } else if (op.skillMasteryCosts) {
+      const sKey = target.selectedSkillIndex !== undefined ? `s${target.selectedSkillIndex + 1}` : 's3'
+      masterySteps = (op.skillMasteryCosts as any)[sKey] || op.skillMasteryCosts.s3
+    }
+
+    if (masterySteps) {
+      for (const step of masterySteps) {
         if (step.m > target.currentMastery && step.m <= target.targetMastery) {
           step.materials?.forEach((m) => addMat(m.id, m.count))
         }
       }
     }
 
-    // 4. Module Upgrades (Stages 1, 2, 3)
-    if (op.moduleCosts) {
+    // 4. Module Upgrades (Specific selected module: Mod-X, Mod-Y, etc.)
+    if (target.selectedModuleId && target.selectedModuleId !== 'none' && op.modules && op.modules.length > 0) {
+      const mod = op.modules.find((m) => m.moduleId === target.selectedModuleId) || op.modules[0]
+      if (mod && mod.stages) {
+        for (const st of mod.stages) {
+          if (st.stage > target.currentModule && st.stage <= target.targetModule) {
+            totalLmd += st.lmd || 0
+            st.materials?.forEach((m) => addMat(m.id, m.count))
+          }
+        }
+      }
+    } else if (op.moduleCosts && (!target.selectedModuleId || target.selectedModuleId !== 'none')) {
       if (target.currentModule < 1 && target.targetModule >= 1 && op.moduleCosts.stage1) {
         totalLmd += op.moduleCosts.stage1.lmd || 0
         op.moduleCosts.stage1.materials?.forEach((m) => addMat(m.id, m.count))

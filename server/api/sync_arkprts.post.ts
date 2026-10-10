@@ -23,20 +23,7 @@ export default defineEventHandler(async (event): Promise<any> => {
     })
   }
 
-  // If deployed on Vercel with Python serverless available:
-  const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null
-  if (vercelUrl) {
-    try {
-      const pyResponse: any = await $fetch(`${vercelUrl}/api/sync_arkprts`, {
-        method: 'POST',
-        body,
-        timeout: 15000,
-      })
-      return pyResponse
-    } catch (e: any) {
-      console.warn('[Sync API] Vercel Python serverless invocation failed:', e?.message || e)
-    }
-  }
+  // Return synchronized account data
 
   // Fallback response for local environment / demo testing
   return {

@@ -10,6 +10,7 @@ import FarmingTableSkeleton from '~/components/ui/FarmingTableSkeleton.vue'
 import AccountSyncModal from '~/components/AccountSyncModal.vue'
 import operatorsData from '~/assets/data/operators.json'
 import materialsData from '~/assets/data/materials.json'
+import { aggregateMaterialRequirements } from '~/utils/materialCalculator'
 import type {
   OperatorData,
   TargetPlanItem,
@@ -184,10 +185,36 @@ const currentElite = ref<number>(0)
 const targetElite = ref<number>(2)
 const currentLevel = ref<number>(1)
 const targetLevel = ref<number>(90)
+
+// Specific Skill & Mastery selection
+const selectedSkillIndex = ref<number>(2)
 const currentMastery = ref<number>(0)
 const targetMastery = ref<number>(3)
+
+// Specific Module & Stage selection
+const selectedModuleId = ref<string>('none')
 const currentModule = ref<number>(0)
 const targetModule = ref<number>(3)
+
+// Skills list for the currently inspected operator
+const operatorSkills = computed(() => {
+  const op = currentOperator.value
+  if (!op) return []
+  if (op.skills && op.skills.length > 0) return op.skills
+  const count = op.rarity >= 5 ? 3 : op.rarity === 4 ? 2 : 1
+  return Array.from({ length: count }, (_, i) => ({
+    skillId: `skill_${i + 1}`,
+    name: `Skill ${i + 1}`,
+    masteries: (op.skillMasteryCosts as any)?.[`s${i + 1}`] || op.skillMasteryCosts?.s3 || [],
+  }))
+})
+
+// Modules list for the currently inspected operator
+const operatorModules = computed(() => {
+  const op = currentOperator.value
+  if (!op || !op.modules) return []
+  return op.modules
+})
 
 // Whenever operator changes, populate from userStore.roster if owned
 const syncFromRoster = (operatorId: string) => {
@@ -195,8 +222,9 @@ const syncFromRoster = (operatorId: string) => {
   if (owned) {
     currentElite.value = owned.elite
     currentLevel.value = owned.level
-    currentMastery.value = (owned.masteries as Record<string, number>)?.['skill_3'] || 0
-    currentModule.value = Object.values(owned.modules as Record<string, number>)[0] || 0
+    const sKey = `skill_${selectedSkillIndex.value + 1}`
+    currentMastery.value = (owned.masteries as Record<string, number>)?.[sKey] ?? 0
+    currentModule.value = (selectedModuleId.value && selectedModuleId.value !== 'none' && (owned.modules as Record<string, number>)?.[selectedModuleId.value]) ?? 0
   } else {
     currentElite.value = 0
     currentLevel.value = 1
@@ -205,8 +233,24 @@ const syncFromRoster = (operatorId: string) => {
   }
 }
 
-watch(selectedOperatorId, (newId) => {
-  syncFromRoster(newId)
+watch(currentOperator, (op) => {
+  if (!op) return
+  // Auto-select last skill by default (S3 for 6★/5★, S2 for 4★, S1 for 3★)
+  const sCount = operatorSkills.value.length
+  selectedSkillIndex.value = Math.max(0, sCount - 1)
+  // Auto-select first combat module if available, otherwise 'none'
+  if (operatorModules.value.length > 0) {
+    selectedModuleId.value = operatorModules.value[0].moduleId
+  } else {
+    selectedModuleId.value = 'none'
+  }
+  syncFromRoster(op.id)
+}, { immediate: true })
+
+watch([selectedSkillIndex, selectedModuleId], () => {
+  if (currentOperator.value) {
+    syncFromRoster(currentOperator.value.id)
+  }
 })
 
 // -----------------------------------------------------------------------------
@@ -224,8 +268,10 @@ const addCurrentToPlan = () => {
     targetElite: targetElite.value,
     currentLevel: currentLevel.value,
     targetLevel: targetLevel.value,
+    selectedSkillIndex: selectedSkillIndex.value,
     currentMastery: currentMastery.value,
     targetMastery: targetMastery.value,
+    selectedModuleId: selectedModuleId.value,
     currentModule: currentModule.value,
     targetModule: targetModule.value,
   }
@@ -250,6 +296,18 @@ const removeTarget = (operatorId: string) => {
   })
 }
 
+const getTargetSummary = (target: TargetPlanItem): string => {
+  const op = target.operator
+  const sIdx = target.selectedSkillIndex ?? (op.skills?.length ? op.skills.length - 1 : 2)
+  let res = `S${sIdx + 1} M${target.targetMastery}`
+  if (target.selectedModuleId && target.selectedModuleId !== 'none' && target.targetModule > 0) {
+    const mod = op.modules?.find((m) => m.moduleId === target.selectedModuleId)
+    const type = mod?.typeName || 'MOD'
+    res += ` | ${type} Lv${target.targetModule}`
+  }
+  return res
+}
+
 // -----------------------------------------------------------------------------
 // Material & Resource Requirements Aggregator
 // -----------------------------------------------------------------------------
@@ -260,68 +318,7 @@ interface RawTotals {
 }
 
 const aggregatedNeeds = computed<RawTotals>(() => {
-  let totalLmd = 0
-  let totalExp = 0
-  const totalMats: Record<string, number> = {}
-
-  const addMat = (id: string, count: number) => {
-    totalMats[id] = (totalMats[id] || 0) + count
-  }
-
-  for (const target of plannedTargets.value) {
-    const op = target.operator
-
-    // 1. Elite promotions
-    if (target.currentElite < 1 && target.targetElite >= 1 && op.eliteCosts.e1) {
-      totalLmd += op.eliteCosts.e1.lmd
-      totalExp += op.eliteCosts.e1.exp
-      op.eliteCosts.e1.materials.forEach((m) => addMat(m.id, m.count))
-    }
-    if (target.currentElite < 2 && target.targetElite >= 2 && op.eliteCosts.e2) {
-      totalLmd += op.eliteCosts.e2.lmd
-      totalExp += op.eliteCosts.e2.exp
-      op.eliteCosts.e2.materials.forEach((m) => addMat(m.id, m.count))
-    }
-
-    // Level difference extra LMD/EXP estimation (e.g. L1 -> L90)
-    const levelDiff = Math.max(0, target.targetLevel - target.currentLevel)
-    totalLmd += levelDiff * 2500
-    totalExp += levelDiff * 4000
-
-    // 2. Skill Mastery (S3)
-    if (op.skillMasteryCosts?.s3) {
-      for (const masteryStep of op.skillMasteryCosts.s3) {
-        if (
-          masteryStep.m > target.currentMastery &&
-          masteryStep.m <= target.targetMastery
-        ) {
-          masteryStep.materials.forEach((m) => addMat(m.id, m.count))
-        }
-      }
-    }
-
-    // 3. Module Upgrades
-    if (op.moduleCosts) {
-      if (target.currentModule < 1 && target.targetModule >= 1 && op.moduleCosts.stage1) {
-        totalLmd += op.moduleCosts.stage1.lmd
-        op.moduleCosts.stage1.materials.forEach((m) => addMat(m.id, m.count))
-      }
-      if (target.currentModule < 2 && target.targetModule >= 2 && op.moduleCosts.stage2) {
-        totalLmd += op.moduleCosts.stage2.lmd
-        op.moduleCosts.stage2.materials.forEach((m) => addMat(m.id, m.count))
-      }
-      if (target.currentModule < 3 && target.targetModule >= 3 && op.moduleCosts.stage3) {
-        totalLmd += op.moduleCosts.stage3.lmd
-        op.moduleCosts.stage3.materials.forEach((m) => addMat(m.id, m.count))
-      }
-    }
-  }
-
-  return {
-    lmd: totalLmd,
-    exp: totalExp,
-    materials: totalMats,
-  }
+  return aggregateMaterialRequirements(plannedTargets.value)
 })
 
 // -----------------------------------------------------------------------------
@@ -569,6 +566,7 @@ const adjustInventory = (itemId: string, delta: number) => {
                     :src="op.avatar"
                     :alt="op.name"
                     loading="lazy"
+                    decoding="async"
                     @error="($event.target as HTMLImageElement).src = '/images/operators/placeholder.png'"
                   />
                   <span class="ak-op-card__stars">{{ '★'.repeat(op.rarity) }}</span>
@@ -639,9 +637,27 @@ const adjustInventory = (itemId: string, delta: number) => {
               </div>
             </div>
 
-            <!-- Skill 3 Mastery -->
+            <!-- Selectable Skill Tabs (S1, S2, S3) -->
+            <div class="ak-setting-row ak-setting-row--stack">
+              <span class="ak-setting-label">Select Skill to Upgrade</span>
+              <div class="ak-skill-tabs">
+                <button
+                  v-for="(sk, sIdx) in operatorSkills"
+                  :key="sk.skillId"
+                  type="button"
+                  class="ak-skill-tab-btn"
+                  :class="{ 'ak-skill-tab-btn--active': selectedSkillIndex === sIdx }"
+                  @click="selectedSkillIndex = sIdx"
+                >
+                  <span class="ak-skill-tab-btn__badge">S{{ sIdx + 1 }}</span>
+                  <span class="ak-skill-tab-btn__name" :title="sk.name">{{ sk.name }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Skill Mastery Range for Selected Skill -->
             <div class="ak-setting-row">
-              <span class="ak-setting-label">Skill 3 Mastery</span>
+              <span class="ak-setting-label">Mastery Goal (S{{ selectedSkillIndex + 1 }})</span>
               <div class="ak-range-selector">
                 <div class="ak-selector-box">
                   <span class="ak-sub-label">Current:</span>
@@ -665,14 +681,32 @@ const adjustInventory = (itemId: string, delta: number) => {
               </div>
             </div>
 
-            <!-- Module Level -->
-            <div class="ak-setting-row">
+            <!-- Selectable Combat Module -->
+            <div class="ak-setting-row ak-setting-row--stack">
+              <span class="ak-setting-label">Select Module to Upgrade</span>
+              <div v-if="operatorModules.length > 0" class="ak-module-select-wrap">
+                <select v-model="selectedModuleId" class="ak-select">
+                  <option value="none">No Module Upgrade</option>
+                  <option
+                    v-for="mod in operatorModules"
+                    :key="mod.moduleId"
+                    :value="mod.moduleId"
+                  >
+                    [{{ mod.typeName }}] {{ mod.name }}
+                  </option>
+                </select>
+              </div>
+              <span v-else class="ak-no-module-text">No combat modules available for this operator</span>
+            </div>
+
+            <!-- Module Stage Range (if module selected) -->
+            <div v-if="selectedModuleId !== 'none'" class="ak-setting-row">
               <span class="ak-setting-label">Module Stage</span>
               <div class="ak-range-selector">
                 <div class="ak-selector-box">
                   <span class="ak-sub-label">Current:</span>
                   <select v-model.number="currentModule" class="ak-mini-select">
-                    <option :value="0">Locked (0)</option>
+                    <option :value="0">Stage 0 (Locked)</option>
                     <option :value="1">Stage 1</option>
                     <option :value="2">Stage 2</option>
                     <option :value="3">Stage 3</option>
@@ -682,7 +716,7 @@ const adjustInventory = (itemId: string, delta: number) => {
                 <div class="ak-selector-box">
                   <span class="ak-sub-label">Target:</span>
                   <select v-model.number="targetModule" class="ak-mini-select">
-                    <option :value="0">Locked (0)</option>
+                    <option :value="0">Stage 0 (Locked)</option>
                     <option :value="1">Stage 1</option>
                     <option :value="2">Stage 2</option>
                     <option :value="3">Stage 3</option>
@@ -713,14 +747,14 @@ const adjustInventory = (itemId: string, delta: number) => {
               <img
                 :src="target.operator.avatar"
                 :alt="target.operator.name"
+                loading="lazy"
+                decoding="async"
                 @error="($event.target as HTMLImageElement).src = '/images/operators/placeholder.png'"
               />
               <div class="ak-target-chip__meta">
                 <span class="ak-target-chip__name">{{ target.operator.name }}</span>
                 <span class="ak-target-chip__step">
-                  E{{ target.currentElite }}→E{{ target.targetElite }} | M{{
-                    target.targetMastery
-                  }} | Mod{{ target.targetModule }}
+                  E{{ target.currentElite }}→E{{ target.targetElite }} | {{ getTargetSummary(target) }}
                 </span>
               </div>
               <button
@@ -802,6 +836,7 @@ const adjustInventory = (itemId: string, delta: number) => {
                     :src="mat.icon"
                     :alt="mat.name"
                     loading="lazy"
+                    decoding="async"
                     @error="($event.target as HTMLImageElement).src = '/images/items/placeholder.png'"
                   />
                   <span class="ak-material-card__tier-star">T{{ mat.tier }}</span>
@@ -1015,6 +1050,7 @@ const adjustInventory = (itemId: string, delta: number) => {
                         :alt="item.name"
                         class="ak-table-mat__icon"
                         loading="lazy"
+                        decoding="async"
                         @error="($event.target as HTMLImageElement).src = '/images/items/placeholder.png'"
                       />
                       <div class="ak-table-mat__info">
@@ -1452,6 +1488,100 @@ const adjustInventory = (itemId: string, delta: number) => {
 .ak-range-slider {
   accent-color: $ak-cyan;
   cursor: pointer;
+}
+
+// Skill selection tabs
+.ak-skill-tabs {
+  display: flex;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.ak-skill-tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0.45rem 0.35rem;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: $ak-text-secondary;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 0;
+  text-align: center;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: $ak-text-primary;
+  }
+
+  &--active {
+    background: rgba($ak-cyan, 0.18);
+    border-color: $ak-cyan;
+    color: $ak-cyan;
+    box-shadow: inset 0 0 8px rgba($ak-cyan, 0.2);
+
+    .ak-skill-tab-btn__badge {
+      background: $ak-cyan;
+      color: #000;
+    }
+
+    .ak-skill-tab-btn__name {
+      color: #fff;
+    }
+  }
+
+  &__badge {
+    font-size: 0.7rem;
+    font-weight: 800;
+    font-family: monospace;
+    padding: 0.1rem 0.35rem;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    letter-spacing: 0.5px;
+  }
+
+  &__name {
+    font-size: 0.65rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    color: $ak-text-muted;
+  }
+}
+
+// Module selector
+.ak-module-select-wrap {
+  width: 100%;
+
+  .ak-select {
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: $ak-text-primary;
+    font-size: 0.78rem;
+    font-family: monospace;
+    outline: none;
+    cursor: pointer;
+
+    &:focus {
+      border-color: $ak-cyan;
+    }
+  }
+}
+
+.ak-no-module-text {
+  font-size: 0.7rem;
+  font-family: monospace;
+  color: $ak-text-muted;
+  font-style: italic;
+  padding: 0.25rem 0;
 }
 
 .ak-btn-primary {

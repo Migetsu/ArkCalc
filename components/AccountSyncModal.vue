@@ -16,19 +16,28 @@ const emit = defineEmits<{
 const userStore = useUserStore()
 const toast = useToast()
 
-// State
-type AuthTab = 'token' | 'email' | 'demo'
-const activeTab = ref<AuthTab>('token')
+// Active Tab: Yostar Email Code | Manual JSON Import | Demo Preview
+type AuthTab = 'email' | 'json' | 'demo'
+const activeTab = ref<AuthTab>('email')
 
 const form = reactive({
   server: 'en',
-  uid: '',
-  token: '',
   email: '',
   code: '',
 })
 
-const showPassword = ref(false)
+// Send Code State
+const isSendingCode = ref(false)
+const sendCodeCooldown = ref(0)
+let cooldownTimer: any = null
+
+// Manual JSON Import State
+const jsonInput = ref('')
+const jsonFileName = ref('')
+const jsonParseError = ref<string | null>(null)
+const jsonPreviewData = ref<any | null>(null)
+
+// Modal State
 const isSubmitting = ref(false)
 const errorMessage = ref<string | null>(null)
 const successData = ref<any | null>(null)
@@ -43,221 +52,238 @@ const closeModal = () => {
   successData.value = null
 }
 
-// Demo data generator for rapid offline preview / testing
-const generateDemoData = (): {
-  success: boolean
-  profile: { uid: string; nickname: string; level: number; server: string }
-  gacha: {
-    orundum: number
-    originite_prime: number
-    single_permits: number
-    ten_permits: number
-    lmd: number
-    pulls_without_op: number
-    pulls_with_op: number
-  }
-  inventory: Record<string, number>
-  roster: Array<{
-    operator_id: string
-    elite: number
-    level: number
-    potential: number
-    skill_level: number
-    masteries: Record<string, number>
-    modules: Record<string, number>
-  }>
-  total_operators?: number
-} => {
-  return {
-    success: true,
-    profile: {
-      uid: '88492015',
-      nickname: 'Doctor Amiya',
-      level: 120,
-      server: form.server.toUpperCase(),
-    },
-    gacha: {
-      orundum: 42600,
-      originite_prime: 54,
-      single_permits: 8,
-      ten_permits: 3,
-      lmd: 2450000,
-      pulls_without_op: 109,
-      pulls_with_op: 125,
-    },
-    inventory: {
-      '4001': 2450000,
-      'orundum': 42600,
-      'originite_prime': 54,
-      '7001': 8,
-      '7002': 3,
-      '30013': 85,
-      '30014': 24,
-      '30073': 42,
-      '30074': 18,
-      '30083': 36,
-      '30084': 12,
-      '30093': 29,
-      '30094': 14,
-      '31014': 16,
-      '31024': 15,
-      '32001': 10,
-      '3303': 120,
-      'mod_unlock_token': 14,
-    },
-    roster: [
-      {
-        operator_id: 'char_172_silver',
-        elite: 2,
-        level: 90,
-        potential: 6,
-        skill_level: 7,
-        masteries: { skchr_silver_3: 3 },
-        modules: { uniequip_002_silver: 3 },
-      },
-      {
-        operator_id: 'char_350_surtr',
-        elite: 2,
-        level: 90,
-        potential: 3,
-        skill_level: 7,
-        masteries: { skchr_surtr_3: 3 },
-        modules: {},
-      },
-      {
-        operator_id: 'char_4025_aprot',
-        elite: 2,
-        level: 90,
-        potential: 4,
-        skill_level: 7,
-        masteries: { skchr_aprot_3: 3 },
-        modules: { uniequip_002_aprot: 3 },
-      },
-      {
-        operator_id: 'char_202_demkni',
-        elite: 2,
-        level: 80,
-        potential: 5,
-        skill_level: 7,
-        masteries: { skchr_demkni_1: 3, skchr_demkni_2: 3, skchr_demkni_3: 3 },
-        modules: { uniequip_002_demkni: 3 },
-      },
-      {
-        operator_id: 'char_103_angel',
-        elite: 2,
-        level: 80,
-        potential: 6,
-        skill_level: 7,
-        masteries: { skchr_angel_3: 3 },
-        modules: { uniequip_002_angel: 3 },
-      },
-      {
-        operator_id: 'char_102_texas',
-        elite: 2,
-        level: 60,
-        potential: 6,
-        skill_level: 7,
-        masteries: { skchr_texas_2: 3 },
-        modules: {},
-      },
-      {
-        operator_id: 'char_237_gravel',
-        elite: 1,
-        level: 50,
-        potential: 6,
-        skill_level: 7,
-        masteries: {},
-        modules: {},
-      },
-    ],
-    total_operators: 7,
-  }
-}
+// Request verification code from Yostar
+const handleSendCode = async () => {
+  if (sendCodeCooldown.value > 0 || isSendingCode.value) return
+  const cleanEmail = form.email.trim()
 
-// Perform Account Sync
-const handleSync = async () => {
+  if (!cleanEmail || !cleanEmail.includes('@')) {
+    errorMessage.value = 'Please provide a valid email address before requesting a verification code.'
+    return
+  }
+
   errorMessage.value = null
-  successData.value = null
-  isSubmitting.value = true
+  isSendingCode.value = true
 
   try {
-    syncStage.value = 'CONNECTING TO PRTS AUTH GATEWAY...'
-
-    if (activeTab.value === 'demo') {
-      // Simulate network latency for demo
-      await new Promise((r) => setTimeout(r, 600))
-      syncStage.value = 'DECODING DEPOT INVENTORY & TROOP ROSTER...'
-      await new Promise((r) => setTimeout(r, 500))
-      const demo = await userStore.loadDemoData()
-      successData.value = demo
-      emit('synced', demo)
-      toast.success(
-        `Welcome Doctor ${demo.profile.nickname}! Depot stock & operator roster synchronized.`,
-        {
-          title: 'PRTS GATEWAY',
-          tag: 'AUTH // OK',
-        }
-      )
-      return
-    }
-
-    // Build Payload for /api/sync_arkprts (Vercel Python serverless endpoint)
-    const payload: Record<string, any> = {
-      server: form.server,
-      auth_type: activeTab.value === 'token' ? 'token' : 'email_code',
-    }
-
-    if (activeTab.value === 'token') {
-      if (!form.uid.trim() || !form.token.trim()) {
-        throw new Error('Please provide both UID and Secret Token.')
-      }
-      payload.uid = form.uid.trim()
-      payload.token = form.token.trim()
-    } else {
-      if (!form.email.trim() || !form.code.trim()) {
-        throw new Error('Please provide both Yostar Email and Verification Code.')
-      }
-      payload.email = form.email.trim()
-      payload.code = form.code.trim()
-    }
-
-    syncStage.value = 'QUERYING ARKNIGHTS GAME SERVERS...'
-
-    // Try posting to /api/sync_arkprts
-    const response = await fetch('/api/sync_arkprts', {
+    const res = await $fetch<any>('/api/yostar/send_code', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+      body: {
+        email: cleanEmail,
+        server: form.server,
       },
-      body: JSON.stringify(payload),
     })
 
-    const data = await response.json()
-
-    if (!response.ok || !data.success) {
-      throw new Error(data.error || 'Failed to authenticate with game servers. Check your credentials.')
-    }
-
-    syncStage.value = 'UPDATING LOCAL DEPOT & OPERATOR ROSTER...'
-
-    // Update userStore
-    await userStore.syncFromArkprtsData(data)
-    successData.value = data
-    emit('synced', data)
-    toast.success(`Doctor profile and inventory synchronized with game servers!`, {
-      title: 'PRTS GATEWAY',
-      tag: 'AUTH // OK',
+    toast.success(res.message || `Code requested for ${cleanEmail}. Check your inbox and spam folder.`, {
+      title: 'VERIFICATION CODE SENT',
+      tag: 'YOSTAR // AUTH',
     })
+
+    // Initiate 60-second cooldown timer
+    sendCodeCooldown.value = 60
+    if (cooldownTimer) clearInterval(cooldownTimer)
+    cooldownTimer = setInterval(() => {
+      sendCodeCooldown.value--
+      if (sendCodeCooldown.value <= 0) {
+        clearInterval(cooldownTimer)
+      }
+    }, 1000)
   } catch (err: any) {
-    const msg = err?.message || 'An unexpected synchronization error occurred.'
+    const msg = err?.data?.statusMessage || err?.message || 'Failed to transmit verification code request.'
     errorMessage.value = msg
     toast.error(msg, {
-      title: 'GATEWAY ERROR',
+      title: 'TRANSMISSION ERROR',
       tag: 'AUTH // FAIL',
     })
   } finally {
-    isSubmitting.value = false
-    syncStage.value = ''
+    isSendingCode.value = false
+  }
+}
+
+// Handle JSON file upload
+const handleFileUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  jsonFileName.value = file.name
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    try {
+      const text = e.target?.result as string
+      jsonInput.value = text
+      validateAndParseJson(text)
+    } catch {
+      jsonParseError.value = 'Failed to read uploaded file.'
+    }
+  }
+  reader.readAsText(file)
+}
+
+// Paste JSON directly from system clipboard
+const handlePasteFromClipboard = async () => {
+  try {
+    const text = await navigator.clipboard.readText()
+    if (text) {
+      jsonInput.value = text
+      validateAndParseJson(text)
+      toast.info('JSON data pasted from clipboard.', { title: 'CLIPBOARD IMPORT' })
+    }
+  } catch {
+    toast.warning('Clipboard access blocked by browser. Paste directly into the textarea.', { title: 'CLIPBOARD' })
+  }
+}
+
+// Validate and parse raw JSON text
+const validateAndParseJson = (rawText: string) => {
+  jsonParseError.value = null
+  jsonPreviewData.value = null
+  if (!rawText.trim()) return null
+
+  try {
+    const parsed = JSON.parse(rawText)
+    // Structure extraction preview
+    const preview = {
+      nickname: parsed.profile?.nickname || parsed.nickname || parsed.user?.name || 'Doctor',
+      level: parsed.profile?.level || parsed.level || 120,
+      server: parsed.profile?.server || parsed.server || form.server.toUpperCase(),
+      rosterCount: Array.isArray(parsed.roster)
+        ? parsed.roster.length
+        : typeof parsed.roster === 'object' && parsed.roster !== null
+        ? Object.keys(parsed.roster).length
+        : 0,
+      inventoryCount: typeof parsed.inventory === 'object' && parsed.inventory !== null
+        ? Object.keys(parsed.inventory).length
+        : 0,
+      orundum: parsed.gacha?.orundum ?? parsed.inventory?.['orundum'] ?? 0,
+      originitePrime: parsed.gacha?.originite_prime ?? parsed.inventory?.['originite_prime'] ?? 0,
+    }
+
+    jsonPreviewData.value = preview
+    return parsed
+  } catch (err: any) {
+    jsonParseError.value = 'Syntax error in JSON: ' + (err.message || 'Invalid format')
+    return null
+  }
+}
+
+// Execute Account Synchronization or JSON Import
+const handleSync = async () => {
+  errorMessage.value = null
+  successData.value = null
+
+  // 1. DEMO MODE
+  if (activeTab.value === 'demo') {
+    isSubmitting.value = true
+    syncStage.value = 'INITIALIZING DEMO ENVIRONMENT...'
+    try {
+      const demo = await userStore.loadDemoData()
+      successData.value = {
+        profile: demo.profile,
+        total_operators: demo.roster?.length || 8,
+        gacha: demo.gacha,
+      }
+      emit('synced', demo)
+      toast.success(`Demo account loaded! Welcome Doctor ${demo.profile.nickname}.`, {
+        title: 'DEMO READY',
+        tag: 'PRTS // DEMO',
+      })
+    } catch (err: any) {
+      errorMessage.value = err?.message || 'Failed to load demo data.'
+    } finally {
+      isSubmitting.value = false
+      syncStage.value = ''
+    }
+    return
+  }
+
+  // 2. MANUAL JSON IMPORT
+  if (activeTab.value === 'json') {
+    const parsed = validateAndParseJson(jsonInput.value)
+    if (!parsed) {
+      errorMessage.value = jsonParseError.value || 'Please provide valid JSON data before importing.'
+      return
+    }
+
+    isSubmitting.value = true
+    syncStage.value = 'PARSING JSON & SYNCHRONIZING DEPOT...'
+    try {
+      await userStore.syncFromArkprtsData(parsed)
+      successData.value = {
+        profile: parsed.profile || {
+          nickname: jsonPreviewData.value?.nickname || 'Doctor',
+          level: jsonPreviewData.value?.level || 120,
+          server: jsonPreviewData.value?.server || form.server.toUpperCase(),
+        },
+        total_operators: jsonPreviewData.value?.rosterCount || 0,
+        gacha: parsed.gacha || {
+          orundum: userStore.getItemQuantity('orundum'),
+          originite_prime: userStore.getItemQuantity('originite_prime'),
+          pulls_with_op: Math.floor(userStore.getItemQuantity('orundum') / 600) + Math.floor((userStore.getItemQuantity('originite_prime') * 180) / 600),
+        },
+      }
+      emit('synced', parsed)
+      toast.success('Roster and inventory depot imported successfully from JSON!', {
+        title: 'IMPORT COMPLETED',
+        tag: 'JSON // SYNCED',
+      })
+    } catch (err: any) {
+      errorMessage.value = 'JSON Import Error: ' + (err?.message || 'Failed to process data structure')
+    } finally {
+      isSubmitting.value = false
+      syncStage.value = ''
+    }
+    return
+  }
+
+  // 3. YOSTAR EMAIL CODE
+  if (activeTab.value === 'email') {
+    if (!form.email.trim() || !form.code.trim()) {
+      errorMessage.value = 'Please provide both your Yostar account email and the 6-digit verification code.'
+      return
+    }
+
+    isSubmitting.value = true
+    syncStage.value = 'CONNECTING TO ARKNIGHTS GATEWAY...'
+
+    try {
+      const response = await fetch('/api/sync_arkprts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          server: form.server,
+          auth_type: 'email_code',
+          email: form.email.trim(),
+          code: form.code.trim(),
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to authenticate with game servers. Please check your verification code.')
+      }
+
+      syncStage.value = 'SYNCHRONIZING DEPOT & OPERATOR ROSTER...'
+      await userStore.syncFromArkprtsData(data)
+      successData.value = data
+      emit('synced', data)
+
+      toast.success('Doctor profile and inventory synchronized with game servers!', {
+        title: 'PRTS GATEWAY',
+        tag: 'AUTH // OK',
+      })
+    } catch (err: any) {
+      const msg = err?.message || 'An unexpected synchronization error occurred.'
+      errorMessage.value = msg
+      toast.error(msg, {
+        title: 'GATEWAY ERROR',
+        tag: 'AUTH // FAIL',
+      })
+    } finally {
+      isSubmitting.value = false
+      syncStage.value = ''
+    }
   }
 }
 </script>
@@ -267,227 +293,279 @@ const handleSync = async () => {
     <div v-if="modelValue" class="ak-modal-overlay" @click.self="closeModal">
       <div class="ak-modal-dialog">
         <!-- Header Bar -->
-      <div class="ak-modal-header">
-        <div class="ak-modal-header__meta">
-          <span class="ak-modal-header__code">PRTS.GATEWAY // PROTOCOL SYNC</span>
-          <h3 class="ak-modal-header__title">Account Synchronization</h3>
-        </div>
-        <button
-          type="button"
-          class="ak-modal-close"
-          :disabled="isSubmitting"
-          aria-label="Close modal"
-          @click="closeModal"
-        >
-          ×
-        </button>
-      </div>
-
-      <!-- Success Screen -->
-      <div v-if="successData" class="ak-modal-body ak-success-body">
-        <div class="ak-success-badge">
-          <span class="ak-success-badge__icon">✓</span>
-          <h4>SYNCHRONIZATION COMPLETED</h4>
-          <p>Account data successfully retrieved via arkprts and synced to your Pinia store & local depot.</p>
-        </div>
-
-        <div class="ak-sync-summary">
-          <div class="ak-summary-card">
-            <span class="ak-summary-card__label">DOCTOR</span>
-            <span class="ak-summary-card__val">
-              <strong>{{ successData.profile.nickname }}</strong>
-              (LV.{{ successData.profile.level }})
-            </span>
+        <div class="ak-modal-header">
+          <div class="ak-modal-header__meta">
+            <span class="ak-modal-header__code">PRTS.GATEWAY // PROTOCOL SYNC</span>
+            <h3 class="ak-modal-header__title">Account Synchronization</h3>
           </div>
-
-          <div class="ak-summary-card">
-            <span class="ak-summary-card__label">ROSTER</span>
-            <span class="ak-summary-card__val">
-              <strong>{{ successData.total_operators }}</strong> Operators
-            </span>
-          </div>
-
-          <div class="ak-summary-card">
-            <span class="ak-summary-card__label">ORUNDUM & OP</span>
-            <span class="ak-summary-card__val">
-              <strong>{{ successData.gacha.orundum.toLocaleString() }}</strong> 💎 / 
-              <strong>{{ successData.gacha.originite_prime }}</strong> OP
-            </span>
-          </div>
-
-          <div class="ak-summary-card">
-            <span class="ak-summary-card__label">ESTIMATED PULLS</span>
-            <span class="ak-summary-card__val ak-summary-card__val--cyan">
-              <strong>{{ successData.gacha.pulls_with_op }}</strong> Pulls
-            </span>
-          </div>
-        </div>
-
-        <div class="ak-modal-footer">
-          <button type="button" class="ak-btn ak-btn--primary" @click="closeModal">
-            CLOSE & CONTINUE
-          </button>
-        </div>
-      </div>
-
-      <!-- Form Body -->
-      <div v-else class="ak-modal-body">
-        <!-- Auth Method Tabs -->
-        <div class="ak-auth-tabs">
           <button
             type="button"
-            class="ak-auth-tab"
-            :class="{ 'ak-auth-tab--active': activeTab === 'token' }"
-            @click="activeTab = 'token'"
+            class="ak-modal-close"
+            :disabled="isSubmitting"
+            aria-label="Close modal"
+            @click="closeModal"
           >
-            TOKEN LOGIN
-          </button>
-          <button
-            type="button"
-            class="ak-auth-tab"
-            :class="{ 'ak-auth-tab--active': activeTab === 'email' }"
-            @click="activeTab = 'email'"
-          >
-            YOSTAR EMAIL CODE
-          </button>
-          <button
-            type="button"
-            class="ak-auth-tab ak-auth-tab--demo"
-            :class="{ 'ak-auth-tab--active': activeTab === 'demo' }"
-            @click="activeTab = 'demo'"
-          >
-            DEMO PREVIEW
+            ✕
           </button>
         </div>
 
-        <!-- Server Selector -->
-        <div class="ak-form-group">
-          <label class="ak-label">SERVER REGION</label>
-          <div class="ak-server-grid">
-            <button
-              v-for="s in ['en', 'jp', 'kr', 'cn']"
-              :key="s"
-              type="button"
-              class="ak-server-btn"
-              :class="{ 'ak-server-btn--active': form.server === s }"
-              @click="form.server = s"
-            >
-              {{ s.toUpperCase() }}
+        <!-- Success Screen -->
+        <div v-if="successData" class="ak-modal-body ak-success-body">
+          <div class="ak-success-badge">
+            <span class="ak-success-badge__icon">✓</span>
+            <h4>SYNCHRONIZATION COMPLETED</h4>
+            <p>Account data successfully retrieved and populated into your local depot and roster.</p>
+          </div>
+
+          <div class="ak-sync-summary">
+            <div class="ak-summary-card">
+              <span class="ak-summary-card__label">DOCTOR</span>
+              <span class="ak-summary-card__val">
+                <strong>{{ successData.profile.nickname }}</strong>
+                (LV.{{ successData.profile.level }})
+              </span>
+            </div>
+
+            <div class="ak-summary-card">
+              <span class="ak-summary-card__label">ROSTER</span>
+              <span class="ak-summary-card__val">
+                <strong>{{ successData.total_operators }}</strong> Operators
+              </span>
+            </div>
+
+            <div class="ak-summary-card">
+              <span class="ak-summary-card__label">ORUNDUM & OP</span>
+              <span class="ak-summary-card__val">
+                <strong>{{ successData.gacha.orundum.toLocaleString() }}</strong> 💎 / 
+                <strong>{{ successData.gacha.originite_prime }}</strong> OP
+              </span>
+            </div>
+
+            <div class="ak-summary-card">
+              <span class="ak-summary-card__label">ESTIMATED PULLS</span>
+              <span class="ak-summary-card__val ak-summary-card__val--cyan">
+                <strong>{{ successData.gacha.pulls_with_op }}</strong> Pulls
+              </span>
+            </div>
+          </div>
+
+          <div class="ak-modal-footer">
+            <button type="button" class="ak-btn ak-btn--primary" @click="closeModal">
+              CLOSE & CONTINUE
             </button>
           </div>
         </div>
 
-        <!-- Token Fields -->
-        <template v-if="activeTab === 'token'">
-          <div class="ak-form-group">
-            <label class="ak-label">DOCTOR UID (ACCOUNT ID)</label>
-            <input
-              v-model="form.uid"
-              type="text"
-              class="ak-input"
-              placeholder="e.g. 10482914"
-              :disabled="isSubmitting"
-            />
+        <!-- Form Body -->
+        <div v-else class="ak-modal-body">
+          <!-- Prominent Security & Zero-Storage Notice -->
+          <div class="ak-security-banner">
+            <div class="ak-security-banner__header">
+              <span class="ak-security-banner__badge">⚠️ ACCOUNT RISK ADVISORY</span>
+              <span class="ak-security-banner__policy">🔒 ZERO-STORAGE POLICY</span>
+            </div>
+            <p class="ak-security-banner__text">
+              <strong>Account Safety:</strong> Synchronizing via live verification codes interacts directly with official authentication endpoints. Logging into an external tool while your in-game client is open will disconnect your active game session.
+            </p>
+            <p class="ak-security-banner__text ak-security-banner__text--dim">
+              <strong>Privacy Guarantee:</strong> We do <em>not</em> store login credentials, verification codes, or access tokens on any server. All depot items and operator rosters remain entirely in your local browser session.
+            </p>
           </div>
 
-          <div class="ak-form-group">
-            <label class="ak-label">SECRET AUTH TOKEN</label>
-            <div class="ak-password-wrap">
-              <input
-                v-model="form.token"
-                :type="showPassword ? 'text' : 'password'"
-                class="ak-input"
-                placeholder="Enter Yostar or PRTS auth token"
-                :disabled="isSubmitting"
-              />
+          <!-- Auth Method Tabs -->
+          <div class="ak-auth-tabs">
+            <button
+              type="button"
+              class="ak-auth-tab"
+              :class="{ 'ak-auth-tab--active': activeTab === 'email' }"
+              @click="activeTab = 'email'"
+            >
+              YOSTAR EMAIL CODE
+            </button>
+            <button
+              type="button"
+              class="ak-auth-tab"
+              :class="{ 'ak-auth-tab--active': activeTab === 'json' }"
+              @click="activeTab = 'json'"
+            >
+              MANUAL JSON IMPORT
+            </button>
+            <button
+              type="button"
+              class="ak-auth-tab ak-auth-tab--demo"
+              :class="{ 'ak-auth-tab--active': activeTab === 'demo' }"
+              @click="activeTab = 'demo'"
+            >
+              DEMO PREVIEW
+            </button>
+          </div>
+
+          <!-- Server Selector (For Email & General) -->
+          <div v-if="activeTab !== 'demo'" class="ak-form-group">
+            <label class="ak-label">SERVER REGION</label>
+            <div class="ak-server-grid">
               <button
+                v-for="s in ['en', 'jp', 'kr', 'cn']"
+                :key="s"
                 type="button"
-                class="ak-pw-toggle"
-                @click="showPassword = !showPassword"
+                class="ak-server-btn"
+                :class="{ 'ak-server-btn--active': form.server === s }"
+                @click="form.server = s"
               >
-                {{ showPassword ? 'HIDE' : 'SHOW' }}
+                {{ s.toUpperCase() }}
               </button>
             </div>
           </div>
-        </template>
 
-        <!-- Email Verification Fields -->
-        <template v-else-if="activeTab === 'email'">
-          <div class="ak-form-group">
-            <label class="ak-label">YOSTAR ACCOUNT EMAIL</label>
-            <input
-              v-model="form.email"
-              type="email"
-              class="ak-input"
-              placeholder="doctor@example.com"
-              :disabled="isSubmitting"
-            />
-          </div>
-
-          <div class="ak-form-group">
-            <label class="ak-label">6-DIGIT VERIFICATION CODE</label>
-            <input
-              v-model="form.code"
-              type="text"
-              class="ak-input ak-input--code"
-              placeholder="123456"
-              maxlength="6"
-              :disabled="isSubmitting"
-            />
-          </div>
-        </template>
-
-        <!-- Demo Mode Notice -->
-        <template v-else>
-          <div class="ak-demo-notice">
-            <span class="ak-demo-notice__icon">ℹ️</span>
-            <div>
-              <strong>DEMO PREVIEW MODE</strong>
-              <p>
-                Loads realistic sample account data (SilverAsh, Surtr, Młynar, 42.6k Orundum, 54 OP, LMD and upgrade materials)
-                into your Pinia store without requiring live Yostar credentials.
-              </p>
+          <!-- TAB 1: Yostar Email Verification Code -->
+          <template v-if="activeTab === 'email'">
+            <div class="ak-form-group">
+              <label class="ak-label">YOSTAR ACCOUNT EMAIL</label>
+              <div class="ak-input-with-action">
+                <input
+                  v-model="form.email"
+                  type="email"
+                  class="ak-input"
+                  placeholder="doctor@example.com"
+                  :disabled="isSubmitting"
+                />
+                <button
+                  type="button"
+                  class="ak-btn-send-code"
+                  :disabled="isSendingCode || sendCodeCooldown > 0 || isSubmitting"
+                  @click="handleSendCode"
+                >
+                  <span v-if="isSendingCode" class="ak-mini-spinner" />
+                  <span v-else-if="sendCodeCooldown > 0">{{ sendCodeCooldown }}s</span>
+                  <span v-else>SEND CODE</span>
+                </button>
+              </div>
+              <span class="ak-input-hint">Click "SEND CODE" to receive a 6-digit confirmation code on your email.</span>
             </div>
+
+            <div class="ak-form-group">
+              <label class="ak-label">6-DIGIT VERIFICATION CODE</label>
+              <input
+                v-model="form.code"
+                type="text"
+                class="ak-input ak-input--code"
+                placeholder="123456"
+                maxlength="6"
+                :disabled="isSubmitting"
+              />
+            </div>
+          </template>
+
+          <!-- TAB 2: Manual JSON Import -->
+          <template v-else-if="activeTab === 'json'">
+            <div class="ak-form-group">
+              <label class="ak-label">UPLOAD JSON FILE OR PASTE EXPORT</label>
+              <div class="ak-file-upload-box">
+                <label class="ak-file-picker-label">
+                  <input
+                    type="file"
+                    accept=".json,application/json"
+                    class="ak-file-hidden"
+                    @change="handleFileUpload"
+                  />
+                  <span class="ak-file-btn">📂 CHOOSE .JSON FILE</span>
+                  <span class="ak-file-name">{{ jsonFileName || 'No file selected (Supports Krooster / Arkprts / Penguin)' }}</span>
+                </label>
+                <button
+                  type="button"
+                  class="ak-btn-paste"
+                  @click="handlePasteFromClipboard"
+                >
+                  📋 PASTE CLIPBOARD
+                </button>
+              </div>
+            </div>
+
+            <div class="ak-form-group">
+              <label class="ak-label">JSON PAYLOAD</label>
+              <textarea
+                v-model="jsonInput"
+                rows="5"
+                class="ak-textarea"
+                placeholder='Paste raw JSON here: { "profile": {...}, "inventory": {...}, "roster": [...] }'
+                :disabled="isSubmitting"
+                @input="validateAndParseJson(jsonInput)"
+              />
+            </div>
+
+            <!-- JSON Live Preview & Error -->
+            <div v-if="jsonParseError" class="ak-json-error">
+              ⚠ {{ jsonParseError }}
+            </div>
+            <div v-else-if="jsonPreviewData" class="ak-json-preview">
+              <div class="ak-json-preview__item">
+                <span>Doctor:</span> <strong>{{ jsonPreviewData.nickname }} (Lv.{{ jsonPreviewData.level }})</strong>
+              </div>
+              <div class="ak-json-preview__item">
+                <span>Operators:</span> <strong>{{ jsonPreviewData.rosterCount }}</strong>
+              </div>
+              <div class="ak-json-preview__item">
+                <span>Depot Items:</span> <strong>{{ jsonPreviewData.inventoryCount }}</strong>
+              </div>
+              <div class="ak-json-preview__item">
+                <span>Orundum:</span> <strong>{{ jsonPreviewData.orundum.toLocaleString() }}</strong>
+              </div>
+            </div>
+          </template>
+
+          <!-- TAB 3: Demo Preview Notice -->
+          <template v-else>
+            <div class="ak-demo-notice">
+              <span class="ak-demo-notice__icon">ℹ️</span>
+              <div>
+                <strong>DEMO PREVIEW MODE</strong>
+                <p>
+                  Loads full sample account data (Doctor Amiya Lv.120, 8 operators including Młynar & Surtr, 42.6k Orundum, 54 OP, LMD and upgrade materials)
+                  into your Pinia store without requiring live Yostar credentials.
+                </p>
+              </div>
+            </div>
+          </template>
+
+          <!-- Sync Progress / Stage indicator -->
+          <div v-if="isSubmitting" class="ak-sync-progress">
+            <div class="ak-progress-bar">
+              <div class="ak-progress-bar__fill" />
+            </div>
+            <span class="ak-progress-text">{{ syncStage }}</span>
           </div>
-        </template>
 
-        <!-- Sync Progress / Stage indicator -->
-        <div v-if="isSubmitting" class="ak-sync-progress">
-          <div class="ak-progress-bar">
-            <div class="ak-progress-bar__fill" />
+          <!-- Error Message Banner -->
+          <div v-if="errorMessage" class="ak-error-banner">
+            <span class="ak-error-banner__icon">⚠</span>
+            <span>{{ errorMessage }}</span>
           </div>
-          <span class="ak-progress-text">{{ syncStage }}</span>
-        </div>
 
-        <!-- Error Message Banner -->
-        <div v-if="errorMessage" class="ak-error-banner">
-          <span class="ak-error-banner__icon">⚠</span>
-          <span>{{ errorMessage }}</span>
-        </div>
-
-        <!-- Modal Actions -->
-        <div class="ak-modal-footer">
-          <button
-            type="button"
-            class="ak-btn ak-btn--ghost"
-            :disabled="isSubmitting"
-            @click="closeModal"
-          >
-            CANCEL
-          </button>
-          <button
-            type="button"
-            class="ak-btn ak-btn--primary"
-            :disabled="isSubmitting"
-            @click="handleSync"
-          >
-            <span v-if="isSubmitting" class="ak-spinner" />
-            <span>{{ activeTab === 'demo' ? 'LOAD DEMO DATA' : 'START SYNC' }}</span>
-          </button>
+          <!-- Modal Actions -->
+          <div class="ak-modal-footer">
+            <button
+              type="button"
+              class="ak-btn ak-btn--ghost"
+              :disabled="isSubmitting"
+              @click="closeModal"
+            >
+              CANCEL
+            </button>
+            <button
+              type="button"
+              class="ak-btn ak-btn--primary"
+              :disabled="isSubmitting || (activeTab === 'json' && !jsonInput.trim())"
+              @click="handleSync"
+            >
+              <span v-if="isSubmitting" class="ak-spinner" />
+              <span v-else-if="activeTab === 'demo'">LOAD DEMO DATA</span>
+              <span v-else-if="activeTab === 'json'">IMPORT JSON DATA</span>
+              <span v-else>START SYNC</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
   </Teleport>
 </template>
 
@@ -496,8 +574,8 @@ const handleSync = async () => {
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -506,14 +584,16 @@ const handleSync = async () => {
 
 .ak-modal-dialog {
   width: 100%;
-  max-width: 520px;
+  max-width: 560px;
   background: $ak-bg-secondary;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-left: 4px solid $ak-cyan;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba($ak-cyan, 0.15);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba($ak-cyan, 0.15);
   clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
   display: flex;
   flex-direction: column;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 // Header
@@ -544,17 +624,17 @@ const handleSync = async () => {
   background: transparent;
   border: none;
   color: $ak-text-muted;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
   padding: 0.25rem;
+  transition: color 0.15s ease;
 
   &:hover {
-    color: $ak-red;
+    color: #fff;
   }
 }
 
-// Body
 .ak-modal-body {
   padding: 1.5rem;
   display: flex;
@@ -562,25 +642,79 @@ const handleSync = async () => {
   gap: 1.25rem;
 }
 
+// Security Banner
+.ak-security-banner {
+  padding: 0.85rem 1rem;
+  background: rgba($ak-amber, 0.07);
+  border: 1px solid rgba($ak-amber, 0.25);
+  border-left: 3px solid $ak-amber;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  &__badge {
+    font-size: 0.65rem;
+    font-family: monospace;
+    font-weight: 800;
+    color: $ak-amber;
+    letter-spacing: 1px;
+  }
+
+  &__policy {
+    font-size: 0.65rem;
+    font-family: monospace;
+    font-weight: 700;
+    color: $ak-green;
+    background: rgba($ak-green, 0.12);
+    padding: 0.15rem 0.4rem;
+    letter-spacing: 1px;
+    border: 1px solid rgba($ak-green, 0.25);
+  }
+
+  &__text {
+    margin: 0;
+    font-size: 0.73rem;
+    line-height: 1.45;
+    color: $ak-text-primary;
+
+    &--dim {
+      color: $ak-text-secondary;
+    }
+
+    strong {
+      color: #fff;
+    }
+  }
+}
+
 // Auth Tabs
 .ak-auth-tabs {
   display: flex;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  gap: 0.5rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.08);
 }
 
 .ak-auth-tab {
-  padding: 0.6rem 0.85rem;
+  flex: 1;
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  color: $ak-text-secondary;
+  padding: 0.65rem 0.5rem;
   font-family: monospace;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  color: $ak-text-muted;
   cursor: pointer;
-  transition: all 0.2s ease;
+  letter-spacing: 1px;
+  margin-bottom: -2px;
+  transition: all 0.15s ease;
 
   &:hover {
     color: $ak-text-primary;
@@ -592,12 +726,12 @@ const handleSync = async () => {
   }
 
   &--demo.ak-auth-tab--active {
-    color: $ak-yellow;
-    border-bottom-color: $ak-yellow;
+    color: $ak-amber;
+    border-bottom-color: $ak-amber;
   }
 }
 
-// Forms
+// Form Elements
 .ak-form-group {
   display: flex;
   flex-direction: column;
@@ -605,59 +739,13 @@ const handleSync = async () => {
 }
 
 .ak-label {
+  font-size: 0.7rem;
   font-family: monospace;
-  font-size: 0.68rem;
   font-weight: 700;
-  color: $ak-text-muted;
+  color: $ak-text-secondary;
   letter-spacing: 1px;
 }
 
-.ak-input {
-  width: 100%;
-  padding: 0.65rem 0.85rem;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: $ak-text-primary;
-  font-family: monospace;
-  font-size: 0.85rem;
-  outline: none;
-
-  &:focus {
-    border-color: $ak-cyan;
-    box-shadow: 0 0 8px rgba($ak-cyan, 0.3);
-  }
-
-  &--code {
-    letter-spacing: 4px;
-    font-size: 1.1rem;
-    font-weight: 800;
-    text-align: center;
-  }
-}
-
-.ak-password-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.ak-pw-toggle {
-  position: absolute;
-  right: 0.5rem;
-  padding: 0.25rem 0.5rem;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: $ak-text-secondary;
-  font-family: monospace;
-  font-size: 0.62rem;
-  cursor: pointer;
-
-  &:hover {
-    color: $ak-text-primary;
-  }
-}
-
-// Server Grid
 .ak-server-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -671,88 +759,264 @@ const handleSync = async () => {
   color: $ak-text-secondary;
   font-family: monospace;
   font-weight: 700;
-  font-size: 0.75rem;
   cursor: pointer;
+  transition: all 0.15s ease;
 
   &:hover {
+    background: rgba(255, 255, 255, 0.08);
     color: $ak-text-primary;
-    border-color: rgba(255, 255, 255, 0.25);
   }
 
   &--active {
-    background: rgba($ak-cyan, 0.15);
+    background: rgba($ak-cyan, 0.12);
     border-color: $ak-cyan;
     color: $ak-cyan;
   }
 }
 
-// Demo Notice
-.ak-demo-notice {
-  display: flex;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: rgba($ak-yellow, 0.08);
-  border: 1px solid rgba($ak-yellow, 0.25);
-  border-left: 3px solid $ak-yellow;
-  font-size: 0.82rem;
-  color: $ak-text-secondary;
+.ak-input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: $ak-text-primary;
+  font-family: monospace;
+  font-size: 0.85rem;
+  outline: none;
+  box-sizing: border-box;
 
-  strong {
-    color: $ak-yellow;
-    font-family: monospace;
+  &:focus {
+    border-color: $ak-cyan;
+    box-shadow: 0 0 10px rgba($ak-cyan, 0.2);
   }
 
-  p {
-    margin: 0.25rem 0 0;
-    line-height: 1.35;
+  &--code {
+    text-align: center;
+    letter-spacing: 8px;
+    font-size: 1.25rem;
+    font-weight: 800;
   }
 }
 
-// Progress
+.ak-input-with-action {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ak-btn-send-code {
+  padding: 0 1rem;
+  background: rgba($ak-cyan, 0.15);
+  border: 1px solid $ak-cyan;
+  color: $ak-cyan;
+  font-family: monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 110px;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: $ak-cyan;
+    color: #000;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.ak-input-hint {
+  font-size: 0.68rem;
+  color: $ak-text-muted;
+  font-family: monospace;
+}
+
+// JSON Upload Box
+.ak-file-upload-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.ak-file-picker-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  flex: 1;
+}
+
+.ak-file-hidden {
+  display: none;
+}
+
+.ak-file-btn {
+  padding: 0.45rem 0.85rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: $ak-text-primary;
+  font-family: monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.16);
+  }
+}
+
+.ak-file-name {
+  font-size: 0.7rem;
+  font-family: monospace;
+  color: $ak-text-muted;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ak-btn-paste {
+  padding: 0.45rem 0.85rem;
+  background: rgba($ak-amber, 0.12);
+  border: 1px solid rgba($ak-amber, 0.35);
+  color: $ak-amber;
+  font-family: monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba($ak-amber, 0.25);
+    border-color: $ak-amber;
+  }
+}
+
+.ak-textarea {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: $ak-text-primary;
+  font-family: monospace;
+  font-size: 0.75rem;
+  outline: none;
+  box-sizing: border-box;
+  resize: vertical;
+  line-height: 1.4;
+
+  &:focus {
+    border-color: $ak-cyan;
+  }
+}
+
+.ak-json-error {
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 77, 77, 0.1);
+  border: 1px solid rgba(255, 77, 77, 0.3);
+  color: #ff6b6b;
+  font-family: monospace;
+  font-size: 0.72rem;
+}
+
+.ak-json-preview {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  background: rgba(0, 240, 255, 0.05);
+  border: 1px solid rgba($ak-cyan, 0.2);
+
+  &__item {
+    font-size: 0.72rem;
+    font-family: monospace;
+    color: $ak-text-secondary;
+
+    strong {
+      color: $ak-cyan;
+    }
+  }
+}
+
+// Demo Notice
+.ak-demo-notice {
+  padding: 1rem;
+  background: rgba($ak-amber, 0.08);
+  border: 1px solid rgba($ak-amber, 0.25);
+  border-left: 3px solid $ak-amber;
+  display: flex;
+  gap: 0.75rem;
+
+  &__icon {
+    font-size: 1.2rem;
+  }
+
+  strong {
+    display: block;
+    font-size: 0.8rem;
+    color: $ak-amber;
+    letter-spacing: 1px;
+    font-family: monospace;
+    margin-bottom: 0.25rem;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.75rem;
+    color: $ak-text-secondary;
+    line-height: 1.4;
+  }
+}
+
+// Progress and Errors
 .ak-sync-progress {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  margin-top: 0.5rem;
 }
 
 .ak-progress-bar {
   height: 4px;
   background: rgba(255, 255, 255, 0.1);
   overflow: hidden;
-  position: relative;
 
   &__fill {
-    width: 40%;
     height: 100%;
+    width: 60%;
     background: $ak-cyan;
-    position: absolute;
-    animation: indeterminate 1.2s infinite ease-in-out;
+    animation: indeterminate 1.5s infinite linear;
   }
 }
 
 .ak-progress-text {
+  font-size: 0.65rem;
   font-family: monospace;
-  font-size: 0.68rem;
   color: $ak-cyan;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
-// Error Banner
 .ak-error-banner {
+  padding: 0.65rem 0.85rem;
+  background: rgba(255, 77, 77, 0.1);
+  border: 1px solid rgba(255, 77, 77, 0.3);
+  color: #ff6b6b;
+  font-size: 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: rgba($ak-red, 0.12);
-  border: 1px solid rgba($ak-red, 0.3);
-  border-left: 3px solid $ak-red;
-  color: $ak-red;
-  font-family: monospace;
-  font-size: 0.75rem;
 }
 
-// Footer
+// Modal Footer
 .ak-modal-footer {
   display: flex;
   justify-content: flex-end;
@@ -765,32 +1029,29 @@ const handleSync = async () => {
   font-family: monospace;
   font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 1px;
   cursor: pointer;
+  letter-spacing: 1px;
+  border: none;
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  transition: all 0.2s ease;
+  gap: 0.5rem;
+  transition: all 0.15s ease;
 
   &--ghost {
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: $ak-text-secondary;
+    color: $ak-text-muted;
 
     &:hover {
-      color: $ak-text-primary;
-      border-color: rgba(255, 255, 255, 0.3);
+      color: #fff;
     }
   }
 
   &--primary {
     background: $ak-cyan;
-    border: 1px solid $ak-cyan;
     color: #000;
 
     &:hover:not(:disabled) {
-      background: $ak-cyan-light;
-      box-shadow: 0 0 10px rgba($ak-cyan, 0.5);
+      background: #fff;
     }
 
     &:disabled {
@@ -800,42 +1061,60 @@ const handleSync = async () => {
   }
 }
 
-// Success screen
+.ak-mini-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s infinite linear;
+}
+
+.ak-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.8s infinite linear;
+}
+
+// Success View
 .ak-success-body {
   gap: 1.5rem;
 }
 
 .ak-success-badge {
   text-align: center;
-  padding: 1.25rem;
+  padding: 1.5rem;
   background: rgba($ak-green, 0.08);
-  border: 1px dashed rgba($ak-green, 0.3);
+  border: 1px solid rgba($ak-green, 0.3);
 
   &__icon {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 36px;
     height: 36px;
-    line-height: 36px;
-    border-radius: 50%;
     background: $ak-green;
     color: #000;
-    font-weight: 900;
     font-size: 1.2rem;
-    margin-bottom: 0.5rem;
+    font-weight: 800;
+    border-radius: 50%;
+    margin-bottom: 0.75rem;
   }
 
   h4 {
-    font-family: monospace;
-    color: $ak-green;
-    font-size: 0.95rem;
     margin: 0;
+    color: $ak-text-primary;
+    font-size: 1rem;
     letter-spacing: 1px;
   }
 
   p {
-    font-size: 0.78rem;
+    margin: 0.5rem 0 0;
+    font-size: 0.75rem;
     color: $ak-text-secondary;
-    margin: 0.35rem 0 0;
   }
 }
 
@@ -847,54 +1126,41 @@ const handleSync = async () => {
 
 .ak-summary-card {
   padding: 0.75rem;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  font-family: monospace;
   display: flex;
   flex-direction: column;
+  gap: 0.25rem;
 
   &__label {
-    font-size: 0.6rem;
+    font-size: 0.65rem;
+    font-family: monospace;
     color: $ak-text-muted;
     letter-spacing: 1px;
   }
 
   &__val {
     font-size: 0.85rem;
-    color: $ak-text-secondary;
-    margin-top: 0.2rem;
+    color: $ak-text-primary;
 
-    strong {
-      color: $ak-text-primary;
-    }
-
-    &--cyan strong {
+    &--cyan {
       color: $ak-cyan;
     }
   }
 }
 
-.ak-spinner {
-  width: 12px;
-  height: 12px;
-  border: 2px solid rgba(0, 0, 0, 0.3);
-  border-top-color: #000;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
 @keyframes spin {
-  100% {
+  to {
     transform: rotate(360deg);
   }
 }
 
 @keyframes indeterminate {
   0% {
-    left: -40%;
+    transform: translateX(-100%);
   }
   100% {
-    left: 100%;
+    transform: translateX(200%);
   }
 }
 </style>

@@ -289,6 +289,8 @@ const quickAddSuggested = (op: OperatorData) => {
             v-if="userStore.profile.avatar_url"
             :src="userStore.profile.avatar_url"
             :alt="userStore.profile.username"
+            loading="lazy"
+            decoding="async"
           />
           <span v-else class="ak-avatar-placeholder">DR</span>
         </div>
@@ -381,6 +383,7 @@ const quickAddSuggested = (op: OperatorData) => {
               :src="upcomingBanner.banner.bannerImg || upcomingBanner.banner.bannerImage"
               :alt="upcomingBanner.banner.title || upcomingBanner.banner.name"
               loading="lazy"
+              decoding="async"
               class="ak-banner-art__img"
             />
             <div class="ak-banner-art__overlay">
@@ -454,7 +457,14 @@ const quickAddSuggested = (op: OperatorData) => {
                 class="ak-rateup-pill"
                 :class="{ 'ak-rateup-pill--6star': op.rarity === 6 }"
               >
-                <img v-if="op.icon" :src="op.icon" :alt="op.name" class="ak-rateup-pill__icon" />
+                <img
+                  v-if="op.icon"
+                  :src="op.icon"
+                  :alt="op.name"
+                  class="ak-rateup-pill__icon"
+                  loading="lazy"
+                  decoding="async"
+                />
                 <span class="ak-rateup-pill__name">{{ op.name }}</span>
                 <span class="ak-rateup-pill__stars">{{ '★'.repeat(op.rarity) }}</span>
               </div>
@@ -573,6 +583,8 @@ const quickAddSuggested = (op: OperatorData) => {
                 :src="target.operator.avatar"
                 :alt="target.operator.name"
                 class="ak-dash-target-card__avatar"
+                loading="lazy"
+                decoding="async"
               />
               <div class="ak-dash-target-card__info">
                 <div class="ak-dash-target-card__title-row">
@@ -588,10 +600,10 @@ const quickAddSuggested = (op: OperatorData) => {
                     L{{ target.targetLevel }}
                   </span>
                   <span v-if="target.targetMastery > 0" class="ak-goal-chip ak-goal-chip--mastery">
-                    M{{ target.targetMastery }}
+                    S{{ (target.selectedSkillIndex ?? (target.operator.skills?.length ? target.operator.skills.length - 1 : 2)) + 1 }} M{{ target.targetMastery }}
                   </span>
-                  <span v-if="target.targetModule > 0" class="ak-goal-chip ak-goal-chip--module">
-                    MOD {{ target.targetModule }}
+                  <span v-if="target.targetModule > 0 && target.selectedModuleId && target.selectedModuleId !== 'none'" class="ak-goal-chip ak-goal-chip--module">
+                    {{ target.operator.modules?.find(m => m.moduleId === target.selectedModuleId)?.typeName || 'MOD' }} Lv{{ target.targetModule }}
                   </span>
                 </div>
               </div>
@@ -618,7 +630,7 @@ const quickAddSuggested = (op: OperatorData) => {
                 class="ak-suggest-btn"
                 @click="quickAddSuggested(op)"
               >
-                <img :src="op.avatar" :alt="op.name" class="ak-suggest-btn__avatar" />
+                <img :src="op.avatar" :alt="op.name" class="ak-suggest-btn__avatar" loading="lazy" decoding="async" />
                 <span class="ak-suggest-btn__name">{{ op.name }}</span>
                 <span class="ak-suggest-btn__action">+ PLAN</span>
               </button>

@@ -156,6 +156,123 @@ describe('Material Delta Calculator', () => {
       expect(result.exp).toBe(0)
       expect(Object.keys(result.materials).length).toBe(0)
     })
+
+    it('calculates mastery costs for a specific chosen skill (S1 vs S2)', () => {
+      const multiSkillOp: OperatorData = {
+        ...mockOperator,
+        skills: [
+          {
+            skillId: 'sk_1',
+            name: 'Skill One',
+            masteries: [
+              { m: 1, materials: [{ id: '30073', count: 2 }] },
+              { m: 2, materials: [{ id: '30073', count: 4 }] },
+              { m: 3, materials: [{ id: '30073', count: 6 }] },
+            ],
+          },
+          {
+            skillId: 'sk_2',
+            name: 'Skill Two',
+            masteries: [
+              { m: 1, materials: [{ id: '30084', count: 3 }] },
+              { m: 2, materials: [{ id: '30084', count: 5 }] },
+              { m: 3, materials: [{ id: '30084', count: 7 }] },
+            ],
+          },
+        ],
+      }
+
+      const s1Target: TargetPlanItem = {
+        operatorId: multiSkillOp.id,
+        operator: multiSkillOp,
+        currentElite: 2,
+        targetElite: 2,
+        currentLevel: 90,
+        targetLevel: 90,
+        selectedSkillIndex: 0,
+        currentMastery: 0,
+        targetMastery: 3,
+        currentModule: 0,
+        targetModule: 0,
+      }
+
+      const s1Res = aggregateMaterialRequirements([s1Target])
+      expect(s1Res.materials['30073']).toBe(12) // 2 + 4 + 6
+      expect(s1Res.materials['30084']).toBeUndefined()
+
+      const s2Target: TargetPlanItem = {
+        operatorId: multiSkillOp.id,
+        operator: multiSkillOp,
+        currentElite: 2,
+        targetElite: 2,
+        currentLevel: 90,
+        targetLevel: 90,
+        selectedSkillIndex: 1,
+        currentMastery: 0,
+        targetMastery: 2,
+        currentModule: 0,
+        targetModule: 0,
+      }
+
+      const s2Res = aggregateMaterialRequirements([s2Target])
+      expect(s2Res.materials['30084']).toBe(8) // 3 + 5
+      expect(s2Res.materials['30073']).toBeUndefined()
+    })
+
+    it('calculates costs for a specific module and respects selectedModuleId: none', () => {
+      const multiModOp: OperatorData = {
+        ...mockOperator,
+        modules: [
+          {
+            moduleId: 'mod_x',
+            name: 'Module X',
+            typeName: 'MOD-X',
+            stages: [
+              { stage: 1, lmd: 40000, materials: [{ id: 'mod_block', count: 2 }] },
+              { stage: 2, lmd: 60000, materials: [{ id: 'mod_block', count: 2 }] },
+              { stage: 3, lmd: 80000, materials: [{ id: 'mod_block', count: 2 }] },
+            ],
+          },
+          {
+            moduleId: 'mod_y',
+            name: 'Module Y',
+            typeName: 'MOD-Y',
+            stages: [
+              { stage: 1, lmd: 50000, materials: [{ id: '30115', count: 4 }] },
+              { stage: 2, lmd: 70000, materials: [{ id: '30115', count: 4 }] },
+              { stage: 3, lmd: 90000, materials: [{ id: '30115', count: 4 }] },
+            ],
+          },
+        ],
+      }
+
+      const modYTarget: TargetPlanItem = {
+        operatorId: multiModOp.id,
+        operator: multiModOp,
+        currentElite: 2,
+        targetElite: 2,
+        currentLevel: 90,
+        targetLevel: 90,
+        currentMastery: 0,
+        targetMastery: 0,
+        selectedModuleId: 'mod_y',
+        currentModule: 1,
+        targetModule: 3,
+      }
+
+      const modYRes = aggregateMaterialRequirements([modYTarget])
+      expect(modYRes.lmd).toBe(70000 + 90000) // stage 2 & 3
+      expect(modYRes.materials['30115']).toBe(8) // stage 2 & 3
+      expect(modYRes.materials['mod_block']).toBeUndefined()
+
+      const noneTarget: TargetPlanItem = {
+        ...modYTarget,
+        selectedModuleId: 'none',
+      }
+      const noneRes = aggregateMaterialRequirements([noneTarget])
+      expect(noneRes.lmd).toBe(0)
+      expect(Object.keys(noneRes.materials).length).toBe(0)
+    })
   })
 
   describe('calculateMaterialDeltas', () => {
