@@ -145,10 +145,67 @@ const forceCloudSync = async () => {
   }
 }
 
-onMounted(() => {
+import { usePenguinStore } from '~/stores/penguinStore'
+import { useOperatorStore } from '~/stores/operatorStore'
+import { clearAllArkCalcCache, isIndexedDbAvailable, getStoreRecordsMeta } from '~/utils/indexedDb'
+
+const penguinStore = usePenguinStore()
+const operatorStore = useOperatorStore()
+const isIdbActive = ref(false)
+const idbStats = ref<{ penguinCount: number; operatorCount: number }>({
+  penguinCount: 0,
+  operatorCount: 0,
+})
+
+const refreshIdbStats = async () => {
+  isIdbActive.value = isIndexedDbAvailable()
+  if (isIdbActive.value) {
+    const penguinMeta = await getStoreRecordsMeta('penguin_store')
+    const operatorMeta = await getStoreRecordsMeta('operator_store')
+    const matrixRec = penguinMeta.find((r) => r.key.startsWith('matrix_'))
+    const opsRec = operatorMeta.find((r) => r.key === 'operators_catalog')
+    idbStats.value = {
+      penguinCount: matrixRec?.count ?? penguinStore.matrixCount,
+      operatorCount: opsRec?.count ?? operatorStore.totalCount,
+    }
+  }
+}
+
+const clearIndexedDbCache = async () => {
+  saveStatus.value = 'saving'
+  statusMessage.value = 'PURGING INDEXEDDB STORAGE CACHE...'
+  await Promise.all([
+    penguinStore.clearCache(),
+    operatorStore.clearCache(),
+    clearAllArkCalcCache(),
+  ])
+  await refreshIdbStats()
+  saveStatus.value = 'saved'
+  statusMessage.value = '✓ INDEXEDDB CACHE CLEARED (PENGUIN MATRIX & OPERATORS DB RESET)'
+}
+
+const reSyncData = async () => {
+  saveStatus.value = 'saving'
+  statusMessage.value = 'FETCHING LIVE PENGUIN STATS & OPERATOR DATABASE...'
+  try {
+    await Promise.all([
+      penguinStore.fetchAll(server.value, true),
+      operatorStore.loadOperators(true),
+    ])
+    await refreshIdbStats()
+    saveStatus.value = 'saved'
+    statusMessage.value = '✓ PENGUIN DROP MATRIX & OPERATOR DATA CACHED IN INDEXEDDB'
+  } catch (err) {
+    saveStatus.value = 'error'
+    statusMessage.value = `⚠ SYNC FAILED: ${err instanceof Error ? err.message : String(err)}`
+  }
+}
+
+onMounted(async () => {
   if (userStore.settings.theme && typeof document !== 'undefined') {
     document.documentElement.setAttribute('data-theme', userStore.settings.theme)
   }
+  await refreshIdbStats()
 })
 </script>
 
@@ -380,6 +437,56 @@ onMounted(() => {
               <strong class="ak-data-pill__val" :class="userStore.isSynced ? 'ak-text-cyan' : 'ak-text-amber'">
                 {{ userStore.isSynced ? 'SYNCED' : 'UNSAVED' }}
               </strong>
+            </div>
+          </div>
+
+          <!-- IndexedDB Cache Panel -->
+          <div class="ak-idb-panel">
+            <div class="ak-idb-head">
+              <span class="ak-idb-tag">INDEXEDDB // LOCAL CACHE ENGINE</span>
+              <h4 class="ak-idb-title">Drop Matrix & Operator Blueprints</h4>
+              <p class="ak-idb-desc">
+                Caches high-volume Penguin Stats drop matrices and operator promotion blueprints in browser IndexedDB to eliminate network requests on page reloads.
+              </p>
+            </div>
+
+            <div class="ak-data-stats">
+              <div class="ak-data-pill">
+                <span class="ak-data-pill__label">PENGUIN MATRIX:</span>
+                <strong class="ak-data-pill__val ak-text-cyan">
+                  {{ (idbStats.penguinCount || penguinStore.matrixCount) > 0 ? `${(idbStats.penguinCount || penguinStore.matrixCount).toLocaleString()} DROPS` : 'STANDBY' }}
+                </strong>
+              </div>
+              <div class="ak-data-pill">
+                <span class="ak-data-pill__label">OPERATOR BLUEPRINTS:</span>
+                <strong class="ak-data-pill__val ak-text-cyan">
+                  {{ (idbStats.operatorCount || operatorStore.totalCount) > 0 ? `${idbStats.operatorCount || operatorStore.totalCount} OPERATORS` : 'STANDBY' }}
+                </strong>
+              </div>
+              <div class="ak-data-pill">
+                <span class="ak-data-pill__label">STORAGE ENGINE:</span>
+                <strong class="ak-data-pill__val">
+                  {{ isIdbActive ? 'INDEXEDDB (ACTIVE)' : 'BROWSER MEMORY' }}
+                </strong>
+              </div>
+            </div>
+
+            <div class="ak-idb-actions">
+              <button
+                type="button"
+                class="ak-btn-idb-resync"
+                :disabled="saveStatus === 'saving'"
+                @click="reSyncData"
+              >
+                {{ saveStatus === 'saving' ? 'SYNCING...' : '↻ RE-SYNC PENGUIN & OPERATORS' }}
+              </button>
+              <button
+                type="button"
+                class="ak-btn-idb-clear"
+                @click="clearIndexedDbCache"
+              >
+                CLEAR INDEXEDDB CACHE
+              </button>
             </div>
           </div>
 
@@ -955,8 +1062,86 @@ onMounted(() => {
   color: $ak-cyan !important;
 }
 
-.ak-text-amber {
-  color: $ak-amber !important;
+// IndexedDB Panel
+.ak-idb-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem;
+  background: rgba(0, 212, 255, 0.03);
+  border: 1px solid rgba(0, 212, 255, 0.18);
+  border-left: 3px solid $ak-cyan;
+  margin-top: 0.5rem;
+}
+
+.ak-idb-head {
+  .ak-idb-tag {
+    font-size: 0.68rem;
+    font-family: monospace;
+    color: $ak-cyan;
+    letter-spacing: 1.5px;
+  }
+
+  .ak-idb-title {
+    font-size: 0.85rem;
+    font-weight: 800;
+    margin: 0.2rem 0;
+    color: $ak-text-primary;
+  }
+
+  .ak-idb-desc {
+    font-size: 0.72rem;
+    color: $ak-text-secondary;
+    margin: 0;
+  }
+}
+
+.ak-idb-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.ak-btn-idb-resync {
+  padding: 0.45rem 0.85rem;
+  background: rgba($ak-cyan, 0.12);
+  border: 1px solid $ak-cyan;
+  color: $ak-cyan;
+  font-family: monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: $ak-cyan;
+    color: #000;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: wait;
+  }
+}
+
+.ak-btn-idb-clear {
+  padding: 0.45rem 0.85rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: $ak-text-secondary;
+  font-family: monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: $ak-text-primary;
+    border-color: rgba(255, 255, 255, 0.3);
+  }
 }
 
 // Danger Zone

@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '~/stores/userStore'
 import { usePenguinStats } from '~/composables/usePenguinStats'
+import { useOperatorStore } from '~/stores/operatorStore'
 import operatorsData from '~/assets/data/operators.json'
 import materialsData from '~/assets/data/materials.json'
 import type {
@@ -17,6 +18,7 @@ useHead({
 
 const userStore = useUserStore()
 const penguin = usePenguinStats()
+const operatorStore = useOperatorStore()
 
 // Load Penguin stats items & stages if not already loaded
 const server = computed(() => userStore.profile.server || 'EN')
@@ -34,8 +36,23 @@ const refreshPenguinStats = async (force = false) => {
 }
 
 onMounted(async () => {
-  if (penguin.items.value.length === 0 || penguin.matrix.value.length === 0) {
-    await refreshPenguinStats(false)
+  await Promise.all([
+    operatorStore.loadOperators(),
+    refreshPenguinStats(false),
+  ])
+
+  if (allOperators.value.length > 0) {
+    if (!selectedOperatorId.value) {
+      selectedOperatorId.value = allOperators.value[0]!.id
+    }
+    if (plannedTargets.value.length > 0 && plannedTargets.value[0]) {
+      const matched = allOperators.value.find(
+        (op) => op.id === plannedTargets.value[0]!.operatorId
+      )
+      if (matched) {
+        plannedTargets.value[0]!.operator = matched
+      }
+    }
   }
 })
 
@@ -44,8 +61,13 @@ watch(server, async (newServer) => {
   await refreshPenguinStats(true)
 })
 
-// Database of operators & materials
-const allOperators = operatorsData as OperatorData[]
+// Database of operators & materials (backed by operatorStore + IndexedDB cache)
+const allOperators = computed<OperatorData[]>(() => {
+  return operatorStore.operators.length > 0
+    ? operatorStore.operators
+    : (operatorsData as OperatorData[])
+})
+
 const materialsCatalog = materialsData as Array<{
   id: string
   name: string
@@ -57,7 +79,7 @@ const materialsCatalog = materialsData as Array<{
 // Operator selection & filtering
 const searchQuery = ref('')
 const selectedProfession = ref<string>('ALL')
-const selectedOperatorId = ref<string>(allOperators[0]?.id || '')
+const selectedOperatorId = ref<string>((operatorsData[0] as OperatorData)?.id || '')
 
 const professions = [
   'ALL',
@@ -72,7 +94,7 @@ const professions = [
 ]
 
 const filteredOperators = computed(() => {
-  return allOperators.filter((op) => {
+  return allOperators.value.filter((op) => {
     const matchProf =
       selectedProfession.value === 'ALL' ||
       op.profession.toLowerCase() === selectedProfession.value.toLowerCase()
@@ -84,7 +106,11 @@ const filteredOperators = computed(() => {
 })
 
 const currentOperator = computed(() => {
-  return allOperators.find((op) => op.id === selectedOperatorId.value) || allOperators[0]!
+  return (
+    allOperators.value.find((op) => op.id === selectedOperatorId.value) ||
+    allOperators.value[0] ||
+    (operatorsData[0] as OperatorData)
+  )
 })
 
 // -----------------------------------------------------------------------------
@@ -124,8 +150,8 @@ watch(selectedOperatorId, (newId) => {
 // -----------------------------------------------------------------------------
 const plannedTargets = ref<TargetPlanItem[]>([
   {
-    operatorId: allOperators[0]?.id || '',
-    operator: allOperators[0]!,
+    operatorId: (operatorsData[0] as OperatorData)?.id || '',
+    operator: operatorsData[0] as OperatorData,
     currentElite: 0,
     targetElite: 2,
     currentLevel: 1,
@@ -419,6 +445,15 @@ const adjustInventory = (itemId: string, delta: number) => {
         <div class="ak-stat-pill ak-stat-pill--green">
           <span class="ak-stat-pill__label">EST. SANITY TO FARM</span>
           <span class="ak-stat-pill__val">{{ totalEstimatedSanity.toLocaleString() }} AP</span>
+        </div>
+        <div
+          class="ak-stat-pill ak-stat-pill--cyan"
+          :title="`Penguin: ${penguin.cacheSource.toUpperCase()} | Ops: ${operatorStore.cacheSource.toUpperCase()}`"
+        >
+          <span class="ak-stat-pill__label">DATA CACHE</span>
+          <span class="ak-stat-pill__val">
+            {{ isMatrixLoading ? 'SYNCING...' : (penguin.cacheSource === 'indexeddb' ? 'INDEXEDDB' : 'ONLINE') }}
+          </span>
         </div>
       </div>
     </header>
@@ -822,17 +857,35 @@ const adjustInventory = (itemId: string, delta: number) => {
             </div>
             <div class="ak-farming-plan-summary">
               <span class="ak-fps-item">
-                <span class="ak-fps-label">TOTAL DEFICIT ITEMS:</span>
+                <span class="ak-fps-label">CACHE:</span>
+                <strong
+                  class="ak-fps-val"
+                  :class="penguin.cacheSource === 'indexeddb' ? 'ak-text-cyan' : 'ak-text-amber'"
+                >
+                  {{ penguin.cacheSource === 'indexeddb' ? 'IDB CACHED' : 'ONLINE' }}
+                </strong>
+              </span>
+              <span class="ak-fps-item">
+                <span class="ak-fps-label">TOTAL DEFICIT:</span>
                 <strong class="ak-fps-val">{{ deficitFarmingPlan.length }}</strong>
               </span>
               <span class="ak-fps-item">
-                <span class="ak-fps-label">EST. TOTAL RUNS:</span>
+                <span class="ak-fps-label">EST. RUNS:</span>
                 <strong class="ak-fps-val">≈ {{ totalEstimatedRuns }}</strong>
               </span>
               <span class="ak-fps-item ak-fps-item--cyan">
-                <span class="ak-fps-label">EST. TOTAL SANITY:</span>
+                <span class="ak-fps-label">EST. SANITY:</span>
                 <strong class="ak-fps-val">{{ totalEstimatedSanity.toLocaleString() }} AP</strong>
               </span>
+              <button
+                type="button"
+                class="ak-btn-cache-sync"
+                :disabled="isMatrixLoading"
+                title="Force refresh drop matrix from Penguin Stats"
+                @click="refreshPenguinStats(true)"
+              >
+                {{ isMatrixLoading ? 'SYNCING...' : '↻ REFRESH' }}
+              </button>
             </div>
           </div>
 
@@ -1909,5 +1962,28 @@ const adjustInventory = (itemId: string, delta: number) => {
 
 .ak-no-alt {
   color: $ak-text-muted;
+}
+
+.ak-btn-cache-sync {
+  background: rgba($ak-cyan, 0.12);
+  border: 1px solid rgba($ak-cyan, 0.35);
+  color: $ak-cyan;
+  font-family: monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.3rem 0.65rem;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: $ak-cyan;
+    color: #000;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 </style>

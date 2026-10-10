@@ -42,7 +42,30 @@ const closeModal = () => {
 }
 
 // Demo data generator for rapid offline preview / testing
-const generateDemoData = () => {
+const generateDemoData = (): {
+  success: boolean
+  profile: { uid: string; nickname: string; level: number; server: string }
+  gacha: {
+    orundum: number
+    originite_prime: number
+    single_permits: number
+    ten_permits: number
+    lmd: number
+    pulls_without_op: number
+    pulls_with_op: number
+  }
+  inventory: Record<string, number>
+  roster: Array<{
+    operator_id: string
+    elite: number
+    level: number
+    potential: number
+    skill_level: number
+    masteries: Record<string, number>
+    modules: Record<string, number>
+  }>
+  total_operators?: number
+} => {
   return {
     success: true,
     profile: {

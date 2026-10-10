@@ -1,4 +1,4 @@
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (event): Promise<any> => {
   const body = await readBody(event)
 
   const server = (body.server || 'en').toLowerCase()
@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
   const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null
   if (vercelUrl) {
     try {
-      const pyResponse = await $fetch(`${vercelUrl}/api/sync_arkprts`, {
+      const pyResponse: any = await $fetch(`${vercelUrl}/api/sync_arkprts`, {
         method: 'POST',
         body,
         timeout: 15000,
