@@ -3,8 +3,17 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useUserStore } from '~/stores/userStore'
 import AccountSyncModal from '~/components/AccountSyncModal.vue'
 
-useHead({
-  title: 'System Settings // ArkCalc',
+useSeoMeta({
+  title: 'Настройки системы (Settings) // ArkCalc',
+  ogTitle: 'Настройки терминала PRTS // ArkCalc',
+  description: 'Параметры терминала ArkCalc: темы оформления, выбор игрового сервера (EN/JP/KR/CN), управление локальным кэшем IndexedDB и синхронизация аккаунта.',
+  ogDescription: 'Параметры терминала ArkCalc: темы оформления, выбор игрового сервера, управление локальным кэшем и сброс данных.',
+  ogImage: '/images/og-image.png',
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'Настройки терминала PRTS // ArkCalc',
+  twitterDescription: 'Настройки темы, сервера и локального кэша ArkCalc.',
+  twitterImage: '/images/og-image.png',
 })
 
 const userStore = useUserStore()

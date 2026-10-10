@@ -19,8 +19,23 @@ import type {
   ArknightsEvent,
 } from '~/types'
 
-useHead({
-  title: 'Operator Promotion Planner // ArkCalc',
+useSeoMeta({
+  title: () => (currentOperator.value?.name
+    ? `Прокачка ${currentOperator.value.name} // Планировщик материалов`
+    : 'Планировщик прокачки оперативников // ArkCalc'),
+  ogTitle: () => (currentOperator.value?.name
+    ? `Калькулятор прокачки ${currentOperator.value.name} // ArkCalc PRTS`
+    : 'Планировщик прокачки и расчет дельты материалов // ArkCalc PRTS'),
+  description: () => 'Калькулятор прокачки оперативников Arknights: расчет Elite 1/2, мастерства скиллов (M1-M3), модулей, дефицита материалов против склада и гарантированных ивентовых наград с оптимальными стадиями фарма Penguin Stats.',
+  ogDescription: () => 'Расчет элитных материалов, мастерства скиллов и модулей оперативников Arknights с учетом склада и ивентов.',
+  ogImage: () => (currentOperator.value?.avatar || '/images/og-image.png'),
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => (currentOperator.value?.name
+    ? `Калькулятор прокачки ${currentOperator.value.name} // ArkCalc`
+    : 'Планировщик прокачки оперативников // ArkCalc'),
+  twitterDescription: () => 'Калькулятор материалов и мастерства для всех оперативников Arknights с учетом склада и ивентов.',
+  twitterImage: () => (currentOperator.value?.avatar || '/images/og-image.png'),
 })
 
 const userStore = useUserStore()

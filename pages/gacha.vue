@@ -3,11 +3,24 @@ import { ref } from 'vue'
 import BannerTimeline from '~/components/BannerTimeline.vue'
 import GachaCalculator from '~/components/GachaCalculator.vue'
 
-useHead({
-  title: 'Gacha & Banner Timeline // ArkCalc',
-})
-
 const activeTab = ref<'calculator' | 'timeline'>('calculator')
+
+useSeoMeta({
+  title: () => (activeTab.value === 'timeline'
+    ? 'Расписание баннеров Arknights (CN/Global) // ArkCalc'
+    : 'Калькулятор круток и искр (Spark Planner) // ArkCalc'),
+  ogTitle: () => (activeTab.value === 'timeline'
+    ? 'Расписание баннеров Arknights (CN/Global с таймером) // ArkCalc'
+    : 'Калькулятор круток и накоплений на гарант (Spark) // ArkCalc PRTS'),
+  description: () => 'Калькулятор ресурсов гачи Arknights: прогноз накопления Orundum и Originite Prime, расчет вероятностей и гаранта (Spark 300 pulls), а также интерактивный календарь баннеров CN/Global.',
+  ogDescription: () => 'Прогноз круток, расчет гаранта (Spark) и расписание предстоящих баннеров Arknights.',
+  ogImage: '/images/og-image.png',
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'Калькулятор круток и расписание баннеров Arknights // ArkCalc',
+  twitterDescription: 'Прогноз круток, расчет гаранта (Spark) и расписание баннеров Arknights.',
+  twitterImage: '/images/og-image.png',
+})
 </script>
 
 <template>

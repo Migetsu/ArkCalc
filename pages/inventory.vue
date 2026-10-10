@@ -6,8 +6,17 @@ import { useToast } from '~/composables/useToast'
 import AccountSyncModal from '~/components/AccountSyncModal.vue'
 import materialsData from '~/assets/data/materials.json'
 
-useHead({
-  title: 'Depot & Material Inventory // ArkCalc',
+useSeoMeta({
+  title: 'Склад материалов и ресурсов (Depot) // ArkCalc',
+  ogTitle: 'Инвентарь склада Arknights // ArkCalc PRTS',
+  description: 'Инвентарь склада Доктора Arknights: учет элитных материалов Т1-Т5, чипов классов, LMD, боевых записей EXP, блоков данных модулей и синхронизация с облаком.',
+  ogDescription: 'Инвентарь склада Доктора Arknights: учет элитных материалов Т1-Т5, чипов классов, LMD, боевых записей EXP и блоков модулей.',
+  ogImage: '/images/og-image.png',
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'Склад ресурсов Arknights // ArkCalc',
+  twitterDescription: 'Учет и управление запасами материалов, чипов и валют Arknights.',
+  twitterImage: '/images/og-image.png',
 })
 
 const userStore = useUserStore()

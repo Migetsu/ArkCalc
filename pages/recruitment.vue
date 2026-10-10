@@ -1,8 +1,17 @@
 <script setup lang="ts">
 import RecruitmentCalculator from '~/components/RecruitmentCalculator.vue'
 
-useHead({
-  title: 'Recruitment // ArkCalc',
+useSeoMeta({
+  title: 'Матрица рекрутинга (Теги) // ArkCalc',
+  ogTitle: 'Калькулятор открытого найма (Recruitment) Arknights // ArkCalc PRTS',
+  description: 'Калькулятор тегов найма Arknights: мгновенный подбор комбинаций для гарантированных 4★, 5★ Senior Operator и 6★ Top Operator без риска потери тегов.',
+  ogDescription: 'Калькулятор тегов найма Arknights: расчет комбинаций для гарантированных 4★, 5★ и 6★ Top Operator.',
+  ogImage: '/images/og-image.png',
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'Калькулятор рекрутинга Arknights // ArkCalc',
+  twitterDescription: 'Гарантированные комбинации тегов для 4★, 5★ и 6★ Top Operator в Arknights.',
+  twitterImage: '/images/og-image.png',
 })
 </script>
 

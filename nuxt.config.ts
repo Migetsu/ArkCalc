@@ -6,15 +6,40 @@ export default defineNuxtConfig({
   app: {
     head: {
       title: 'ArkCalc // PRTS Tactical Terminal',
+      titleTemplate: '%s // ArkCalc PRTS',
+      htmlAttrs: {
+        lang: 'ru',
+      },
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
         { name: 'theme-color', content: '#0d1117' },
-        { name: 'description', content: 'Arknights Doctor tactical assistant: promotion calculator, spark simulator, recruitment matrix and depot inventory.' },
+        { name: 'description', content: 'Тактический терминал Доктора Arknights: планировщик прокачки оперативников, калькулятор круток и искр, матрица рекрутинга и инвентарь склада.' },
+        { name: 'keywords', content: 'Arknights, ArkCalc, PRTS, калькулятор прокачки, гача, рекрутинг, расчет круток, склад, материалы, Penguin Stats, Spark Calculator' },
+        { name: 'author', content: 'ArkCalc Terminal' },
+        { name: 'robots', content: 'index, follow' },
         { name: 'mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
         { name: 'apple-mobile-web-app-title', content: 'ArkCalc' },
+
+        // Open Graph Global
+        { property: 'og:site_name', content: 'ArkCalc // PRTS Tactical Terminal' },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:locale', content: 'ru_RU' },
+        { property: 'og:title', content: 'ArkCalc // PRTS Тактический терминал Arknights' },
+        { property: 'og:description', content: 'Универсальный помощник Доктора: расчет материалов прокачки, калькулятор искр и круток, матрица рекрутинга 4★/5★/6★ и учет склада.' },
+        { property: 'og:image', content: '/images/og-image.png' },
+        { property: 'og:image:width', content: '1200' },
+        { property: 'og:image:height', content: '630' },
+        { property: 'og:image:type', content: 'image/png' },
+        { property: 'og:image:alt', content: 'ArkCalc PRTS Tactical Terminal Interface Preview' },
+
+        // Twitter Cards Global
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:title', content: 'ArkCalc // PRTS Тактический терминал Arknights' },
+        { name: 'twitter:description', content: 'Универсальный помощник Доктора: калькулятор прокачки, искр, рекрутинга и склад материалов.' },
+        { name: 'twitter:image', content: '/images/og-image.png' },
       ],
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },

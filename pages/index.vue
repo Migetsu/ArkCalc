@@ -9,8 +9,17 @@ import AccountSyncModal from '~/components/AccountSyncModal.vue'
 import fallbackBanners from '~/assets/data/banners.json'
 import type { TargetPlanItem, OperatorData } from '~/types'
 
-useHead({
-  title: 'Dashboard // ArkCalc Tactical Terminal',
+useSeoMeta({
+  title: 'Dashboard // Центральный командный терминал PRTS',
+  ogTitle: 'ArkCalc // Командный терминал Доктора Arknights',
+  description: 'Центральный терминал PRTS: отсчет до баннеров Arknights, баланс круток и Orundum, сводка активных целей прокачки и быстрый переход к модулям.',
+  ogDescription: 'Центральный терминал PRTS: отсчет до баннеров Arknights, баланс круток и Orundum, сводка активных целей прокачки и быстрый переход к модулям.',
+  ogImage: '/images/og-image.png',
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'ArkCalc // Командный терминал Доктора Arknights',
+  twitterDescription: 'Центральный терминал PRTS: отсчет до баннеров, баланс круток и Orundum, сводка целей прокачки.',
+  twitterImage: '/images/og-image.png',
 })
 
 const userStore = useUserStore()
