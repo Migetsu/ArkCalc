@@ -1,0 +1,92 @@
+// =============================================================================
+// Arknights Theme - SCSS Color Variables & Design Tokens
+// Inspired by Rhodes Island PRTS Terminal UI & Industrial Sci-Fi Aesthetic
+// =============================================================================
+
+// --- Base Neutrals & Terminal Backgrounds ---
+$ak-bg-main: #121214;          // Deep space / PRTS terminal main background
+$ak-bg-secondary: #1a1a1e;     // Panel / card background
+$ak-bg-elevated: #24252a;      // Hover / elevated dialogs
+$ak-bg-surface: #2d2e36;       // Input & surface container
+$ak-bg-contrast: #ffffff;      // Inverted white background for high-contrast labels
+
+// --- Text & Typography ---
+$ak-text-primary: #f5f5f7;     // Primary high-contrast text
+$ak-text-secondary: #a0a0aa;   // Secondary label text
+$ak-text-muted: #64646e;       // Muted / disabled / metadata text
+$ak-text-inverse: #121214;     // Inverse text on light badges
+
+// --- Rhodes Island Signature Accents ---
+$ak-cyan: #00d4ff;             // Rhodes Island terminal neon cyan
+$ak-cyan-light: #6be4ff;       // Light cyan hover
+$ak-cyan-dark: #0098b8;        // Deep cyan border / active
+
+// --- Industrial Accents & Originium ---
+$ak-yellow: #ffc400;           // Hazard caution yellow
+$ak-amber: #ff9100;            // Originium amber / warning
+$ak-red: #ff334b;              // Alert danger / emergency red
+$ak-green: #00e676;            // Sanity green / safe state / online
+$ak-purple: #b388ff;           // Special / elite arts
+
+// --- In-Game Currencies & Resources ---
+$ak-sanity: #00e676;           // Sanity / Stamina
+$ak-lmd: #3bb2ec;              // Lungmen Dollars (LMD)
+$ak-orundum: #d84315;          // Orundum synthetic jade red
+$ak-originite-prime: #ffab00;  // Originite Prime (OP) gold
+$ak-exp: #ffea00;              // Battle Records EXP yellow
+
+// --- Operator Rarity Grades ---
+$ak-rarity-6: #ff6a00;         // 6-star (Intense Orange)
+$ak-rarity-5: #ffb703;         // 5-star (Bright Gold)
+$ak-rarity-4: #bb86fc;         // 4-star (Purple / Violet)
+$ak-rarity-3: #00b4d8;         // 3-star (Sky Blue)
+$ak-rarity-2: #80ed99;         // 2-star (Light Green)
+$ak-rarity-1: #9e9e9e;         // 1-star (Grey)
+
+// --- Borders, Grids & UI Dividers ---
+$ak-border-light: rgba(255, 255, 255, 0.12);
+$ak-border-default: rgba(255, 255, 255, 0.2);
+$ak-border-cyan: rgba(0, 212, 255, 0.35);
+$ak-border-active: #00d4ff;
+
+// --- CSS Variables Root Mapping (for CSS & Vue runtime access) ---
+:root {
+  --ak-bg-main: #{$ak-bg-main};
+  --ak-bg-secondary: #{$ak-bg-secondary};
+  --ak-bg-elevated: #{$ak-bg-elevated};
+  --ak-bg-surface: #{$ak-bg-surface};
+  --ak-bg-contrast: #{$ak-bg-contrast};
+
+  --ak-text-primary: #{$ak-text-primary};
+  --ak-text-secondary: #{$ak-text-secondary};
+  --ak-text-muted: #{$ak-text-muted};
+  --ak-text-inverse: #{$ak-text-inverse};
+
+  --ak-cyan: #{$ak-cyan};
+  --ak-cyan-light: #{$ak-cyan-light};
+  --ak-cyan-dark: #{$ak-cyan-dark};
+
+  --ak-yellow: #{$ak-yellow};
+  --ak-amber: #{$ak-amber};
+  --ak-red: #{$ak-red};
+  --ak-green: #{$ak-green};
+  --ak-purple: #{$ak-purple};
+
+  --ak-sanity: #{$ak-sanity};
+  --ak-lmd: #{$ak-lmd};
+  --ak-orundum: #{$ak-orundum};
+  --ak-originite-prime: #{$ak-originite-prime};
+  --ak-exp: #{$ak-exp};
+
+  --ak-rarity-6: #{$ak-rarity-6};
+  --ak-rarity-5: #{$ak-rarity-5};
+  --ak-rarity-4: #{$ak-rarity-4};
+  --ak-rarity-3: #{$ak-rarity-3};
+  --ak-rarity-2: #{$ak-rarity-2};
+  --ak-rarity-1: #{$ak-rarity-1};
+
+  --ak-border-light: #{$ak-border-light};
+  --ak-border-default: #{$ak-border-default};
+  --ak-border-cyan: #{$ak-border-cyan};
+  --ak-border-active: #{$ak-border-active};
+}

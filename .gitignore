@@ -13,6 +13,14 @@ dist
 dist-ssr
 *.local
 
+# Nuxt & Deployment
+.nuxt
+.output
+.data
+.nitro
+.cache
+.vercel
+
 # Environment variables
 .env
 .env.*

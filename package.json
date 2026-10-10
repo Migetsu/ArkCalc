@@ -1,0 +1,28 @@
+{
+  "name": "ark-calc",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@nuxtjs/supabase": "^2.0.10",
+    "@pinia/nuxt": "^1.0.2",
+    "@supabase/supabase-js": "^2.117.3",
+    "nuxt": "^4.6.1",
+    "pinia": "^4.0.3",
+    "pinia-plugin-persistedstate": "^4.7.1",
+    "vue": "^3.5.43",
+    "vue-router": "^5.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "sass": "^1.105.1",
+    "typescript": "^5.9.3",
+    "vue-tsc": "^2.2.8"
+  }
+}
