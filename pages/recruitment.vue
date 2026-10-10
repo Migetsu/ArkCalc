@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import RecruitmentCalculator from '~/components/RecruitmentCalculator.vue'
+
 useHead({
   title: 'Recruitment // ArkCalc',
 })
@@ -13,11 +15,7 @@ useHead({
     </div>
 
     <div class="ak-page__content">
-      <div class="ak-placeholder-card">
-        <div class="ak-placeholder-card__icon">🎯</div>
-        <h2>Recruitment Calculator Ready</h2>
-        <p>Input available tags to calculate possible operator outcomes and guarantee thresholds without tag dropping.</p>
-      </div>
+      <RecruitmentCalculator />
     </div>
   </div>
 </template>
@@ -26,12 +24,12 @@ useHead({
 .ak-page {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.75rem;
 
   &__header {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.35rem;
   }
 
   &__tag {
@@ -51,32 +49,12 @@ useHead({
   &__desc {
     color: $ak-text-secondary;
     margin: 0;
-  }
-}
-
-.ak-placeholder-card {
-  background: rgba(26, 26, 30, 0.6);
-  border: 1px dashed rgba(255, 255, 255, 0.15);
-  padding: 3rem 2rem;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-
-  &__icon {
-    font-size: 3rem;
+    font-size: 0.95rem;
   }
 
-  h2 {
-    color: $ak-yellow;
-    margin: 0;
-  }
-
-  p {
-    color: $ak-text-secondary;
-    max-width: 500px;
-    margin: 0;
+  &__content {
+    display: flex;
+    flex-direction: column;
   }
 }
 </style>

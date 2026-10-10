@@ -1,0 +1,1244 @@
+[
+  {
+    "id": "char_002_prep",
+    "name": "Castle-3",
+    "rarity": 1,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "Support", "Robot"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_002_prep.png"
+  },
+  {
+    "id": "char_003_sora",
+    "name": "Lancet-2",
+    "rarity": 1,
+    "profession": "Medic",
+    "position": "Ranged",
+    "tags": ["Ranged", "Medic", "Healing", "Robot"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_003_sora.png"
+  },
+  {
+    "id": "char_376_thermx",
+    "name": "THRM-EX",
+    "rarity": 1,
+    "profession": "Specialist",
+    "position": "Melee",
+    "tags": ["Melee", "Specialist", "Nuker", "Robot"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_376_thermx.png"
+  },
+  {
+    "id": "char_4000_jknigh",
+    "name": "Justice Knight",
+    "rarity": 1,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "Slow", "Robot"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_4000_jknigh.png"
+  },
+  {
+    "id": "char_4023_frston",
+    "name": "Friston-3",
+    "rarity": 1,
+    "profession": "Defender",
+    "position": "Melee",
+    "tags": ["Melee", "Defender", "Defense", "Robot"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_4023_frston.png"
+  },
+  {
+    "id": "char_4082_phonor",
+    "name": "PhonoR-0",
+    "rarity": 1,
+    "profession": "Supporter",
+    "position": "Ranged",
+    "tags": ["Ranged", "Supporter", "Support", "Robot"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_4082_phonor.png"
+  },
+  {
+    "id": "char_500_noirc",
+    "name": "Noir Corne",
+    "rarity": 2,
+    "profession": "Defender",
+    "position": "Melee",
+    "tags": ["Melee", "Defender", "Starter"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_500_noirc.png"
+  },
+  {
+    "id": "char_501_durin",
+    "name": "Durin",
+    "rarity": 2,
+    "profession": "Caster",
+    "position": "Ranged",
+    "tags": ["Ranged", "Caster", "Starter"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_501_durin.png"
+  },
+  {
+    "id": "char_502_noka",
+    "name": "12F",
+    "rarity": 2,
+    "profession": "Caster",
+    "position": "Ranged",
+    "tags": ["Ranged", "Caster", "Starter"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_502_noka.png"
+  },
+  {
+    "id": "char_503_rang",
+    "name": "Rangers",
+    "rarity": 2,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "Starter"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_503_rang.png"
+  },
+  {
+    "id": "char_504_yato",
+    "name": "Yato",
+    "rarity": 2,
+    "profession": "Vanguard",
+    "position": "Melee",
+    "tags": ["Melee", "Vanguard", "Starter", "Fast-Redeploy"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_504_yato.png"
+  },
+  {
+    "id": "char_123_fang",
+    "name": "Fang",
+    "rarity": 3,
+    "profession": "Vanguard",
+    "position": "Melee",
+    "tags": ["Melee", "Vanguard", "DP-Recovery"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_123_fang.png"
+  },
+  {
+    "id": "char_240_wyvern",
+    "name": "Vanilla",
+    "rarity": 3,
+    "profession": "Vanguard",
+    "position": "Melee",
+    "tags": ["Melee", "Vanguard", "DP-Recovery"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_240_wyvern.png"
+  },
+  {
+    "id": "char_192_falco",
+    "name": "Plume",
+    "rarity": 3,
+    "profession": "Vanguard",
+    "position": "Melee",
+    "tags": ["Melee", "Vanguard", "DP-Recovery", "DPS"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_192_falco.png"
+  },
+  {
+    "id": "char_208_melan",
+    "name": "Melantha",
+    "rarity": 3,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "DPS", "Survival"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_208_melan.png"
+  },
+  {
+    "id": "char_281_popka",
+    "name": "Popukar",
+    "rarity": 3,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "AoE", "Survival"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_281_popka.png"
+  },
+  {
+    "id": "char_284_spot",
+    "name": "Spot",
+    "rarity": 3,
+    "profession": "Defender",
+    "position": "Melee",
+    "tags": ["Melee", "Defender", "Defense", "Healing"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_284_spot.png"
+  },
+  {
+    "id": "char_122_beagle",
+    "name": "Beagle",
+    "rarity": 3,
+    "profession": "Defender",
+    "position": "Melee",
+    "tags": ["Melee", "Defender", "Defense"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_122_beagle.png"
+  },
+  {
+    "id": "char_124_kroos",
+    "name": "Kroos",
+    "rarity": 3,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "DPS"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_124_kroos.png"
+  },
+  {
+    "id": "char_282_catap",
+    "name": "Catapult",
+    "rarity": 3,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "AoE"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_282_catap.png"
+  },
+  {
+    "id": "char_120_hibis",
+    "name": "Hibiscus",
+    "rarity": 3,
+    "profession": "Medic",
+    "position": "Ranged",
+    "tags": ["Ranged", "Medic", "Healing"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_120_hibis.png"
+  },
+  {
+    "id": "char_212_ansel",
+    "name": "Ansel",
+    "rarity": 3,
+    "profession": "Medic",
+    "position": "Ranged",
+    "tags": ["Ranged", "Medic", "Healing"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_212_ansel.png"
+  },
+  {
+    "id": "char_121_lava",
+    "name": "Lava",
+    "rarity": 3,
+    "profession": "Caster",
+    "position": "Ranged",
+    "tags": ["Ranged", "Caster", "AoE"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_121_lava.png"
+  },
+  {
+    "id": "char_210_stward",
+    "name": "Steward",
+    "rarity": 3,
+    "profession": "Caster",
+    "position": "Ranged",
+    "tags": ["Ranged", "Caster", "DPS"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_210_stward.png"
+  },
+  {
+    "id": "char_278_orchid",
+    "name": "Orchid",
+    "rarity": 3,
+    "profession": "Supporter",
+    "position": "Ranged",
+    "tags": ["Ranged", "Supporter", "Slow"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_278_orchid.png"
+  },
+  {
+    "id": "char_283_midn",
+    "name": "Midnight",
+    "rarity": 3,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "DPS"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_283_midn.png"
+  },
+  {
+    "id": "char_149_scav",
+    "name": "Scavenger",
+    "rarity": 4,
+    "profession": "Vanguard",
+    "position": "Melee",
+    "tags": ["Melee", "Vanguard", "DP-Recovery", "DPS"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_149_scav.png"
+  },
+  {
+    "id": "char_290_vigna",
+    "name": "Vigna",
+    "rarity": 4,
+    "profession": "Vanguard",
+    "position": "Melee",
+    "tags": ["Melee", "Vanguard", "DP-Recovery", "DPS"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_290_vigna.png"
+  },
+  {
+    "id": "char_437_mimi",
+    "name": "Beanstalk",
+    "rarity": 4,
+    "profession": "Vanguard",
+    "position": "Ranged",
+    "tags": ["Ranged", "Vanguard", "DP-Recovery"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_437_mimi.png"
+  },
+  {
+    "id": "char_130_doberm",
+    "name": "Dobermann",
+    "rarity": 4,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "Support", "DPS"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_130_doberm.png"
+  },
+  {
+    "id": "char_127_estell",
+    "name": "Estelle",
+    "rarity": 4,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "AoE", "Survival"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_127_estell.png"
+  },
+  {
+    "id": "char_289_gyuki",
+    "name": "Matoimaru",
+    "rarity": 4,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "Survival", "DPS"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_289_gyuki.png"
+  },
+  {
+    "id": "char_193_frostl",
+    "name": "Frostleaf",
+    "rarity": 4,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "Slow", "DPS"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_193_frostl.png"
+  },
+  {
+    "id": "char_185_frncat",
+    "name": "Mousse",
+    "rarity": 4,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "DPS"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_185_frncat.png"
+  },
+  {
+    "id": "char_337_utage",
+    "name": "Utage",
+    "rarity": 4,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "DPS", "Survival"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_337_utage.png"
+  },
+  {
+    "id": "char_301_cutter",
+    "name": "Cutter",
+    "rarity": 4,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "Nuker", "DPS"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_301_cutter.png"
+  },
+  {
+    "id": "char_271_spikes",
+    "name": "Arene",
+    "rarity": 4,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "DPS"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_271_spikes.png"
+  },
+  {
+    "id": "char_230_savage",
+    "name": "Cuora",
+    "rarity": 4,
+    "profession": "Defender",
+    "position": "Melee",
+    "tags": ["Melee", "Defender", "Defense"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_230_savage.png"
+  },
+  {
+    "id": "char_196_sunbr",
+    "name": "Gummy",
+    "rarity": 4,
+    "profession": "Defender",
+    "position": "Melee",
+    "tags": ["Melee", "Defender", "Defense", "Healing"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_196_sunbr.png"
+  },
+  {
+    "id": "char_198_blackd",
+    "name": "Matterhorn",
+    "rarity": 4,
+    "profession": "Defender",
+    "position": "Melee",
+    "tags": ["Melee", "Defender", "Defense"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_198_blackd.png"
+  },
+  {
+    "id": "char_381_bubble",
+    "name": "Bubble",
+    "rarity": 4,
+    "profession": "Defender",
+    "position": "Melee",
+    "tags": ["Melee", "Defender", "Defense", "Debuff"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_381_bubble.png"
+  },
+  {
+    "id": "char_235_jesica",
+    "name": "Jessica",
+    "rarity": 4,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "DPS", "Survival"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_235_jesica.png"
+  },
+  {
+    "id": "char_190_clour",
+    "name": "Meteor",
+    "rarity": 4,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "DPS", "Debuff"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_190_clour.png"
+  },
+  {
+    "id": "char_118_yuki",
+    "name": "Shirayuki",
+    "rarity": 4,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "AoE", "Slow"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_118_yuki.png"
+  },
+  {
+    "id": "char_133_mm",
+    "name": "May",
+    "rarity": 4,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "DPS", "Slow"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_133_mm.png"
+  },
+  {
+    "id": "char_302_glaze",
+    "name": "Ambriel",
+    "rarity": 4,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "DPS", "Slow"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_302_glaze.png"
+  },
+  {
+    "id": "char_199_yaksa",
+    "name": "Vermeil",
+    "rarity": 4,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "DPS"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_199_yaksa.png"
+  },
+  {
+    "id": "char_440_pinec",
+    "name": "Pinecone",
+    "rarity": 4,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "AoE"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_440_pinec.png"
+  },
+  {
+    "id": "char_181_flower",
+    "name": "Perfumer",
+    "rarity": 4,
+    "profession": "Medic",
+    "position": "Ranged",
+    "tags": ["Ranged", "Medic", "Healing"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_181_flower.png"
+  },
+  {
+    "id": "char_117_myrrh",
+    "name": "Myrrh",
+    "rarity": 4,
+    "profession": "Medic",
+    "position": "Ranged",
+    "tags": ["Ranged", "Medic", "Healing"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_117_myrrh.png"
+  },
+  {
+    "id": "char_298_susuro",
+    "name": "Sussurro",
+    "rarity": 4,
+    "profession": "Medic",
+    "position": "Ranged",
+    "tags": ["Ranged", "Medic", "Healing"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_298_susuro.png"
+  },
+  {
+    "id": "char_385_finl",
+    "name": "Purestream",
+    "rarity": 4,
+    "profession": "Medic",
+    "position": "Ranged",
+    "tags": ["Ranged", "Medic", "Healing", "Support"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_385_finl.png"
+  },
+  {
+    "id": "char_141_nights",
+    "name": "Haze",
+    "rarity": 4,
+    "profession": "Caster",
+    "position": "Ranged",
+    "tags": ["Ranged", "Caster", "DPS", "Debuff"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_141_nights.png"
+  },
+  {
+    "id": "char_109_fmout",
+    "name": "Gitano",
+    "rarity": 4,
+    "profession": "Caster",
+    "position": "Ranged",
+    "tags": ["Ranged", "Caster", "AoE"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_109_fmout.png"
+  },
+  {
+    "id": "char_285_medic2",
+    "name": "Greyy",
+    "rarity": 4,
+    "profession": "Caster",
+    "position": "Ranged",
+    "tags": ["Ranged", "Caster", "AoE", "Slow"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_285_medic2.png"
+  },
+  {
+    "id": "char_126_shotst",
+    "name": "Earthspirit",
+    "rarity": 4,
+    "profession": "Supporter",
+    "position": "Ranged",
+    "tags": ["Ranged", "Supporter", "Slow"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_126_shotst.png"
+  },
+  {
+    "id": "char_347_jakip",
+    "name": "Podenco",
+    "rarity": 4,
+    "profession": "Supporter",
+    "position": "Ranged",
+    "tags": ["Ranged", "Supporter", "Slow", "Healing", "Debuff"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_347_jakip.png"
+  },
+  {
+    "id": "char_431_ashlock",
+    "name": "Roberta",
+    "rarity": 4,
+    "profession": "Supporter",
+    "position": "Melee",
+    "tags": ["Melee", "Supporter", "Support", "Defense"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_431_ashlock.png"
+  },
+  {
+    "id": "char_237_gravel",
+    "name": "Gravel",
+    "rarity": 4,
+    "profession": "Specialist",
+    "position": "Melee",
+    "tags": ["Melee", "Specialist", "Fast-Redeploy", "Defense"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_237_gravel.png"
+  },
+  {
+    "id": "char_236_rope",
+    "name": "Rope",
+    "rarity": 4,
+    "profession": "Specialist",
+    "position": "Melee",
+    "tags": ["Melee", "Specialist", "Shift"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_236_rope.png"
+  },
+  {
+    "id": "char_277_sqrurl",
+    "name": "Shaw",
+    "rarity": 4,
+    "profession": "Specialist",
+    "position": "Melee",
+    "tags": ["Melee", "Specialist", "Shift"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_277_sqrurl.png"
+  },
+  {
+    "id": "char_272_strong",
+    "name": "Jaye",
+    "rarity": 4,
+    "profession": "Specialist",
+    "position": "Melee",
+    "tags": ["Melee", "Specialist", "Fast-Redeploy", "DPS", "Healing"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_272_strong.png"
+  },
+  {
+    "id": "char_128_plosis",
+    "name": "Ptilopsis",
+    "rarity": 5,
+    "profession": "Medic",
+    "position": "Ranged",
+    "tags": ["Ranged", "Medic", "Healing", "Support", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_128_plosis.png"
+  },
+  {
+    "id": "char_108_silent",
+    "name": "Silence",
+    "rarity": 5,
+    "profession": "Medic",
+    "position": "Ranged",
+    "tags": ["Ranged", "Medic", "Healing", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_108_silent.png"
+  },
+  {
+    "id": "char_171_bldsk",
+    "name": "Warfarin",
+    "rarity": 5,
+    "profession": "Medic",
+    "position": "Ranged",
+    "tags": ["Ranged", "Medic", "Healing", "Support", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_171_bldsk.png"
+  },
+  {
+    "id": "char_115_headbr",
+    "name": "Zima",
+    "rarity": 5,
+    "profession": "Vanguard",
+    "position": "Melee",
+    "tags": ["Melee", "Vanguard", "DP-Recovery", "Support", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_115_headbr.png"
+  },
+  {
+    "id": "char_102_texas",
+    "name": "Texas",
+    "rarity": 5,
+    "profession": "Vanguard",
+    "position": "Melee",
+    "tags": ["Melee", "Vanguard", "DP-Recovery", "Crowd Control", "DPS", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_102_texas.png"
+  },
+  {
+    "id": "char_261_sddrag",
+    "name": "Reed",
+    "rarity": 5,
+    "profession": "Vanguard",
+    "position": "Melee",
+    "tags": ["Melee", "Vanguard", "DP-Recovery", "DPS", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_261_sddrag.png"
+  },
+  {
+    "id": "char_349_chiave",
+    "name": "Chiave",
+    "rarity": 5,
+    "profession": "Vanguard",
+    "position": "Melee",
+    "tags": ["Melee", "Vanguard", "DP-Recovery", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_349_chiave.png"
+  },
+  {
+    "id": "char_401_elysm",
+    "name": "Elysium",
+    "rarity": 5,
+    "profession": "Vanguard",
+    "position": "Ranged",
+    "tags": ["Ranged", "Vanguard", "DP-Recovery", "Support", "Slow", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_401_elysm.png"
+  },
+  {
+    "id": "char_106_franka",
+    "name": "Franka",
+    "rarity": 5,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "DPS", "Survival", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_106_franka.png"
+  },
+  {
+    "id": "char_143_ghost",
+    "name": "Specter",
+    "rarity": 5,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "AoE", "Survival", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_143_ghost.png"
+  },
+  {
+    "id": "char_140_whitew",
+    "name": "Lappland",
+    "rarity": 5,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "DPS", "Debuff", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_140_whitew.png"
+  },
+  {
+    "id": "char_155_tiger",
+    "name": "Indra",
+    "rarity": 5,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "DPS", "Survival", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_155_tiger.png"
+  },
+  {
+    "id": "char_308_swire",
+    "name": "Swire",
+    "rarity": 5,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "Support", "DPS", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_308_swire.png"
+  },
+  {
+    "id": "char_274_astesi",
+    "name": "Astesia",
+    "rarity": 5,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "DPS", "Defense", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_274_astesi.png"
+  },
+  {
+    "id": "char_343_tntlin",
+    "name": "Broca",
+    "rarity": 5,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "AoE", "DPS", "Slow", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_343_tntlin.png"
+  },
+  {
+    "id": "char_294_ayer",
+    "name": "Ayerscarpe",
+    "rarity": 5,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "DPS", "Slow", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_294_ayer.png"
+  },
+  {
+    "id": "char_415_flint",
+    "name": "Flint",
+    "rarity": 5,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "DPS", "Shift", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_415_flint.png"
+  },
+  {
+    "id": "char_204_platnm",
+    "name": "Platinum",
+    "rarity": 5,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "DPS", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_204_platnm.png"
+  },
+  {
+    "id": "char_219_metere",
+    "name": "Meteorite",
+    "rarity": 5,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "AoE", "Debuff", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_219_metere.png"
+  },
+  {
+    "id": "char_158_milu",
+    "name": "Firewatch",
+    "rarity": 5,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "Nuker", "DPS", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_158_milu.png"
+  },
+  {
+    "id": "char_145_prove",
+    "name": "Provence",
+    "rarity": 5,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "DPS", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_145_prove.png"
+  },
+  {
+    "id": "char_367_swllow",
+    "name": "GreyThroat",
+    "rarity": 5,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "DPS", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_367_swllow.png"
+  },
+  {
+    "id": "char_379_sesa",
+    "name": "Sesa",
+    "rarity": 5,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "AoE", "Debuff", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_379_sesa.png"
+  },
+  {
+    "id": "char_365_april",
+    "name": "April",
+    "rarity": 5,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "DPS", "Fast-Redeploy", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_365_april.png"
+  },
+  {
+    "id": "char_346_aosta",
+    "name": "Aosta",
+    "rarity": 5,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "AoE", "Debuff", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_346_aosta.png"
+  },
+  {
+    "id": "char_363_toddi",
+    "name": "Toddifons",
+    "rarity": 5,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "DPS", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_363_toddi.png"
+  },
+  {
+    "id": "char_148_nearl",
+    "name": "Nearl",
+    "rarity": 5,
+    "profession": "Defender",
+    "position": "Melee",
+    "tags": ["Melee", "Defender", "Defense", "Healing", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_148_nearl.png"
+  },
+  {
+    "id": "char_163_hpsts",
+    "name": "Vulcan",
+    "rarity": 5,
+    "profession": "Defender",
+    "position": "Melee",
+    "tags": ["Melee", "Defender", "Defense", "Survival", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_163_hpsts.png"
+  },
+  {
+    "id": "char_107_liskam",
+    "name": "Liskarm",
+    "rarity": 5,
+    "profession": "Defender",
+    "position": "Melee",
+    "tags": ["Melee", "Defender", "Defense", "Support", "DPS", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_107_liskam.png"
+  },
+  {
+    "id": "char_201_mosp",
+    "name": "Croissant",
+    "rarity": 5,
+    "profession": "Defender",
+    "position": "Melee",
+    "tags": ["Melee", "Defender", "Defense", "Shift", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_201_mosp.png"
+  },
+  {
+    "id": "char_362_saga",
+    "name": "Hung",
+    "rarity": 5,
+    "profession": "Defender",
+    "position": "Melee",
+    "tags": ["Melee", "Defender", "Defense", "Healing", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_226_hmau.png"
+  },
+  {
+    "id": "char_378_asbest",
+    "name": "Asbestos",
+    "rarity": 5,
+    "profession": "Defender",
+    "position": "Melee",
+    "tags": ["Melee", "Defender", "Defense", "DPS", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_378_asbest.png"
+  },
+  {
+    "id": "char_166_skfire",
+    "name": "Nightmare",
+    "rarity": 5,
+    "profession": "Caster",
+    "position": "Ranged",
+    "tags": ["Ranged", "Caster", "Slow", "DPS", "Healing", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_166_skfire.png"
+  },
+  {
+    "id": "char_306_leizi",
+    "name": "Leizi",
+    "rarity": 5,
+    "profession": "Caster",
+    "position": "Ranged",
+    "tags": ["Ranged", "Caster", "DPS", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_306_leizi.png"
+  },
+  {
+    "id": "char_373_lionh",
+    "name": "Leonhardt",
+    "rarity": 5,
+    "profession": "Caster",
+    "position": "Ranged",
+    "tags": ["Ranged", "Caster", "AoE", "Debuff", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_373_lionh.png"
+  },
+  {
+    "id": "char_344_beewax",
+    "name": "Beeswax",
+    "rarity": 5,
+    "profession": "Caster",
+    "position": "Ranged",
+    "tags": ["Ranged", "Caster", "AoE", "Defense", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_344_beewax.png"
+  },
+  {
+    "id": "char_338_iris",
+    "name": "Iris",
+    "rarity": 5,
+    "profession": "Caster",
+    "position": "Ranged",
+    "tags": ["Ranged", "Caster", "DPS", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_338_iris.png"
+  },
+  {
+    "id": "char_179_cora",
+    "name": "Pramanix",
+    "rarity": 5,
+    "profession": "Supporter",
+    "position": "Ranged",
+    "tags": ["Ranged", "Supporter", "Debuff", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_179_cora.png"
+  },
+  {
+    "id": "char_242_otter",
+    "name": "Mayer",
+    "rarity": 5,
+    "profession": "Supporter",
+    "position": "Ranged",
+    "tags": ["Ranged", "Supporter", "Summon", "Crowd Control", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_242_otter.png"
+  },
+  {
+    "id": "char_326_glacus",
+    "name": "Glaucus",
+    "rarity": 5,
+    "profession": "Supporter",
+    "position": "Ranged",
+    "tags": ["Ranged", "Supporter", "Slow", "Crowd Control", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_326_glacus.png"
+  },
+  {
+    "id": "char_254_shamir",
+    "name": "Shamare",
+    "rarity": 5,
+    "profession": "Supporter",
+    "position": "Ranged",
+    "tags": ["Ranged", "Supporter", "Debuff", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_254_shamir.png"
+  },
+  {
+    "id": "char_173_slncr",
+    "name": "Cliffheart",
+    "rarity": 5,
+    "profession": "Specialist",
+    "position": "Melee",
+    "tags": ["Melee", "Specialist", "Shift", "DPS", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_173_slncr.png"
+  },
+  {
+    "id": "char_241_panda",
+    "name": "FEater",
+    "rarity": 5,
+    "profession": "Specialist",
+    "position": "Melee",
+    "tags": ["Melee", "Specialist", "Shift", "Slow", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_241_panda.png"
+  },
+  {
+    "id": "char_144_red",
+    "name": "Projekt Red",
+    "rarity": 5,
+    "profession": "Specialist",
+    "position": "Melee",
+    "tags": ["Melee", "Specialist", "Fast-Redeploy", "Crowd Control", "DPS", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_144_red.png"
+  },
+  {
+    "id": "char_250_phaly",
+    "name": "Waai Fu",
+    "rarity": 5,
+    "profession": "Specialist",
+    "position": "Melee",
+    "tags": ["Melee", "Specialist", "Fast-Redeploy", "Debuff", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_250_phaly.png"
+  },
+  {
+    "id": "char_214_kafka",
+    "name": "Kafka",
+    "rarity": 5,
+    "profession": "Specialist",
+    "position": "Melee",
+    "tags": ["Melee", "Specialist", "Fast-Redeploy", "Crowd Control", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_214_kafka.png"
+  },
+  {
+    "id": "char_455_nothin",
+    "name": "Mr. Nothing",
+    "rarity": 5,
+    "profession": "Specialist",
+    "position": "Melee",
+    "tags": ["Melee", "Specialist", "Fast-Redeploy", "Crowd Control", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_455_nothin.png"
+  },
+  {
+    "id": "char_4016_kazemr",
+    "name": "Kazemaru",
+    "rarity": 5,
+    "profession": "Specialist",
+    "position": "Melee",
+    "tags": ["Melee", "Specialist", "Fast-Redeploy", "DPS", "Senior Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_4016_kazemr.png"
+  },
+  {
+    "id": "char_172_silver",
+    "name": "SilverAsh",
+    "rarity": 6,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "DPS", "Survival", "Support", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_172_silver.png"
+  },
+  {
+    "id": "char_103_angel",
+    "name": "Exusiai",
+    "rarity": 6,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "DPS", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_103_angel.png"
+  },
+  {
+    "id": "char_202_demkni",
+    "name": "Saria",
+    "rarity": 6,
+    "profession": "Defender",
+    "position": "Melee",
+    "tags": ["Melee", "Defender", "Defense", "Healing", "Support", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_202_demkni.png"
+  },
+  {
+    "id": "char_112_siege",
+    "name": "Siege",
+    "rarity": 6,
+    "profession": "Vanguard",
+    "position": "Melee",
+    "tags": ["Melee", "Vanguard", "DPS", "DP-Recovery", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_112_siege.png"
+  },
+  {
+    "id": "char_136_hukao",
+    "name": "Hoshiguma",
+    "rarity": 6,
+    "profession": "Defender",
+    "position": "Melee",
+    "tags": ["Melee", "Defender", "Defense", "DPS", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_136_hukao.png"
+  },
+  {
+    "id": "char_147_shining",
+    "name": "Shining",
+    "rarity": 6,
+    "profession": "Medic",
+    "position": "Ranged",
+    "tags": ["Ranged", "Medic", "Healing", "Support", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_147_shining.png"
+  },
+  {
+    "id": "char_174_nightm",
+    "name": "Nightingale",
+    "rarity": 6,
+    "profession": "Medic",
+    "position": "Ranged",
+    "tags": ["Ranged", "Medic", "Healing", "Support", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_174_nightm.png"
+  },
+  {
+    "id": "char_134_ifrit",
+    "name": "Ifrit",
+    "rarity": 6,
+    "profession": "Caster",
+    "position": "Ranged",
+    "tags": ["Ranged", "Caster", "AoE", "Debuff", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_134_ifrit.png"
+  },
+  {
+    "id": "char_263_skadi",
+    "name": "Skadi",
+    "rarity": 6,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "DPS", "Survival", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_263_skadi.png"
+  },
+  {
+    "id": "char_010_chen",
+    "name": "Ch'en",
+    "rarity": 6,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "Nuker", "DPS", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_010_chen.png"
+  },
+  {
+    "id": "char_188_helage",
+    "name": "Hellagur",
+    "rarity": 6,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "DPS", "Survival", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_188_helage.png"
+  },
+  {
+    "id": "char_340_shwz",
+    "name": "Schwarz",
+    "rarity": 6,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "DPS", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_340_shwz.png"
+  },
+  {
+    "id": "char_248_mgllan",
+    "name": "Magallan",
+    "rarity": 6,
+    "profession": "Supporter",
+    "position": "Ranged",
+    "tags": ["Ranged", "Supporter", "Support", "Slow", "DPS", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_248_mgllan.png"
+  },
+  {
+    "id": "char_213_mostma",
+    "name": "Mostima",
+    "rarity": 6,
+    "profession": "Caster",
+    "position": "Ranged",
+    "tags": ["Ranged", "Caster", "AoE", "Crowd Control", "Slow", "Support", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_213_mostma.png"
+  },
+  {
+    "id": "char_017_huang",
+    "name": "Blaze",
+    "rarity": 6,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "DPS", "Survival", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_017_huang.png"
+  },
+  {
+    "id": "char_225_haak",
+    "name": "Aak",
+    "rarity": 6,
+    "profession": "Specialist",
+    "position": "Ranged",
+    "tags": ["Ranged", "Specialist", "Support", "DPS", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_225_haak.png"
+  },
+  {
+    "id": "char_2013_cerber",
+    "name": "Ceobe",
+    "rarity": 6,
+    "profession": "Caster",
+    "position": "Ranged",
+    "tags": ["Ranged", "Caster", "DPS", "Crowd Control", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_2013_cerber.png"
+  },
+  {
+    "id": "char_222_bpipe",
+    "name": "Bagpipe",
+    "rarity": 6,
+    "profession": "Vanguard",
+    "position": "Melee",
+    "tags": ["Melee", "Vanguard", "DPS", "DP-Recovery", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_222_bpipe.png"
+  },
+  {
+    "id": "char_225_phantom",
+    "name": "Phantom",
+    "rarity": 6,
+    "profession": "Specialist",
+    "position": "Melee",
+    "tags": ["Melee", "Specialist", "Fast-Redeploy", "Crowd Control", "DPS", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_225_phantom.png"
+  },
+  {
+    "id": "char_197_poca",
+    "name": "Rosa",
+    "rarity": 6,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "DPS", "Crowd Control", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_197_poca.png"
+  },
+  {
+    "id": "char_358_lisa",
+    "name": "Suzuran",
+    "rarity": 6,
+    "profession": "Supporter",
+    "position": "Ranged",
+    "tags": ["Ranged", "Supporter", "Slow", "Support", "DPS", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_358_lisa.png"
+  },
+  {
+    "id": "char_400_weedy",
+    "name": "Weedy",
+    "rarity": 6,
+    "profession": "Specialist",
+    "position": "Melee",
+    "tags": ["Melee", "Specialist", "Shift", "Crowd Control", "DPS", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_400_weedy.png"
+  },
+  {
+    "id": "char_293_thorns",
+    "name": "Thorns",
+    "rarity": 6,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "DPS", "Defense", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_293_thorns.png"
+  },
+  {
+    "id": "char_416_zumama",
+    "name": "Eunectes",
+    "rarity": 6,
+    "profession": "Defender",
+    "position": "Melee",
+    "tags": ["Melee", "Defender", "Defense", "DPS", "Survival", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_416_zumama.png"
+  },
+  {
+    "id": "char_350_surtr",
+    "name": "Surtr",
+    "rarity": 6,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "DPS", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_350_surtr.png"
+  },
+  {
+    "id": "char_423_blemis",
+    "name": "Blemishine",
+    "rarity": 6,
+    "profession": "Defender",
+    "position": "Melee",
+    "tags": ["Melee", "Defender", "Defense", "Healing", "DPS", "Crowd Control", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_423_blemis.png"
+  },
+  {
+    "id": "char_264_f12yin",
+    "name": "Mountain",
+    "rarity": 6,
+    "profession": "Guard",
+    "position": "Melee",
+    "tags": ["Melee", "Guard", "DPS", "Defense", "Survival", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_264_f12yin.png"
+  },
+  {
+    "id": "char_332_archet",
+    "name": "Archetto",
+    "rarity": 6,
+    "profession": "Sniper",
+    "position": "Ranged",
+    "tags": ["Ranged", "Sniper", "DPS", "Top Operator"],
+    "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_332_archet.png"
+  }
+]
