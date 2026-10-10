@@ -42,7 +42,7 @@ const searchQuery = ref<string>('')
 const sortAscending = ref<boolean>(true) // true: oldest at top, newest at bottom (matching wiki default)
 
 // Fetch banners from server API which parses arknights.wiki.gg/wiki/Headhunting/Banners/Upcoming
-const { data: apiResponse, pending: isLoading, refresh } = await useFetch('/api/banners', {
+const { data: apiResponse, pending: isLoading, refresh } = useFetch('/api/banners', {
   default: () => ({
     source: 'local-fallback',
     updatedAt: new Date().toISOString(),

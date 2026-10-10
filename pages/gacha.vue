@@ -43,10 +43,12 @@ const activeTab = ref<'calculator' | 'timeline'>('calculator')
     </div>
 
     <div class="ak-page__content">
-      <keep-alive>
-        <GachaCalculator v-if="activeTab === 'calculator'" />
-        <BannerTimeline v-else :initial-offset-days="175" />
-      </keep-alive>
+      <div v-show="activeTab === 'calculator'">
+        <GachaCalculator />
+      </div>
+      <div v-show="activeTab === 'timeline'">
+        <BannerTimeline :initial-offset-days="175" />
+      </div>
     </div>
   </div>
 </template>
