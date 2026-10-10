@@ -250,8 +250,9 @@ const handleSync = async () => {
       tag: 'AUTH // OK',
     })
   } catch (err: any) {
-    errorMessage.value = err?.message || 'An unexpected synchronization error occurred.'
-    toast.error(errorMessage.value, {
+    const msg = err?.message || 'An unexpected synchronization error occurred.'
+    errorMessage.value = msg
+    toast.error(msg, {
       title: 'GATEWAY ERROR',
       tag: 'AUTH // FAIL',
     })
