@@ -3,6 +3,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useUserStore } from '~/stores/userStore'
 import { usePlannerStore } from '~/stores/plannerStore'
 import { useOperatorStore } from '~/stores/operatorStore'
+import { useToast } from '~/composables/useToast'
+import BannerCardSkeleton from '~/components/ui/BannerCardSkeleton.vue'
 import fallbackBanners from '~/assets/data/banners.json'
 import type { TargetPlanItem, OperatorData } from '~/types'
 
@@ -13,6 +15,7 @@ useHead({
 const userStore = useUserStore()
 const plannerStore = usePlannerStore()
 const operatorStore = useOperatorStore()
+const toast = useToast()
 
 // -----------------------------------------------------------------------------
 // Core Navigation Modules
@@ -78,7 +81,7 @@ interface BannerItem {
   operators: RateUpOp[]
 }
 
-const { data: bannerApiResponse } = useFetch('/api/banners', {
+const { data: bannerApiResponse, status: bannerStatus } = useFetch('/api/banners', {
   default: () => ({
     source: 'local-fallback',
     updatedAt: new Date().toISOString(),
@@ -238,6 +241,10 @@ const quickAddSuggested = (op: OperatorData) => {
     currentModule: 0,
     targetModule: 3,
   })
+  toast.success(`${op.name} added to promotion targets!`, {
+    title: 'TARGET ADDED',
+    tag: 'PLN // GOAL',
+  })
 }
 </script>
 
@@ -318,7 +325,8 @@ const quickAddSuggested = (op: OperatorData) => {
           </span>
         </div>
 
-        <div v-if="upcomingBanner" class="ak-banner-body">
+        <BannerCardSkeleton v-if="bannerStatus === 'pending' && !upcomingBanner" />
+        <div v-else-if="upcomingBanner" class="ak-banner-body">
           <!-- Banner Art Hero with fallback -->
           <div class="ak-banner-art">
             <img

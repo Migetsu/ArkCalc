@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useUserStore } from '~/stores/userStore'
+import { useToast } from '~/composables/useToast'
 
 const props = defineProps<{
   modelValue?: boolean
@@ -13,6 +14,7 @@ const emit = defineEmits<{
 }>()
 
 const userStore = useUserStore()
+const toast = useToast()
 
 // State
 type AuthTab = 'token' | 'email' | 'demo'
@@ -190,6 +192,13 @@ const handleSync = async () => {
       await userStore.syncFromArkprtsData(demo)
       successData.value = demo
       emit('synced', demo)
+      toast.success(
+        `Welcome Doctor ${demo.profile.nickname}! Depot stock & operator roster synchronized.`,
+        {
+          title: 'PRTS GATEWAY',
+          tag: 'AUTH // OK',
+        }
+      )
       return
     }
 
@@ -236,8 +245,16 @@ const handleSync = async () => {
     await userStore.syncFromArkprtsData(data)
     successData.value = data
     emit('synced', data)
+    toast.success(`Doctor profile and inventory synchronized with game servers!`, {
+      title: 'PRTS GATEWAY',
+      tag: 'AUTH // OK',
+    })
   } catch (err: any) {
     errorMessage.value = err?.message || 'An unexpected synchronization error occurred.'
+    toast.error(errorMessage.value, {
+      title: 'GATEWAY ERROR',
+      tag: 'AUTH // FAIL',
+    })
   } finally {
     isSubmitting.value = false
     syncStage.value = ''

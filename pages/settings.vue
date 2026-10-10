@@ -147,10 +147,12 @@ const forceCloudSync = async () => {
 
 import { usePenguinStore } from '~/stores/penguinStore'
 import { useOperatorStore } from '~/stores/operatorStore'
+import { useToast } from '~/composables/useToast'
 import { clearAllArkCalcCache, isIndexedDbAvailable, getStoreRecordsMeta } from '~/utils/indexedDb'
 
 const penguinStore = usePenguinStore()
 const operatorStore = useOperatorStore()
+const toast = useToast()
 const isIdbActive = ref(false)
 const idbStats = ref<{ penguinCount: number; operatorCount: number }>({
   penguinCount: 0,
@@ -182,11 +184,19 @@ const clearIndexedDbCache = async () => {
   await refreshIdbStats()
   saveStatus.value = 'saved'
   statusMessage.value = '✓ INDEXEDDB CACHE CLEARED (PENGUIN MATRIX & OPERATORS DB RESET)'
+  toast.success('IndexedDB cache purged (matrix & operator data reset)', {
+    title: 'STORAGE CACHE',
+    tag: 'IDB // PURGED',
+  })
 }
 
 const reSyncData = async () => {
   saveStatus.value = 'saving'
   statusMessage.value = 'FETCHING LIVE PENGUIN STATS & OPERATOR DATABASE...'
+  toast.info('Connecting to Penguin Stats & Operator API...', {
+    title: 'DATA SYNC',
+    tag: 'NET // SYNC',
+  })
   try {
     await Promise.all([
       penguinStore.fetchAll(server.value, true),
@@ -195,9 +205,16 @@ const reSyncData = async () => {
     await refreshIdbStats()
     saveStatus.value = 'saved'
     statusMessage.value = '✓ PENGUIN DROP MATRIX & OPERATOR DATA CACHED IN INDEXEDDB'
+    toast.success('Drop matrix and operator blueprints cached in IndexedDB!', {
+      title: 'SYNC COMPLETE',
+      tag: 'IDB // CACHED',
+    })
   } catch (err) {
     saveStatus.value = 'error'
     statusMessage.value = `⚠ SYNC FAILED: ${err instanceof Error ? err.message : String(err)}`
+    toast.error('Data sync failed. Check network connectivity.', {
+      title: 'SYNC ERROR',
+    })
   }
 }
 

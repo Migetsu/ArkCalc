@@ -4,6 +4,9 @@ import { useUserStore } from '~/stores/userStore'
 import { usePenguinStats } from '~/composables/usePenguinStats'
 import { useOperatorStore } from '~/stores/operatorStore'
 import { usePlannerStore } from '~/stores/plannerStore'
+import { useToast } from '~/composables/useToast'
+import OperatorCardSkeleton from '~/components/ui/OperatorCardSkeleton.vue'
+import FarmingTableSkeleton from '~/components/ui/FarmingTableSkeleton.vue'
 import operatorsData from '~/assets/data/operators.json'
 import materialsData from '~/assets/data/materials.json'
 import type {
@@ -21,6 +24,7 @@ const userStore = useUserStore()
 const penguin = usePenguinStats()
 const operatorStore = useOperatorStore()
 const plannerStore = usePlannerStore()
+const toast = useToast()
 const route = useRoute()
 
 // Load Penguin stats items & stages if not already loaded
@@ -29,10 +33,28 @@ const isMatrixLoading = ref(false)
 
 const refreshPenguinStats = async (force = false) => {
   isMatrixLoading.value = true
+  if (force) {
+    toast.info('Fetching live drop matrix from Penguin Stats...', {
+      title: 'PENGUIN STATS',
+      tag: 'NET // SYNC',
+    })
+  }
   try {
     await penguin.fetchAll(server.value, force)
+    if (force) {
+      toast.success('Penguin drop matrix synchronized & cached in IndexedDB', {
+        title: 'CACHE SYNCHRONIZED',
+        tag: 'IDB // STORED',
+      })
+    }
   } catch (e) {
     console.warn('[Planner] Live Penguin stats fetch warning:', e)
+    if (force) {
+      toast.error('Failed to sync live matrix. Reverting to cached data.', {
+        title: 'NETWORK ERROR',
+        tag: 'NET // FAIL',
+      })
+    }
   } finally {
     isMatrixLoading.value = false
   }
@@ -174,10 +196,23 @@ const addCurrentToPlan = () => {
   }
 
   plannerStore.addTarget(newTarget)
+  toast.success(
+    `${currentOperator.value.name} upgrade goals set to E${targetElite.value} Lvl ${targetLevel.value}`,
+    {
+      title: 'TARGET UPDATED',
+      tag: 'PLN // GOAL',
+    }
+  )
 }
 
 const removeTarget = (operatorId: string) => {
+  const target = plannerStore.getTarget(operatorId)
+  const name = target?.operator.name || 'Operator'
   plannerStore.removeTarget(operatorId)
+  toast.info(`${name} removed from promotion plan`, {
+    title: 'TARGET REMOVED',
+    tag: 'PLN // REMOVE',
+  })
 }
 
 // -----------------------------------------------------------------------------
@@ -478,23 +513,29 @@ const adjustInventory = (itemId: string, delta: number) => {
 
           <!-- Operator Thumbnails Grid -->
           <div class="ak-op-selector-grid">
-            <button
-              v-for="op in filteredOperators"
-              :key="op.id"
-              type="button"
-              class="ak-op-card"
-              :class="{
-                'ak-op-card--active': selectedOperatorId === op.id,
-                'ak-op-card--planned': plannedTargets.some((t) => t.operatorId === op.id),
-              }"
-              @click="selectedOperatorId = op.id"
-            >
-              <div class="ak-op-card__avatar">
-                <img :src="op.avatar" :alt="op.name" loading="lazy" />
-                <span class="ak-op-card__stars">{{ '★'.repeat(op.rarity) }}</span>
-              </div>
-              <span class="ak-op-card__name">{{ op.name }}</span>
-            </button>
+            <OperatorCardSkeleton
+              v-if="operatorStore.isLoading && filteredOperators.length === 0"
+              :count="8"
+            />
+            <template v-else>
+              <button
+                v-for="op in filteredOperators"
+                :key="op.id"
+                type="button"
+                class="ak-op-card"
+                :class="{
+                  'ak-op-card--active': selectedOperatorId === op.id,
+                  'ak-op-card--planned': plannedTargets.some((t) => t.operatorId === op.id),
+                }"
+                @click="selectedOperatorId = op.id"
+              >
+                <div class="ak-op-card__avatar">
+                  <img :src="op.avatar" :alt="op.name" loading="lazy" />
+                  <span class="ak-op-card__stars">{{ '★'.repeat(op.rarity) }}</span>
+                </div>
+                <span class="ak-op-card__name">{{ op.name }}</span>
+              </button>
+            </template>
           </div>
         </div>
 
@@ -876,7 +917,8 @@ const adjustInventory = (itemId: string, delta: number) => {
           </div>
 
           <div class="ak-farming-table-wrap">
-            <table class="ak-farming-table">
+            <FarmingTableSkeleton v-if="isMatrixLoading" :rows="4" />
+            <table v-else class="ak-farming-table">
               <thead>
                 <tr>
                   <th class="ak-th-mat">MATERIAL DEFICIT</th>
