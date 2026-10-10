@@ -57,7 +57,12 @@ const tenPermits = ref<number>(userStore.getItemQuantity('ten_permit') || 1)
 
 // Options & Preferences
 const convertOP = ref<boolean>(true) // Whether to count OP as pulls (1 OP = 180 Orundum)
-const hasMonthlyCard = ref<boolean>(true) // Monthly card active (+200 Orundum/day)
+const hasMonthlyCard = computed({
+  get: () => userStore.settings.monthly_card ?? true,
+  set: (val: boolean) => {
+    userStore.updateSettings({ monthly_card: val })
+  },
+})
 const doAnnihilation = ref<boolean>(true) // 1800 Orundum/week
 const buyGreenCertShop = ref<boolean>(true) // 600 Orundum + 4 permits per month
 const targetSpark = ref<number>(300) // 300 for limited, 120 for collab

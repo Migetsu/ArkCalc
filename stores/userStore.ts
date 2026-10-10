@@ -28,6 +28,8 @@ export const useUserStore = defineStore(
       server: 'EN',
       language: 'en',
       show_unreleased: false,
+      monthly_card: true,
+      preferences: {},
     })
 
     // Sync status indicators
@@ -142,9 +144,41 @@ export const useUserStore = defineStore(
       }
     }
 
-    const updateSettings = (newSettings: Partial<UserSettings>) => {
+    const updateSettings = async (newSettings: Partial<UserSettings>) => {
       settings.value = { ...settings.value, ...newSettings }
       isSynced.value = false
+
+      // Apply theme attribute to document html root for instant styling
+      if (typeof document !== 'undefined' && settings.value.theme) {
+        document.documentElement.setAttribute('data-theme', settings.value.theme)
+      }
+
+      // If user is authenticated with Supabase, sync immediately
+      const client = useSupabaseClient<Database>()
+      const user = useSupabaseUser()
+
+      if (user.value) {
+        try {
+          const preferences = {
+            ...(settings.value.preferences || {}),
+            monthly_card: settings.value.monthly_card,
+          }
+
+          const { error: settingsErr } = await client.from('user_settings').upsert({
+            user_id: user.value.id,
+            theme: settings.value.theme,
+            server: settings.value.server,
+            language: settings.value.language,
+            show_unreleased: settings.value.show_unreleased,
+            preferences,
+          })
+          if (!settingsErr) {
+            isSynced.value = true
+          }
+        } catch (err) {
+          console.warn('[userStore] Failed to auto-sync user_settings to Supabase:', err)
+        }
+      }
     }
 
     const clearUserData = () => {
@@ -207,11 +241,17 @@ export const useUserStore = defineStore(
 
         if (settingsErr) throw settingsErr
         if (settingsData) {
+          const prefs = (settingsData.preferences as Record<string, any>) || {}
           settings.value = {
             theme: settingsData.theme || 'dark',
             server: settingsData.server || 'EN',
             language: settingsData.language || 'en',
             show_unreleased: settingsData.show_unreleased ?? false,
+            monthly_card: prefs.monthly_card !== undefined ? Boolean(prefs.monthly_card) : true,
+            preferences: prefs,
+          }
+          if (typeof document !== 'undefined' && settings.value.theme) {
+            document.documentElement.setAttribute('data-theme', settings.value.theme)
           }
         }
 
@@ -292,12 +332,18 @@ export const useUserStore = defineStore(
         if (profileErr) throw profileErr
 
         // 2. Upsert Settings
+        const preferences = {
+          ...(settings.value.preferences || {}),
+          monthly_card: settings.value.monthly_card,
+        }
+
         const { error: settingsErr } = await client.from('user_settings').upsert({
           user_id: userId,
           theme: settings.value.theme,
           server: settings.value.server,
           language: settings.value.language,
           show_unreleased: settings.value.show_unreleased,
+          preferences,
         })
         if (settingsErr) throw settingsErr
 

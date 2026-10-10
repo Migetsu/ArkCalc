@@ -41,6 +41,8 @@ export interface UserSettings {
   server: string
   language: string
   show_unreleased: boolean
+  monthly_card?: boolean
+  preferences?: Record<string, any>
 }
 
 export * from './database.types'

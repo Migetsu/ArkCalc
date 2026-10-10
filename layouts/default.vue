@@ -1,9 +1,19 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import AppNavbar from '~/components/AppNavbar.vue'
+import { useUserStore } from '~/stores/userStore'
+
+const userStore = useUserStore()
+
+onMounted(() => {
+  if (userStore.settings.theme && typeof document !== 'undefined') {
+    document.documentElement.setAttribute('data-theme', userStore.settings.theme)
+  }
+})
 </script>
 
 <template>
-  <div class="ak-layout">
+  <div class="ak-layout" :class="`theme-${userStore.settings.theme || 'dark'}`">
     <!-- Navigation Bar -->
     <AppNavbar />
 
@@ -135,5 +145,39 @@ import AppNavbar from '~/components/AppNavbar.vue'
     letter-spacing: 1px;
     color: $ak-cyan;
   }
+}
+
+// -----------------------------------------------------------------------------
+// Theme Variants
+// -----------------------------------------------------------------------------
+.ak-layout.theme-cyberpunk {
+  --ak-cyan: #ff007f;
+  --ak-cyan-light: #ff66b2;
+  --ak-cyan-dark: #cc0066;
+  --ak-border-active: #ff007f;
+  --ak-border-cyan: rgba(255, 0, 127, 0.4);
+
+  .ak-navbar__title {
+    color: #ff007f;
+  }
+}
+
+.ak-layout.theme-originium {
+  --ak-cyan: #ff9100;
+  --ak-cyan-light: #ffb74d;
+  --ak-cyan-dark: #f57c00;
+  --ak-border-active: #ff9100;
+  --ak-border-cyan: rgba(255, 145, 0, 0.4);
+
+  .ak-navbar__title {
+    color: #ff9100;
+  }
+}
+
+.ak-layout.theme-rhodes-light {
+  --ak-bg-main: #18191d;
+  --ak-bg-secondary: #222329;
+  --ak-text-primary: #ffffff;
+  --ak-cyan: #00e5ff;
 }
 </style>
