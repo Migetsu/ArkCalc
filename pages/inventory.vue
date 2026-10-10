@@ -334,7 +334,7 @@ const reloadFromCloud = async () => {
                 :src="item.icon"
                 :alt="item.name"
                 loading="lazy"
-                @error="($event.target as HTMLElement).style.display = 'none'"
+                @error="($event.target as HTMLImageElement).src = '/images/items/placeholder.png'"
               />
               <span class="ak-item-card__tier-badge">T{{ item.tier }}</span>
             </div>

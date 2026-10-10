@@ -348,27 +348,52 @@ const quickAddSuggested = (op: OperatorData) => {
             <span class="ak-countdown-label">
               {{ upcomingBanner.isActive ? 'TIME REMAINING UNTIL CONCLUSION:' : 'COMMENCING IN:' }}
             </span>
-            <div class="ak-countdown-digits">
-              <div class="ak-digit-cell">
-                <span class="ak-digit-num">{{ String(countdown.days).padStart(2, '0') }}</span>
-                <span class="ak-digit-lbl">DAYS</span>
+            <ClientOnly>
+              <div class="ak-countdown-digits">
+                <div class="ak-digit-cell">
+                  <span class="ak-digit-num">{{ String(countdown.days).padStart(2, '0') }}</span>
+                  <span class="ak-digit-lbl">DAYS</span>
+                </div>
+                <span class="ak-digit-sep">:</span>
+                <div class="ak-digit-cell">
+                  <span class="ak-digit-num">{{ String(countdown.hours).padStart(2, '0') }}</span>
+                  <span class="ak-digit-lbl">HRS</span>
+                </div>
+                <span class="ak-digit-sep">:</span>
+                <div class="ak-digit-cell">
+                  <span class="ak-digit-num">{{ String(countdown.minutes).padStart(2, '0') }}</span>
+                  <span class="ak-digit-lbl">MIN</span>
+                </div>
+                <span class="ak-digit-sep">:</span>
+                <div class="ak-digit-cell">
+                  <span class="ak-digit-num ak-text-cyan">{{ String(countdown.seconds).padStart(2, '0') }}</span>
+                  <span class="ak-digit-lbl">SEC</span>
+                </div>
               </div>
-              <span class="ak-digit-sep">:</span>
-              <div class="ak-digit-cell">
-                <span class="ak-digit-num">{{ String(countdown.hours).padStart(2, '0') }}</span>
-                <span class="ak-digit-lbl">HRS</span>
-              </div>
-              <span class="ak-digit-sep">:</span>
-              <div class="ak-digit-cell">
-                <span class="ak-digit-num">{{ String(countdown.minutes).padStart(2, '0') }}</span>
-                <span class="ak-digit-lbl">MIN</span>
-              </div>
-              <span class="ak-digit-sep">:</span>
-              <div class="ak-digit-cell">
-                <span class="ak-digit-num ak-text-cyan">{{ String(countdown.seconds).padStart(2, '0') }}</span>
-                <span class="ak-digit-lbl">SEC</span>
-              </div>
-            </div>
+              <template #fallback>
+                <div class="ak-countdown-digits">
+                  <div class="ak-digit-cell">
+                    <span class="ak-digit-num">--</span>
+                    <span class="ak-digit-lbl">DAYS</span>
+                  </div>
+                  <span class="ak-digit-sep">:</span>
+                  <div class="ak-digit-cell">
+                    <span class="ak-digit-num">--</span>
+                    <span class="ak-digit-lbl">HRS</span>
+                  </div>
+                  <span class="ak-digit-sep">:</span>
+                  <div class="ak-digit-cell">
+                    <span class="ak-digit-num">--</span>
+                    <span class="ak-digit-lbl">MIN</span>
+                  </div>
+                  <span class="ak-digit-sep">:</span>
+                  <div class="ak-digit-cell">
+                    <span class="ak-digit-num ak-text-cyan">--</span>
+                    <span class="ak-digit-lbl">SEC</span>
+                  </div>
+                </div>
+              </template>
+            </ClientOnly>
           </div>
 
           <!-- Featured Rate-Up Operators -->

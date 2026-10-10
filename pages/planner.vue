@@ -306,7 +306,7 @@ const calculatedDeltas = computed<MaterialDelta[]>(() => {
       name: 'Lungmen Dollars (LMD)',
       tier: 4,
       category: 'currency',
-      icon: matsMap.get('4001')?.icon,
+      icon: matsMap.get('4001')?.icon || '/images/items/4001.png',
       required: aggregatedNeeds.value.lmd,
       owned: ownedLmd,
       delta: Math.max(0, aggregatedNeeds.value.lmd - ownedLmd),
@@ -321,7 +321,7 @@ const calculatedDeltas = computed<MaterialDelta[]>(() => {
       name: 'Tactical Battle Record (EXP)',
       tier: 4,
       category: 'exp',
-      icon: matsMap.get('2004')?.icon,
+      icon: matsMap.get('2004')?.icon || '/images/items/2004.png',
       required: aggregatedNeeds.value.exp,
       owned: ownedExp,
       delta: Math.max(0, aggregatedNeeds.value.exp - ownedExp),
@@ -336,7 +336,7 @@ const calculatedDeltas = computed<MaterialDelta[]>(() => {
       name: penguin.getItemName(itemId) || itemId,
       tier: 3,
       category: 'material',
-      icon: `https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/${itemId}.png`,
+      icon: `/images/items/${itemId}.png`,
     }
 
     const ownedCount = userStore.getItemQuantity(itemId)
@@ -530,7 +530,12 @@ const adjustInventory = (itemId: string, delta: number) => {
                 @click="selectedOperatorId = op.id"
               >
                 <div class="ak-op-card__avatar">
-                  <img :src="op.avatar" :alt="op.name" loading="lazy" />
+                  <img
+                    :src="op.avatar"
+                    :alt="op.name"
+                    loading="lazy"
+                    @error="($event.target as HTMLImageElement).src = '/images/operators/placeholder.png'"
+                  />
                   <span class="ak-op-card__stars">{{ '★'.repeat(op.rarity) }}</span>
                 </div>
                 <span class="ak-op-card__name">{{ op.name }}</span>
@@ -670,7 +675,11 @@ const adjustInventory = (itemId: string, delta: number) => {
               :key="target.operatorId"
               class="ak-target-chip"
             >
-              <img :src="target.operator.avatar" :alt="target.operator.name" />
+              <img
+                :src="target.operator.avatar"
+                :alt="target.operator.name"
+                @error="($event.target as HTMLImageElement).src = '/images/operators/placeholder.png'"
+              />
               <div class="ak-target-chip__meta">
                 <span class="ak-target-chip__name">{{ target.operator.name }}</span>
                 <span class="ak-target-chip__step">
@@ -758,7 +767,7 @@ const adjustInventory = (itemId: string, delta: number) => {
                     :src="mat.icon"
                     :alt="mat.name"
                     loading="lazy"
-                    @error="($event.target as HTMLElement).style.display = 'none'"
+                    @error="($event.target as HTMLImageElement).src = '/images/items/placeholder.png'"
                   />
                   <span class="ak-material-card__tier-star">T{{ mat.tier }}</span>
                 </div>
@@ -945,6 +954,7 @@ const adjustInventory = (itemId: string, delta: number) => {
                         :alt="item.name"
                         class="ak-table-mat__icon"
                         loading="lazy"
+                        @error="($event.target as HTMLImageElement).src = '/images/items/placeholder.png'"
                       />
                       <div class="ak-table-mat__info">
                         <span class="ak-table-mat__name">{{ item.name }}</span>

@@ -1,46 +1,310 @@
 [
-  { "id": "4001", "name": "LMD", "tier": 4, "category": "currency", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/4001.png" },
-  { "id": "orundum", "name": "Orundum", "tier": 4, "category": "currency", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/4003.png" },
-  { "id": "originite_prime", "name": "Originite Prime", "tier": 5, "category": "currency", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/4002.png" },
-  { "id": "single_permit", "name": "Headhunting Permit", "tier": 4, "category": "currency", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/7001.png" },
-  { "id": "ten_permit", "name": "Ten-roll Permit", "tier": 5, "category": "currency", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/7003.png" },
-  { "id": "2004", "name": "Tactical Battle Record", "tier": 4, "category": "exp", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/2004.png" },
-  { "id": "30014", "name": "Orirock Concentration", "tier": 4, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30014.png" },
-  { "id": "30013", "name": "Orirock Cluster", "tier": 3, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30013.png" },
-  { "id": "30012", "name": "Orirock Cube", "tier": 2, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30012.png" },
-  { "id": "30024", "name": "Sugar Lump", "tier": 4, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30024.png" },
-  { "id": "30023", "name": "Sugar Pack", "tier": 3, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30023.png" },
-  { "id": "30034", "name": "Polyester Lump", "tier": 4, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30034.png" },
-  { "id": "30033", "name": "Polyester Pack", "tier": 3, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30033.png" },
-  { "id": "30044", "name": "Oriron Block", "tier": 4, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30044.png" },
-  { "id": "30043", "name": "Oriron Cluster", "tier": 3, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30043.png" },
-  { "id": "30054", "name": "Ketone Colloid", "tier": 4, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30054.png" },
-  { "id": "30053", "name": "Polyketone", "tier": 3, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30053.png" },
-  { "id": "30064", "name": "Device", "tier": 4, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30064.png" },
-  { "id": "30063", "name": "Integrated Device", "tier": 3, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30063.png" },
-  { "id": "30074", "name": "White Horse Kohl", "tier": 4, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30074.png" },
-  { "id": "30073", "name": "Loxic Kohl", "tier": 3, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30073.png" },
-  { "id": "30084", "name": "Manganese Trioxide", "tier": 4, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30084.png" },
-  { "id": "30083", "name": "Manganese Ore", "tier": 3, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30083.png" },
-  { "id": "30094", "name": "Grindstone Pentahydrate", "tier": 4, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30094.png" },
-  { "id": "30093", "name": "Grindstone", "tier": 3, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30093.png" },
-  { "id": "30104", "name": "RMA70-24", "tier": 4, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30104.png" },
-  { "id": "30103", "name": "RMA70-12", "tier": 3, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30103.png" },
-  { "id": "31014", "name": "D32 Steel", "tier": 5, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/31014.png" },
-  { "id": "31024", "name": "Bipolar Nanoflake", "tier": 5, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/31024.png" },
-  { "id": "31034", "name": "Polymerization Preparation", "tier": 5, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/31034.png" },
-  { "id": "31044", "name": "Crystalline Electronic Unit", "tier": 5, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/31044.png" },
-  { "id": "31054", "name": "Nucleic Sintering Catalyst", "tier": 5, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/31054.png" },
-  { "id": "32001", "name": "Guard Dualchip", "tier": 5, "category": "chip", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/32001.png" },
-  { "id": "32002", "name": "Sniper Dualchip", "tier": 5, "category": "chip", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/32002.png" },
-  { "id": "32003", "name": "Defender Dualchip", "tier": 5, "category": "chip", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/32003.png" },
-  { "id": "32004", "name": "Medic Dualchip", "tier": 5, "category": "chip", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/32004.png" },
-  { "id": "32005", "name": "Supporter Dualchip", "tier": 5, "category": "chip", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/32005.png" },
-  { "id": "32006", "name": "Caster Dualchip", "tier": 5, "category": "chip", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/32006.png" },
-  { "id": "32007", "name": "Vanguard Dualchip", "tier": 5, "category": "chip", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/32007.png" },
-  { "id": "32008", "name": "Specialist Dualchip", "tier": 5, "category": "chip", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/32008.png" },
-  { "id": "3301", "name": "Skill Summary - 1", "tier": 1, "category": "skill", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/3301.png" },
-  { "id": "3302", "name": "Skill Summary - 2", "tier": 2, "category": "skill", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/3302.png" },
-  { "id": "3303", "name": "Skill Summary - 3", "tier": 3, "category": "skill", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/3303.png" },
-  { "id": "mod_unlock_token", "name": "Module Data Block", "tier": 5, "category": "module", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/mod_unlock_token.png" }
+  {
+    "id": "4001",
+    "name": "LMD",
+    "tier": 4,
+    "category": "currency",
+    "icon": "/images/items/4001.png"
+  },
+  {
+    "id": "orundum",
+    "name": "Orundum",
+    "tier": 4,
+    "category": "currency",
+    "icon": "/images/items/orundum.png"
+  },
+  {
+    "id": "originite_prime",
+    "name": "Originite Prime",
+    "tier": 5,
+    "category": "currency",
+    "icon": "/images/items/originite_prime.png"
+  },
+  {
+    "id": "single_permit",
+    "name": "Headhunting Permit",
+    "tier": 4,
+    "category": "currency",
+    "icon": "/images/items/single_permit.png"
+  },
+  {
+    "id": "ten_permit",
+    "name": "Ten-roll Permit",
+    "tier": 5,
+    "category": "currency",
+    "icon": "/images/items/ten_permit.png"
+  },
+  {
+    "id": "2004",
+    "name": "Tactical Battle Record",
+    "tier": 4,
+    "category": "exp",
+    "icon": "/images/items/2004.png"
+  },
+  {
+    "id": "30014",
+    "name": "Orirock Concentration",
+    "tier": 4,
+    "category": "material",
+    "icon": "/images/items/30014.png"
+  },
+  {
+    "id": "30013",
+    "name": "Orirock Cluster",
+    "tier": 3,
+    "category": "material",
+    "icon": "/images/items/30013.png"
+  },
+  {
+    "id": "30012",
+    "name": "Orirock Cube",
+    "tier": 2,
+    "category": "material",
+    "icon": "/images/items/30012.png"
+  },
+  {
+    "id": "30024",
+    "name": "Sugar Lump",
+    "tier": 4,
+    "category": "material",
+    "icon": "/images/items/30024.png"
+  },
+  {
+    "id": "30023",
+    "name": "Sugar Pack",
+    "tier": 3,
+    "category": "material",
+    "icon": "/images/items/30023.png"
+  },
+  {
+    "id": "30034",
+    "name": "Polyester Lump",
+    "tier": 4,
+    "category": "material",
+    "icon": "/images/items/30034.png"
+  },
+  {
+    "id": "30033",
+    "name": "Polyester Pack",
+    "tier": 3,
+    "category": "material",
+    "icon": "/images/items/30033.png"
+  },
+  {
+    "id": "30044",
+    "name": "Oriron Block",
+    "tier": 4,
+    "category": "material",
+    "icon": "/images/items/30044.png"
+  },
+  {
+    "id": "30043",
+    "name": "Oriron Cluster",
+    "tier": 3,
+    "category": "material",
+    "icon": "/images/items/30043.png"
+  },
+  {
+    "id": "30054",
+    "name": "Ketone Colloid",
+    "tier": 4,
+    "category": "material",
+    "icon": "/images/items/30054.png"
+  },
+  {
+    "id": "30053",
+    "name": "Polyketone",
+    "tier": 3,
+    "category": "material",
+    "icon": "/images/items/30053.png"
+  },
+  {
+    "id": "30064",
+    "name": "Device",
+    "tier": 4,
+    "category": "material",
+    "icon": "/images/items/30064.png"
+  },
+  {
+    "id": "30063",
+    "name": "Integrated Device",
+    "tier": 3,
+    "category": "material",
+    "icon": "/images/items/30063.png"
+  },
+  {
+    "id": "30074",
+    "name": "White Horse Kohl",
+    "tier": 4,
+    "category": "material",
+    "icon": "/images/items/30074.png"
+  },
+  {
+    "id": "30073",
+    "name": "Loxic Kohl",
+    "tier": 3,
+    "category": "material",
+    "icon": "/images/items/30073.png"
+  },
+  {
+    "id": "30084",
+    "name": "Manganese Trioxide",
+    "tier": 4,
+    "category": "material",
+    "icon": "/images/items/30084.png"
+  },
+  {
+    "id": "30083",
+    "name": "Manganese Ore",
+    "tier": 3,
+    "category": "material",
+    "icon": "/images/items/30083.png"
+  },
+  {
+    "id": "30094",
+    "name": "Grindstone Pentahydrate",
+    "tier": 4,
+    "category": "material",
+    "icon": "/images/items/30094.png"
+  },
+  {
+    "id": "30093",
+    "name": "Grindstone",
+    "tier": 3,
+    "category": "material",
+    "icon": "/images/items/30093.png"
+  },
+  {
+    "id": "30104",
+    "name": "RMA70-24",
+    "tier": 4,
+    "category": "material",
+    "icon": "/images/items/30104.png"
+  },
+  {
+    "id": "30103",
+    "name": "RMA70-12",
+    "tier": 3,
+    "category": "material",
+    "icon": "/images/items/30103.png"
+  },
+  {
+    "id": "31014",
+    "name": "D32 Steel",
+    "tier": 5,
+    "category": "material",
+    "icon": "/images/items/31014.png"
+  },
+  {
+    "id": "31024",
+    "name": "Bipolar Nanoflake",
+    "tier": 5,
+    "category": "material",
+    "icon": "/images/items/31024.png"
+  },
+  {
+    "id": "31034",
+    "name": "Polymerization Preparation",
+    "tier": 5,
+    "category": "material",
+    "icon": "/images/items/31034.png"
+  },
+  {
+    "id": "31044",
+    "name": "Crystalline Electronic Unit",
+    "tier": 5,
+    "category": "material",
+    "icon": "/images/items/31044.png"
+  },
+  {
+    "id": "31054",
+    "name": "Nucleic Sintering Catalyst",
+    "tier": 5,
+    "category": "material",
+    "icon": "/images/items/31054.png"
+  },
+  {
+    "id": "32001",
+    "name": "Guard Dualchip",
+    "tier": 5,
+    "category": "chip",
+    "icon": "/images/items/32001.png"
+  },
+  {
+    "id": "32002",
+    "name": "Sniper Dualchip",
+    "tier": 5,
+    "category": "chip",
+    "icon": "/images/items/32002.png"
+  },
+  {
+    "id": "32003",
+    "name": "Defender Dualchip",
+    "tier": 5,
+    "category": "chip",
+    "icon": "/images/items/32003.png"
+  },
+  {
+    "id": "32004",
+    "name": "Medic Dualchip",
+    "tier": 5,
+    "category": "chip",
+    "icon": "/images/items/32004.png"
+  },
+  {
+    "id": "32005",
+    "name": "Supporter Dualchip",
+    "tier": 5,
+    "category": "chip",
+    "icon": "/images/items/32005.png"
+  },
+  {
+    "id": "32006",
+    "name": "Caster Dualchip",
+    "tier": 5,
+    "category": "chip",
+    "icon": "/images/items/32006.png"
+  },
+  {
+    "id": "32007",
+    "name": "Vanguard Dualchip",
+    "tier": 5,
+    "category": "chip",
+    "icon": "/images/items/32007.png"
+  },
+  {
+    "id": "32008",
+    "name": "Specialist Dualchip",
+    "tier": 5,
+    "category": "chip",
+    "icon": "/images/items/32008.png"
+  },
+  {
+    "id": "3301",
+    "name": "Skill Summary - 1",
+    "tier": 1,
+    "category": "skill",
+    "icon": "/images/items/3301.png"
+  },
+  {
+    "id": "3302",
+    "name": "Skill Summary - 2",
+    "tier": 2,
+    "category": "skill",
+    "icon": "/images/items/3302.png"
+  },
+  {
+    "id": "3303",
+    "name": "Skill Summary - 3",
+    "tier": 3,
+    "category": "skill",
+    "icon": "/images/items/3303.png"
+  },
+  {
+    "id": "mod_unlock_token",
+    "name": "Module Data Block",
+    "tier": 5,
+    "category": "module",
+    "icon": "/images/items/mod_unlock_token.png"
+  }
 ]

@@ -272,7 +272,7 @@ const stats = computed(() => {
 const handleImgError = (event: Event) => {
   const img = event.target as HTMLImageElement
   if (img) {
-    img.src = 'https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_002_prep.png'
+    img.src = '/images/operators/placeholder.png'
   }
 }
 </script>

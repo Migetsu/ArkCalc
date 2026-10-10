@@ -161,7 +161,7 @@ const filteredBanners = computed(() => {
 const onImageError = (e: Event) => {
   const target = e.target as HTMLImageElement
   if (target) {
-    target.src = 'https://raw.githubusercontent.com/Aceship/Arknight-Images/master/ui/banner/banner_placeholder.png'
+    target.src = '/images/banner_placeholder.png'
   }
 }
 </script>
