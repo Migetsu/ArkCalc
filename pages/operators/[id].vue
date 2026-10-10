@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useOperatorDetails } from '~/composables/useOperatorDetails'
 import type { OperatorSkillDetailed, OperatorSkillLevel } from '~/types'
 import RangeViewer from '~/components/wiki/RangeViewer.vue'
+import SkinGallery from '~/components/wiki/SkinGallery.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -676,6 +677,15 @@ useSeoMeta({
                   </div>
                 </div>
               </div>
+            </div>
+
+            <!-- 4. Operator Artwork & Skins Wardrobe Gallery -->
+            <div class="ak-panel-card ak-panel-card--skins-gallery">
+              <SkinGallery
+                :operator-id="operator.id"
+                :operator-name="operator.name"
+                :rarity="operator.rarity"
+              />
             </div>
           </section>
         </div>

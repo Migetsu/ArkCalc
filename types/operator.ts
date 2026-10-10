@@ -94,3 +94,18 @@ export interface RangeData {
   direction: number
   grids: RangeGrid[]
 }
+
+export interface OperatorSkinItem {
+  skinId: string
+  charId: string
+  portraitId: string
+  name: string
+  skinGroupName?: string
+  type: 'elite0' | 'elite2' | 'alternative'
+  illustrator?: string
+  description?: string
+  dialog?: string
+  avatarUrl?: string
+  aceshipUrl: string
+  cdnUrl: string
+}
