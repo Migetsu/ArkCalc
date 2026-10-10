@@ -1,5 +1,9 @@
 [
   { "id": "4001", "name": "LMD", "tier": 4, "category": "currency", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/4001.png" },
+  { "id": "orundum", "name": "Orundum", "tier": 4, "category": "currency", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/4003.png" },
+  { "id": "originite_prime", "name": "Originite Prime", "tier": 5, "category": "currency", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/4002.png" },
+  { "id": "single_permit", "name": "Headhunting Permit", "tier": 4, "category": "currency", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/7001.png" },
+  { "id": "ten_permit", "name": "Ten-roll Permit", "tier": 5, "category": "currency", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/7003.png" },
   { "id": "2004", "name": "Tactical Battle Record", "tier": 4, "category": "exp", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/2004.png" },
   { "id": "30014", "name": "Orirock Concentration", "tier": 4, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30014.png" },
   { "id": "30013", "name": "Orirock Cluster", "tier": 3, "category": "material", "icon": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/items/30013.png" },
