@@ -8,9 +8,11 @@ import { useToast } from '~/composables/useToast'
 import OperatorCardSkeleton from '~/components/ui/OperatorCardSkeleton.vue'
 import FarmingTableSkeleton from '~/components/ui/FarmingTableSkeleton.vue'
 import AccountSyncModal from '~/components/AccountSyncModal.vue'
+import PlanShareModal from '~/components/PlanShareModal.vue'
 import operatorsData from '~/assets/data/operators.json'
 import materialsData from '~/assets/data/materials.json'
 import { aggregateMaterialRequirements, calculateMaterialDeltas } from '~/utils/materialCalculator'
+import { decodePlanFromQueryString } from '~/utils/planShare'
 import type {
   OperatorData,
   TargetPlanItem,
@@ -44,8 +46,10 @@ const operatorStore = useOperatorStore()
 const plannerStore = usePlannerStore()
 const toast = useToast()
 const route = useRoute()
+const router = useRouter()
 
 const isSyncModalOpen = ref(false)
+const isShareModalOpen = ref(false)
 const isLoadingDemo = ref(false)
 
 const loadDemoData = async () => {
@@ -117,6 +121,27 @@ onMounted(async () => {
     operatorStore.loadOperators(),
     refreshPenguinStats(false),
   ])
+
+  // Support deep-linking from shared plan link: /planner?plan=...
+  if (route.query.plan && typeof route.query.plan === 'string') {
+    try {
+      const imported = decodePlanFromQueryString(route.query.plan, allOperators.value)
+      if (imported.length > 0) {
+        plannerStore.setPlannedTargets(imported)
+        toast.success(`План прокачки успешно импортирован (${imported.length} целей)!`, {
+          title: 'SHARED PLAN LOADED',
+          tag: 'PRTS // SHARED',
+        })
+        // Clear route query without reloading page
+        router.replace({ path: route.path, query: { ...route.query, plan: undefined } })
+      }
+    } catch (err) {
+      console.warn('[Planner] Failed to decode shared plan query:', err)
+      toast.error('Ссылка содержит некорректный или повреждённый план прокачки.', {
+        title: 'IMPORT ERROR',
+      })
+    }
+  }
 
   // Support deep-linking from dashboard: /planner?op=char_xxx
   if (route.query.op) {
@@ -324,6 +349,42 @@ const getTargetSummary = (target: TargetPlanItem): string => {
     res += ` | ${type} Lv${target.targetModule}`
   }
   return res
+}
+
+const openShareModal = () => {
+  isShareModalOpen.value = true
+}
+
+const handleImportPlan = (targets: TargetPlanItem[], mode: 'replace' | 'merge') => {
+  if (!targets || targets.length === 0) return
+
+  if (mode === 'replace') {
+    plannerStore.setPlannedTargets(targets)
+  } else {
+    for (const t of targets) {
+      plannerStore.addTarget(t)
+    }
+  }
+
+  isShareModalOpen.value = false
+
+  toast.success(
+    `${mode === 'replace' ? 'Заменено' : 'Объединено'} ${targets.length} целей прокачки!`,
+    {
+      title: 'ПЛАН ИМПОРТИРОВАН',
+      tag: 'PRTS // IMPORT',
+    }
+  )
+}
+
+const clearAllTargets = () => {
+  if (typeof window !== 'undefined' && window.confirm('Очистить все активные цели прокачки?')) {
+    plannerStore.clearTargets()
+    toast.info('Все цели удалены из текущего плана', {
+      title: 'ПЛАН СБРОШЕН',
+      tag: 'PLN // RESET',
+    })
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -584,6 +645,19 @@ const adjustInventory = (itemId: string, delta: number) => {
           </span>
         </div>
       </div>
+
+      <div class="ak-planner__header-actions">
+        <button
+          type="button"
+          class="ak-btn-header-share"
+          title="Поделиться планом или импортировать цели прокачки без регистрации"
+          @click="openShareModal"
+        >
+          <span class="ak-btn-header-share__icon">🔗</span>
+          <span>SHARE / IMPORT PLAN</span>
+          <span v-if="plannedTargets.length > 0" class="ak-btn-header-share__count">({{ plannedTargets.length }})</span>
+        </button>
+      </div>
     </header>
 
     <div class="ak-planner__layout">
@@ -808,9 +882,29 @@ const adjustInventory = (itemId: string, delta: number) => {
 
         <!-- Panel 3: Active Planned Targets -->
         <div v-if="plannedTargets.length > 0" class="ak-panel">
-          <div class="ak-panel__head">
-            <span class="ak-panel__badge">03</span>
-            <h3>ACTIVE PLAN TARGETS ({{ plannedTargets.length }})</h3>
+          <div class="ak-panel__head ak-panel__head--flex">
+            <div>
+              <span class="ak-panel__badge">03</span>
+              <h3>ACTIVE PLAN TARGETS ({{ plannedTargets.length }})</h3>
+            </div>
+            <div class="ak-panel-head-actions">
+              <button
+                type="button"
+                class="ak-btn-plan-head"
+                title="Поделиться ссылкой или скопировать JSON плана"
+                @click="openShareModal"
+              >
+                🔗 SHARE
+              </button>
+              <button
+                type="button"
+                class="ak-btn-plan-head ak-btn-plan-head--danger"
+                title="Очистить все цели"
+                @click="clearAllTargets"
+              >
+                CLEAR
+              </button>
+            </div>
           </div>
 
           <div class="ak-target-chips">
@@ -841,6 +935,29 @@ const adjustInventory = (itemId: string, delta: number) => {
                 ✕
               </button>
             </div>
+          </div>
+        </div>
+
+        <!-- Panel 3 (Empty State): Active Planned Targets -->
+        <div v-else class="ak-panel ak-panel--empty-plan">
+          <div class="ak-panel__head ak-panel__head--flex">
+            <div>
+              <span class="ak-panel__badge">03</span>
+              <h3>ACTIVE PLAN TARGETS (0)</h3>
+            </div>
+          </div>
+
+          <div class="ak-empty-plan-box">
+            <p class="ak-empty-plan-box__text">
+              В плане пока нет выбранных целей. Добавьте оперативника выше или импортируйте сохранённый план:
+            </p>
+            <button
+              type="button"
+              class="ak-btn-import-prompt"
+              @click="openShareModal"
+            >
+              📥 ИМПОРТИРОВАТЬ ПЛАН (JSON / URL)
+            </button>
           </div>
         </div>
       </aside>
@@ -1281,6 +1398,15 @@ const adjustInventory = (itemId: string, delta: number) => {
       :is-open="isSyncModalOpen"
       @close="isSyncModalOpen = false"
       @synced="isSyncModalOpen = false"
+    />
+
+    <!-- Plan Share & Import Modal -->
+    <PlanShareModal
+      :is-open="isShareModalOpen"
+      :planned-targets="plannedTargets"
+      :operators-catalog="allOperators"
+      @close="isShareModalOpen = false"
+      @import="handleImportPlan"
     />
   </div>
 </template>
@@ -1866,6 +1992,122 @@ const adjustInventory = (itemId: string, delta: number) => {
     &:hover {
       color: $ak-red;
     }
+  }
+}
+
+// Plan Header Actions & Share CTA
+.ak-planner__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ak-btn-header-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  background: rgba($ak-cyan, 0.12);
+  border: 1px solid $ak-cyan;
+  color: $ak-cyan;
+  font-family: monospace;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 2px;
+
+  &:hover {
+    background: $ak-cyan;
+    color: #000;
+    box-shadow: 0 0 12px rgba($ak-cyan, 0.4);
+  }
+
+  &__icon {
+    font-size: 0.9rem;
+  }
+
+  &__count {
+    color: #000;
+    background: $ak-cyan;
+    padding: 0.05rem 0.35rem;
+    border-radius: 2px;
+    font-size: 0.7rem;
+    font-weight: 800;
+  }
+
+  &:hover &__count {
+    background: #000;
+    color: $ak-cyan;
+  }
+}
+
+.ak-panel-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ak-btn-plan-head {
+  padding: 0.2rem 0.55rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: $ak-cyan;
+  font-family: monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba($ak-cyan, 0.15);
+    border-color: $ak-cyan;
+  }
+
+  &--danger {
+    color: $ak-red;
+    &:hover {
+      background: rgba($ak-red, 0.15);
+      border-color: $ak-red;
+    }
+  }
+}
+
+.ak-empty-plan-box {
+  padding: 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  text-align: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+
+  &__text {
+    font-size: 0.78rem;
+    color: $ak-text-secondary;
+    line-height: 1.4;
+    margin: 0;
+  }
+}
+
+.ak-btn-import-prompt {
+  padding: 0.45rem 0.95rem;
+  background: rgba($ak-cyan, 0.1);
+  border: 1px solid rgba($ak-cyan, 0.4);
+  color: $ak-cyan;
+  font-family: monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: $ak-cyan;
+    color: #000;
+    box-shadow: 0 0 10px rgba($ak-cyan, 0.3);
   }
 }
 

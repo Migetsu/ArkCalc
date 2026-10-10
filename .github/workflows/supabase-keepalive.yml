@@ -1,0 +1,49 @@
+name: Supabase Database Keepalive
+
+on:
+  schedule:
+    # Run every 3 days at 04:00 UTC (prevents Supabase free-tier 7-day inactivity pause)
+    - cron: '0 4 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    name: Ping Supabase Database & Auth API
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping Supabase REST API & Health Check
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://bihelrjtkeaytsrxuppl.supabase.co' }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpaGVscmp0a2VheXRzcnh1cHBsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2ODU4NTQsImV4cCI6MjEwNjI2MTg1NH0.ra2cpUd7h6ngiBeGnrLvmpOhFgIJEQsXNMxhDQgiIiQ' }}
+        run: |
+          echo "============================================="
+          echo "PRTS KEEPALIVE // SUPABASE ACTIVITY PULSE"
+          echo "Timestamp: $(date -u)"
+          echo "Target: $SUPABASE_URL"
+          echo "============================================="
+
+          # 1. Ping Auth Health
+          echo "--> [1/2] Pinging Supabase Auth Health..."
+          AUTH_HTTP_CODE=$(curl -s -o /tmp/auth_res.json -w "%{http_code}" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/auth/v1/health")
+          echo "Auth HTTP Status: $AUTH_HTTP_CODE"
+          cat /tmp/auth_res.json || true
+          echo ""
+
+          # 2. Ping PostgREST Schema
+          echo "--> [2/2] Pinging Supabase PostgREST Root..."
+          REST_HTTP_CODE=$(curl -s -o /tmp/rest_res.json -w "%{http_code}" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/")
+          echo "REST HTTP Status: $REST_HTTP_CODE"
+          echo ""
+
+          if [ "$AUTH_HTTP_CODE" -eq 200 ] || [ "$REST_HTTP_CODE" -eq 200 ]; then
+            echo "✅ Supabase project successfully pinged! Database inactivity counter reset."
+          else
+            echo "⚠️ Warning: Non-200 status received (Auth: $AUTH_HTTP_CODE, REST: $REST_HTTP_CODE)"
+            exit 1
+          fi
