@@ -132,17 +132,17 @@ onUnmounted(() => {
         <button
           type="button"
           class="ak-status-card"
-          title="Click to synchronize Arknights account"
+          :title="userStore.hasSavedSession ? `PRTS Session active: ${userStore.savedSessionEmail || userStore.profile.username} (Click to Sync Again)` : 'Click to synchronize Arknights account'"
           @click="openSyncModal"
         >
           <div
             class="ak-status-card__indicator"
-            :class="{ 'ak-status-card__indicator--synced': userStore.isSynced }"
+            :class="{ 'ak-status-card__indicator--synced': userStore.isSynced || userStore.hasSavedSession }"
           />
           <div class="ak-status-card__meta">
             <span class="ak-status-card__name">{{ userStore.profile.username || 'Doctor' }}</span>
             <span class="ak-status-card__sub">
-              LV.{{ userStore.profile.level || 1 }} [{{ userStore.profile.server || 'EN' }}]
+              LV.{{ userStore.profile.level || 1 }} [{{ (userStore.savedSessionServer || userStore.profile.server || 'EN').toUpperCase() }}]
             </span>
           </div>
         </button>
@@ -151,13 +151,14 @@ onUnmounted(() => {
         <button
           type="button"
           class="ak-btn-sync"
-          title="PRTS Account Synchronization"
+          :class="{ 'ak-btn-sync--has-session': userStore.hasSavedSession }"
+          :title="userStore.hasSavedSession ? '1-Click Sync Again with stored session' : 'PRTS Account Synchronization'"
           @click="openSyncModal"
         >
           <svg class="ak-btn-sync__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          <span class="ak-btn-sync__label">SYNC</span>
+          <span class="ak-btn-sync__label">{{ userStore.hasSavedSession ? 'SYNC ⟳' : 'SYNC' }}</span>
         </button>
 
         <!-- PRTS Tactical Burger / Off-canvas Menu Button -->

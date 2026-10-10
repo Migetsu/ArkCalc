@@ -42,6 +42,7 @@ const isSubmitting = ref(false)
 const errorMessage = ref<string | null>(null)
 const successData = ref<any | null>(null)
 const syncStage = ref<string>('')
+const forceNewLogin = ref(false)
 
 // Close Modal
 const closeModal = () => {
@@ -50,6 +51,7 @@ const closeModal = () => {
   emit('close')
   errorMessage.value = null
   successData.value = null
+  forceNewLogin.value = false
 }
 
 // Request verification code from Yostar
@@ -286,6 +288,64 @@ const handleSync = async () => {
     }
   }
 }
+
+const formatSyncDate = (isoStr?: string | null) => {
+  if (!isoStr) return 'Никогда'
+  try {
+    const d = new Date(isoStr)
+    return d.toLocaleString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return isoStr
+  }
+}
+
+// 1-Click Sync Again with stored token
+const handleSyncAgain = async () => {
+  if (!userStore.hasSavedSession) return
+  isSubmitting.value = true
+  errorMessage.value = null
+  syncStage.value = 'ПОДКЛЮЧЕНИЕ К PRTS С ИСПОЛЬЗОВАНИЕМ СОХРАНЁННОГО ТОКЕНА...'
+
+  try {
+    const data = await userStore.syncWithSavedSession()
+    successData.value = data
+    emit('synced', data)
+    toast.success('Аккаунт успешно повторно синхронизирован!', {
+      title: 'СИНХРОНИЗАЦИЯ PRTS',
+      tag: 'AUTH // OK',
+    })
+  } catch (err: any) {
+    const msg = err?.data?.statusMessage || err?.message || 'Не удалось повторно синхронизировать аккаунт.'
+    errorMessage.value = msg
+    toast.error(msg, {
+      title: 'ОШИБКА СЕССИИ',
+      tag: 'AUTH // FAIL',
+    })
+    // If token expired on game server, switch to new code form
+    if (err?.statusCode === 400 || msg.toLowerCase().includes('token') || msg.toLowerCase().includes('expired')) {
+      forceNewLogin.value = true
+    }
+  } finally {
+    isSubmitting.value = false
+    syncStage.value = ''
+  }
+}
+
+// Forget saved session
+const handleForgetSession = () => {
+  userStore.clearAuthSession()
+  forceNewLogin.value = true
+  toast.info('Сохранённая сессия удалена из браузера.', {
+    title: 'СЕССИЯ СБРОШЕНА',
+    tag: 'AUTH // RESET',
+  })
+}
 </script>
 
 <template>
@@ -401,7 +461,7 @@ const handleSync = async () => {
           </div>
 
           <!-- Server Selector (For Email & General) -->
-          <div v-if="activeTab !== 'demo'" class="ak-form-group">
+          <div v-if="activeTab !== 'demo' && (!userStore.hasSavedSession || forceNewLogin || activeTab === 'json')" class="ak-form-group">
             <label class="ak-label">SERVER REGION</label>
             <div class="ak-server-grid">
               <button
@@ -419,40 +479,121 @@ const handleSync = async () => {
 
           <!-- TAB 1: Yostar Email Verification Code -->
           <template v-if="activeTab === 'email'">
-            <div class="ak-form-group">
-              <label class="ak-label">YOSTAR ACCOUNT EMAIL</label>
-              <div class="ak-input-with-action">
-                <input
-                  v-model="form.email"
-                  type="email"
-                  class="ak-input"
-                  placeholder="doctor@example.com"
-                  :disabled="isSubmitting"
-                />
+            <!-- Case A: Active saved session in LocalStorage -->
+            <div v-if="userStore.hasSavedSession && !forceNewLogin" class="ak-saved-session-card">
+              <div class="ak-saved-session-header">
+                <div class="ak-saved-session-badge">
+                  <span class="ak-pulse-dot" />
+                  <span>СОХРАНЁННАЯ СЕССИЯ АКТИВНА</span>
+                </div>
+                <span class="ak-server-pill">{{ (userStore.savedSessionServer || form.server).toUpperCase() }}</span>
+              </div>
+
+              <div class="ak-saved-session-details">
+                <div class="ak-session-detail-row">
+                  <span class="ak-session-label">ДОКТОР:</span>
+                  <span class="ak-session-val">
+                    <strong>{{ userStore.profile.username || 'Doctor' }}</strong> (LV.{{ userStore.profile.level || 1 }})
+                  </span>
+                </div>
+                <div v-if="userStore.savedSessionEmail" class="ak-session-detail-row">
+                  <span class="ak-session-label">АККАУНТ:</span>
+                  <span class="ak-session-val">{{ userStore.savedSessionEmail }}</span>
+                </div>
+                <div class="ak-session-detail-row">
+                  <span class="ak-session-label">ТОКЕН СЕССИИ:</span>
+                  <span class="ak-session-val ak-mono-val">
+                    UID {{ userStore.authSession?.uid }} • ••••••••{{ userStore.authSession?.token ? userStore.authSession.token.slice(-4) : '••••' }}
+                  </span>
+                </div>
+                <div class="ak-session-detail-row">
+                  <span class="ak-session-label">ПОСЛЕДНИЙ СИНК:</span>
+                  <span class="ak-session-val">
+                    {{ formatSyncDate(userStore.lastSyncedAt || userStore.authSession?.savedAt) }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="ak-saved-session-cta">
                 <button
                   type="button"
-                  class="ak-btn-send-code"
-                  :disabled="isSendingCode || sendCodeCooldown > 0 || isSubmitting"
-                  @click="handleSendCode"
+                  class="ak-btn-sync-again"
+                  :disabled="isSubmitting"
+                  @click="handleSyncAgain"
                 >
-                  <span v-if="isSendingCode" class="ak-mini-spinner" />
-                  <span v-else-if="sendCodeCooldown > 0">{{ sendCodeCooldown }}s</span>
-                  <span v-else>SEND CODE</span>
+                  <span class="ak-btn-icon" :class="{ 'ak-spin': isSubmitting }">⟳</span>
+                  <span>{{ isSubmitting ? (syncStage || 'СИНХРОНИЗАЦИЯ...') : 'СИНХРОНИЗИРОВАТЬ СНОВА (SYNC AGAIN)' }}</span>
                 </button>
+
+                <div class="ak-saved-session-subactions">
+                  <button
+                    type="button"
+                    class="ak-link-subaction"
+                    :disabled="isSubmitting"
+                    @click="forceNewLogin = true"
+                  >
+                    Войти с другим кодом
+                  </button>
+                  <span class="ak-subaction-sep">•</span>
+                  <button
+                    type="button"
+                    class="ak-link-subaction ak-link-subaction--danger"
+                    :disabled="isSubmitting"
+                    @click="handleForgetSession"
+                  >
+                    Забыть сессию
+                  </button>
+                </div>
               </div>
-              <span class="ak-input-hint">Click "SEND CODE" to receive a 6-digit confirmation code on your email.</span>
             </div>
 
-            <div class="ak-form-group">
-              <label class="ak-label">6-DIGIT VERIFICATION CODE</label>
-              <input
-                v-model="form.code"
-                type="text"
-                class="ak-input ak-input--code"
-                placeholder="123456"
-                maxlength="6"
-                :disabled="isSubmitting"
-              />
+            <!-- Case B: Standard Email + Verification Code Login -->
+            <div v-else class="ak-email-login-box">
+              <div v-if="userStore.hasSavedSession && forceNewLogin" class="ak-back-to-session">
+                <button
+                  type="button"
+                  class="ak-btn-back-link"
+                  @click="forceNewLogin = false"
+                >
+                  ← Вернуться к сохранённой сессии ({{ userStore.savedSessionEmail || userStore.profile.username }})
+                </button>
+              </div>
+
+              <div class="ak-form-group">
+                <label class="ak-label">YOSTAR ACCOUNT EMAIL</label>
+                <div class="ak-input-with-action">
+                  <input
+                    v-model="form.email"
+                    type="email"
+                    class="ak-input"
+                    placeholder="doctor@example.com"
+                    :disabled="isSubmitting"
+                  />
+                  <button
+                    type="button"
+                    class="ak-btn-send-code"
+                    :disabled="isSendingCode || sendCodeCooldown > 0 || isSubmitting"
+                    @click="handleSendCode"
+                  >
+                    <span v-if="isSendingCode" class="ak-mini-spinner" />
+                    <span v-else-if="sendCodeCooldown > 0">{{ sendCodeCooldown }}s</span>
+                    <span v-else>SEND CODE</span>
+                  </button>
+                </div>
+                <span class="ak-input-hint">Нажмите "SEND CODE", чтобы получить 6-значный код верификации на почту.</span>
+              </div>
+
+              <div class="ak-form-group">
+                <label class="ak-label">6-DIGIT VERIFICATION CODE</label>
+                <input
+                  v-model="form.code"
+                  type="text"
+                  class="ak-input ak-input--code"
+                  placeholder="123456"
+                  maxlength="6"
+                  :disabled="isSubmitting"
+                />
+              </div>
             </div>
           </template>
 
@@ -552,6 +693,7 @@ const handleSync = async () => {
               CANCEL
             </button>
             <button
+              v-if="!(activeTab === 'email' && userStore.hasSavedSession && !forceNewLogin)"
               type="button"
               class="ak-btn ak-btn--primary"
               :disabled="isSubmitting || (activeTab === 'json' && !jsonInput.trim())"
@@ -1147,6 +1289,208 @@ const handleSync = async () => {
       color: $ak-cyan;
     }
   }
+}
+
+// Saved Session Card
+.ak-saved-session-card {
+  padding: 1.1rem;
+  background: linear-gradient(135deg, rgba($ak-green, 0.08) 0%, rgba(0, 0, 0, 0.45) 100%);
+  border: 1px solid rgba($ak-green, 0.35);
+  border-left: 3px solid $ak-green;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ak-saved-session-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 0.65rem;
+}
+
+.ak-saved-session-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: $ak-green;
+  letter-spacing: 0.5px;
+}
+
+.ak-pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: $ak-green;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 8px $ak-green;
+  animation: pulse-dot 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.5;
+  }
+}
+
+.ak-server-pill {
+  font-family: monospace;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.15rem 0.45rem;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-radius: 2px;
+}
+
+.ak-saved-session-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.ak-session-detail-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.75rem;
+  font-family: monospace;
+}
+
+.ak-session-label {
+  color: $ak-text-muted;
+  font-size: 0.68rem;
+}
+
+.ak-session-val {
+  color: $ak-text-primary;
+  text-align: right;
+
+  strong {
+    color: #fff;
+  }
+}
+
+.ak-mono-val {
+  color: $ak-cyan;
+  font-size: 0.7rem;
+}
+
+.ak-saved-session-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+}
+
+.ak-btn-sync-again {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.25rem;
+  background: $ak-green;
+  border: none;
+  color: #000;
+  font-family: monospace;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 16px rgba($ak-green, 0.25);
+
+  &:hover:not(:disabled) {
+    background: lighten($ak-green, 10%);
+    box-shadow: 0 0 20px rgba($ak-green, 0.45);
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.ak-btn-icon {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.ak-saved-session-subactions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-family: monospace;
+  font-size: 0.7rem;
+}
+
+.ak-link-subaction {
+  background: transparent;
+  border: none;
+  color: $ak-text-muted;
+  cursor: pointer;
+  padding: 0.2rem 0.35rem;
+  transition: color 0.2s;
+
+  &:hover:not(:disabled) {
+    color: $ak-text-primary;
+    text-decoration: underline;
+  }
+
+  &--danger {
+    color: rgba($ak-red, 0.8);
+    &:hover:not(:disabled) {
+      color: $ak-red;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.ak-subaction-sep {
+  color: rgba(255, 255, 255, 0.15);
+}
+
+.ak-back-to-session {
+  margin-bottom: 0.85rem;
+}
+
+.ak-btn-back-link {
+  background: rgba($ak-green, 0.1);
+  border: 1px solid rgba($ak-green, 0.3);
+  color: $ak-green;
+  font-family: monospace;
+  font-size: 0.72rem;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba($ak-green, 0.2);
+    border-color: $ak-green;
+  }
+}
+
+.ak-spin {
+  animation: spin 0.8s infinite linear;
+  display: inline-block;
 }
 
 @keyframes spin {

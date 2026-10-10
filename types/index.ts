@@ -45,6 +45,14 @@ export interface UserSettings {
   preferences?: Record<string, any>
 }
 
+export interface UserAuthSession {
+  uid: string
+  token: string
+  email: string
+  server: string
+  savedAt: string
+}
+
 export * from './database.types'
 export * from './penguin'
 export * from './banner'

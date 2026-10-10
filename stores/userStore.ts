@@ -1,6 +1,7 @@
+import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { Database } from '~/types/database.types'
-import type { UserProfile, UserOperator, UserInventory, UserSettings } from '~/types'
+import type { UserProfile, UserOperator, UserInventory, UserSettings, UserAuthSession } from '~/types'
 
 export const useUserStore = defineStore(
   'user',
@@ -32,6 +33,21 @@ export const useUserStore = defineStore(
       preferences: {},
     })
 
+    // Yostar Auth Session: persistent long-term token & UID for 1-click sync
+    const authSession = ref<UserAuthSession | null>(null)
+
+    // Restore saved auth session from localStorage on client load
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('arkcalc_yostar_session')
+        if (cached && !authSession.value) {
+          authSession.value = JSON.parse(cached)
+        }
+      } catch (e) {
+        console.warn('[userStore] Failed to restore arkcalc_yostar_session:', e)
+      }
+    }
+
     // Sync status indicators
     const isLoading = ref(false)
     const isSynced = ref(false)
@@ -61,6 +77,13 @@ export const useUserStore = defineStore(
     const hasSyncedAccount = computed(() => {
       return Boolean(isSynced.value || lastSyncedAt.value !== null || Object.keys(roster.value).length > 0)
     })
+
+    const hasSavedSession = computed(() => {
+      return Boolean(authSession.value?.uid && authSession.value?.token)
+    })
+
+    const savedSessionEmail = computed(() => authSession.value?.email || '')
+    const savedSessionServer = computed(() => authSession.value?.server || 'en')
 
     // -------------------------------------------------------------------------
     // Actions (Mutations)
@@ -399,6 +422,56 @@ export const useUserStore = defineStore(
       }
     }
 
+    const setAuthSession = (session: UserAuthSession | null) => {
+      authSession.value = session
+      if (typeof window !== 'undefined') {
+        if (session) {
+          localStorage.setItem('arkcalc_yostar_session', JSON.stringify(session))
+        } else {
+          localStorage.removeItem('arkcalc_yostar_session')
+        }
+      }
+    }
+
+    const clearAuthSession = () => {
+      setAuthSession(null)
+    }
+
+    const syncWithSavedSession = async () => {
+      if (!authSession.value?.uid || !authSession.value?.token) {
+        throw new Error('No active saved session found in PRTS terminal storage.')
+      }
+
+      isLoading.value = true
+      syncError.value = null
+
+      try {
+        const res = await $fetch<any>('/api/sync_arkprts', {
+          method: 'POST',
+          body: {
+            server: authSession.value.server || 'en',
+            auth_type: 'token',
+            uid: authSession.value.uid,
+            token: authSession.value.token,
+            email: authSession.value.email,
+          },
+        })
+
+        if (!res || !res.success) {
+          throw new Error(res?.error || 'Failed to authenticate with saved session token.')
+        }
+
+        await syncFromArkprtsData(res)
+        return res
+      } catch (err: any) {
+        const msg = err?.data?.statusMessage || err?.message || 'Session synchronization failed'
+        syncError.value = msg
+        throw err
+      } finally {
+        isLoading.value = false
+      }
+    }
+
     const syncFromArkprtsData = async (data: {
       profile?: { uid?: string; nickname?: string; level?: number; server?: string }
       inventory?: Record<string, number>
@@ -417,6 +490,7 @@ export const useUserStore = defineStore(
         single_permits?: number
         ten_permits?: number
       }
+      session?: UserAuthSession
     }) => {
       if (data.profile) {
         if (data.profile.nickname) profile.value.username = data.profile.nickname
@@ -445,6 +519,16 @@ export const useUserStore = defineStore(
             is_favorite: roster.value[op.operator_id]?.is_favorite || false,
           }
         }
+      }
+
+      if (data.session && data.session.uid && data.session.token) {
+        setAuthSession({
+          uid: String(data.session.uid),
+          token: String(data.session.token),
+          email: data.session.email || authSession.value?.email || '',
+          server: (data.session.server || profile.value.server || 'en').toLowerCase(),
+          savedAt: data.session.savedAt || new Date().toISOString(),
+        })
       }
 
       lastSyncedAt.value = new Date().toISOString()
@@ -592,6 +676,7 @@ export const useUserStore = defineStore(
       inventory,
       roster,
       settings,
+      authSession,
       isLoading,
       isSynced,
       lastSyncedAt,
@@ -605,6 +690,9 @@ export const useUserStore = defineStore(
       getOperator,
       isOperatorOwned,
       hasSyncedAccount,
+      hasSavedSession,
+      savedSessionEmail,
+      savedSessionServer,
 
       // Actions
       setProfile,
@@ -619,6 +707,9 @@ export const useUserStore = defineStore(
       updateOperatorModule,
       updateSettings,
       clearUserData,
+      setAuthSession,
+      clearAuthSession,
+      syncWithSavedSession,
       fetchFromSupabase,
       syncToSupabase,
       syncFromArkprtsData,
@@ -628,7 +719,7 @@ export const useUserStore = defineStore(
   {
     persist: {
       key: 'arkcalc_user_store',
-      pick: ['profile', 'inventory', 'roster', 'settings', 'lastSyncedAt', 'isSynced'],
+      pick: ['profile', 'inventory', 'roster', 'settings', 'lastSyncedAt', 'isSynced', 'authSession'],
     },
   }
 )

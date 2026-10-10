@@ -34,7 +34,19 @@ export default defineEventHandler(async (event): Promise<any> => {
 
       const liveData = await fetchLiveArknightsData(server, channelUid, yostarToken, email)
       console.log(`[PRTS Sync] Successfully synchronized ${liveData.total_operators} operators for ${liveData.profile.nickname}`)
-      return liveData
+      
+      const session = {
+        uid: channelUid,
+        token: yostarToken,
+        email,
+        server,
+        savedAt: new Date().toISOString(),
+      }
+
+      return {
+        ...liveData,
+        session,
+      }
     } catch (err: any) {
       console.error('[PRTS Sync Error]:', err?.message || err)
       throw createError({
@@ -47,13 +59,26 @@ export default defineEventHandler(async (event): Promise<any> => {
   // 2. Token-based login
   if (authType === 'token') {
     try {
-      const liveData = await fetchLiveArknightsData(server, uid, token)
-      return liveData
+      console.log(`[PRTS Sync] Synchronizing with stored session token for UID ${uid} (${server.toUpperCase()})...`)
+      const liveData = await fetchLiveArknightsData(server, uid, token, email)
+      
+      const session = {
+        uid,
+        token,
+        email,
+        server,
+        savedAt: new Date().toISOString(),
+      }
+
+      return {
+        ...liveData,
+        session,
+      }
     } catch (err: any) {
       console.error('[PRTS Token Sync Error]:', err?.message || err)
       throw createError({
         statusCode: 400,
-        statusMessage: err?.message || 'Token synchronization failed.',
+        statusMessage: err?.message || 'Token synchronization failed. Session may have expired.',
       })
     }
   }
