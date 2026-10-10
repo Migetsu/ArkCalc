@@ -79,6 +79,7 @@ export interface MaterialDelta {
   icon?: string
   required: number
   owned: number
+  eventRewards?: number
   delta: number
   isSufficient: boolean
   bestStage?: {
@@ -99,3 +100,31 @@ export interface MaterialDelta {
   }>
   totalApToFarm?: number
 }
+
+export interface EventRewardItem {
+  itemId: string
+  name: string
+  tier: number
+  count: number
+  category: string
+  source: 'shop' | 'milestone' | 'first_clear'
+  icon?: string
+}
+
+export interface ArknightsEvent {
+  id: string
+  name: string
+  title: string
+  type: string
+  status: 'active' | 'upcoming' | 'passed'
+  cnStartDate: string
+  cnEndDate: string
+  wikiUrl: string
+  description?: string
+  rewards: EventRewardItem[]
+  totalLmd: number
+  totalExp: number
+  totalOrundum: number
+  totalPermits: number
+}
+

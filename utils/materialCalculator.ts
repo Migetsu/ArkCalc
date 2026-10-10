@@ -111,7 +111,8 @@ export function aggregateMaterialRequirements(targets: TargetPlanItem[]): RawTot
 export function calculateMaterialDeltas(
   aggregated: RawTotals,
   inventory: Record<string, number> = {},
-  catalog: MaterialMetadata[] = []
+  catalog: MaterialMetadata[] = [],
+  eventRewards: Record<string, number> = {}
 ): MaterialDelta[] {
   const list: MaterialDelta[] = []
   const matsMap = new Map(catalog.map((m) => [m.id, m]))
@@ -119,6 +120,8 @@ export function calculateMaterialDeltas(
   // 1. Currency: LMD (4001)
   if (aggregated.lmd > 0) {
     const ownedLmd = inventory['4001'] || 0
+    const eventLmd = eventRewards['4001'] || 0
+    const effectiveLmd = ownedLmd + eventLmd
     list.push({
       itemId: '4001',
       name: 'Lungmen Dollars (LMD)',
@@ -127,14 +130,17 @@ export function calculateMaterialDeltas(
       icon: matsMap.get('4001')?.icon,
       required: aggregated.lmd,
       owned: ownedLmd,
-      delta: Math.max(0, aggregated.lmd - ownedLmd),
-      isSufficient: ownedLmd >= aggregated.lmd,
+      eventRewards: eventLmd,
+      delta: Math.max(0, aggregated.lmd - effectiveLmd),
+      isSufficient: effectiveLmd >= aggregated.lmd,
     })
   }
 
   // 2. Currency: EXP (2004)
   if (aggregated.exp > 0) {
     const ownedExp = inventory['2004'] || 0
+    const eventExp = eventRewards['2004'] || 0
+    const effectiveExp = ownedExp + eventExp
     list.push({
       itemId: '2004',
       name: 'Tactical Battle Record (EXP)',
@@ -143,8 +149,9 @@ export function calculateMaterialDeltas(
       icon: matsMap.get('2004')?.icon,
       required: aggregated.exp,
       owned: ownedExp,
-      delta: Math.max(0, aggregated.exp - ownedExp),
-      isSufficient: ownedExp >= aggregated.exp,
+      eventRewards: eventExp,
+      delta: Math.max(0, aggregated.exp - effectiveExp),
+      isSufficient: effectiveExp >= aggregated.exp,
     })
   }
 
@@ -161,7 +168,9 @@ export function calculateMaterialDeltas(
     }
 
     const ownedCount = inventory[itemId] || 0
-    const delta = Math.max(0, requiredCount - ownedCount)
+    const eventGain = eventRewards[itemId] || 0
+    const effectiveOwned = ownedCount + eventGain
+    const delta = Math.max(0, requiredCount - effectiveOwned)
 
     list.push({
       itemId,
@@ -171,8 +180,9 @@ export function calculateMaterialDeltas(
       icon: meta.icon,
       required: requiredCount,
       owned: ownedCount,
+      eventRewards: eventGain,
       delta,
-      isSufficient: ownedCount >= requiredCount,
+      isSufficient: effectiveOwned >= requiredCount,
     })
   }
 

@@ -10,12 +10,13 @@ import FarmingTableSkeleton from '~/components/ui/FarmingTableSkeleton.vue'
 import AccountSyncModal from '~/components/AccountSyncModal.vue'
 import operatorsData from '~/assets/data/operators.json'
 import materialsData from '~/assets/data/materials.json'
-import { aggregateMaterialRequirements } from '~/utils/materialCalculator'
+import { aggregateMaterialRequirements, calculateMaterialDeltas } from '~/utils/materialCalculator'
 import type {
   OperatorData,
   TargetPlanItem,
   MaterialDelta,
   MaterialRequirement,
+  ArknightsEvent,
 } from '~/types'
 
 useHead({
@@ -322,61 +323,117 @@ const aggregatedNeeds = computed<RawTotals>(() => {
 })
 
 // -----------------------------------------------------------------------------
-// Delta Calculation against userStore.inventory
+// Guaranteed Event Rewards Integration (wiki.gg + offline catalog)
+// -----------------------------------------------------------------------------
+const includeEventRewards = ref<boolean>(true)
+const selectedEventId = ref<string>('all')
+
+const { data: eventsData, pending: isEventsLoading } = await useFetch<{
+  source: string
+  updatedAt: string
+  events: ArknightsEvent[]
+}>('/api/events')
+
+const eventsList = computed<ArknightsEvent[]>(() => {
+  return eventsData.value?.events || []
+})
+
+const selectedEventName = computed(() => {
+  if (selectedEventId.value === 'all') return 'All Upcoming Events'
+  const ev = eventsList.value.find((e) => e.id === selectedEventId.value)
+  return ev ? ev.name : 'Selected Event'
+})
+
+const activeEventsCount = computed(() => {
+  if (selectedEventId.value === 'all') return eventsList.value.length
+  return eventsList.value.filter((e) => e.id === selectedEventId.value).length
+})
+
+const activeEventRewardsMap = computed<Record<string, number>>(() => {
+  if (!includeEventRewards.value) return {}
+  const activeEvents = eventsList.value.filter((ev) => {
+    if (selectedEventId.value === 'all') return true
+    return ev.id === selectedEventId.value
+  })
+
+  const map: Record<string, number> = {}
+  for (const ev of activeEvents) {
+    if (ev.rewards) {
+      for (const r of ev.rewards) {
+        map[r.itemId] = (map[r.itemId] || 0) + r.count
+      }
+    }
+  }
+  return map
+})
+
+// Highlight top event rewards that match doctor's required materials or high tiers
+const displayedEventRewardHighlights = computed(() => {
+  const activeEvents = eventsList.value.filter((ev) => {
+    if (selectedEventId.value === 'all') return true
+    return ev.id === selectedEventId.value
+  })
+
+  const aggregatedMap = new Map<string, { itemId: string; name: string; count: number; tier: number }>()
+
+  for (const ev of activeEvents) {
+    for (const r of ev.rewards || []) {
+      const existing = aggregatedMap.get(r.itemId)
+      if (existing) {
+        existing.count += r.count
+      } else {
+        aggregatedMap.set(r.itemId, {
+          itemId: r.itemId,
+          name: r.name,
+          count: r.count,
+          tier: r.tier,
+        })
+      }
+    }
+  }
+
+  const neededMatKeys = Object.keys(aggregatedNeeds.value.materials)
+  return Array.from(aggregatedMap.values())
+    .filter((r) => r.itemId !== '4001' && r.itemId !== '2004')
+    .sort((a, b) => {
+      const aNeeded = neededMatKeys.includes(a.itemId) ? 1 : 0
+      const bNeeded = neededMatKeys.includes(b.itemId) ? 1 : 0
+      if (aNeeded !== bNeeded) return bNeeded - aNeeded
+      return b.tier - a.tier
+    })
+    .slice(0, 8)
+})
+
+// Total count of guaranteed event bonus items impacting plan
+const totalEventBonusItemsApplied = computed(() => {
+  if (!includeEventRewards.value) return 0
+  let total = 0
+  for (const item of calculatedDeltas.value) {
+    if (item.eventRewards && item.eventRewards > 0) {
+      total += item.eventRewards
+    }
+  }
+  return total
+})
+
+// -----------------------------------------------------------------------------
+// Delta Calculation against userStore.inventory & Guaranteed Event Rewards
 // -----------------------------------------------------------------------------
 const materialFilter = ref<'all' | 'deficit' | 'chips' | 'tier5' | 'tier4' | 'tier3'>('all')
 
 const calculatedDeltas = computed<MaterialDelta[]>(() => {
-  const list: MaterialDelta[] = []
   const matsMap = new Map(materialsCatalog.map((m) => [m.id, m]))
+  const baseList = calculateMaterialDeltas(
+    aggregatedNeeds.value,
+    userStore.inventory,
+    materialsCatalog,
+    includeEventRewards.value ? activeEventRewardsMap.value : {}
+  )
 
-  // Add LMD & EXP entries
-  if (aggregatedNeeds.value.lmd > 0) {
-    const ownedLmd = userStore.getItemQuantity('4001')
-    list.push({
-      itemId: '4001',
-      name: 'Lungmen Dollars (LMD)',
-      tier: 4,
-      category: 'currency',
-      icon: matsMap.get('4001')?.icon || '/images/items/4001.png',
-      required: aggregatedNeeds.value.lmd,
-      owned: ownedLmd,
-      delta: Math.max(0, aggregatedNeeds.value.lmd - ownedLmd),
-      isSufficient: ownedLmd >= aggregatedNeeds.value.lmd,
-    })
-  }
-
-  if (aggregatedNeeds.value.exp > 0) {
-    const ownedExp = userStore.getItemQuantity('2004')
-    list.push({
-      itemId: '2004',
-      name: 'Tactical Battle Record (EXP)',
-      tier: 4,
-      category: 'exp',
-      icon: matsMap.get('2004')?.icon || '/images/items/2004.png',
-      required: aggregatedNeeds.value.exp,
-      owned: ownedExp,
-      delta: Math.max(0, aggregatedNeeds.value.exp - ownedExp),
-      isSufficient: ownedExp >= aggregatedNeeds.value.exp,
-    })
-  }
-
-  // Add item materials
-  for (const [itemId, requiredCount] of Object.entries(aggregatedNeeds.value.materials)) {
-    const meta = matsMap.get(itemId) || {
-      id: itemId,
-      name: penguin.getItemName(itemId) || itemId,
-      tier: 3,
-      category: 'material',
-      icon: `/images/items/${itemId}.png`,
-    }
-
-    const ownedCount = userStore.getItemQuantity(itemId)
-    const delta = Math.max(0, requiredCount - ownedCount)
-
+  return baseList.map((m) => {
     // Suggest best stage from Penguin Stats
     let bestStage
-    const topStages = penguin.getBestStagesForItem(itemId).slice(0, 3)
+    const topStages = penguin.getBestStagesForItem(m.itemId).slice(0, 3)
     if (topStages.length > 0 && topStages[0]) {
       bestStage = {
         stageId: topStages[0].stageId,
@@ -388,25 +445,16 @@ const calculatedDeltas = computed<MaterialDelta[]>(() => {
       }
     }
 
-    const totalApToFarm = bestStage && delta > 0 ? Math.round(delta * bestStage.apPerDrop) : 0
+    const totalApToFarm = bestStage && m.delta > 0 ? Math.round(m.delta * bestStage.apPerDrop) : 0
 
-    list.push({
-      itemId,
-      name: meta.name,
-      tier: meta.tier,
-      category: meta.category,
-      icon: meta.icon,
-      required: requiredCount,
-      owned: ownedCount,
-      delta,
-      isSufficient: ownedCount >= requiredCount,
+    return {
+      ...m,
+      icon: m.icon || matsMap.get(m.itemId)?.icon || `/images/items/${m.itemId}.png`,
       bestStage,
       bestStages: topStages,
       totalApToFarm,
-    })
-  }
-
-  return list
+    }
+  })
 })
 
 // Filtered deltas
@@ -506,6 +554,16 @@ const adjustInventory = (itemId: string, delta: number) => {
           <span class="ak-stat-pill__label">DATA CACHE</span>
           <span class="ak-stat-pill__val">
             {{ isMatrixLoading ? 'SYNCING...' : (penguin.cacheSource === 'indexeddb' ? 'INDEXEDDB' : 'ONLINE') }}
+          </span>
+        </div>
+        <div
+          class="ak-stat-pill"
+          :class="includeEventRewards ? 'ak-stat-pill--purple' : ''"
+          :title="includeEventRewards ? `Event reduction active: ${selectedEventName} (-${totalEventBonusItemsApplied} items)` : 'Event shop deduction disabled'"
+        >
+          <span class="ak-stat-pill__label">EVENT SHOP DEDUCTION</span>
+          <span class="ak-stat-pill__val">
+            {{ includeEventRewards ? (totalEventBonusItemsApplied > 0 ? `-${totalEventBonusItemsApplied} DEDUCTED` : 'ACTIVE') : 'OFF' }}
           </span>
         </div>
       </div>
@@ -772,6 +830,68 @@ const adjustInventory = (itemId: string, delta: number) => {
 
       <!-- Right Column: Materials Delta & Farming Recommendations -->
       <main class="ak-planner__right">
+        <!-- Panel: Guaranteed Event Shop & Milestone Rewards HUD -->
+        <div class="ak-panel ak-event-hud">
+          <div class="ak-panel__head ak-panel__head--flex">
+            <div class="ak-event-hud__title-group">
+              <span class="ak-panel__badge ak-panel__badge--purple">PRTS // EVENT INTELLIGENCE</span>
+              <h3>GUARANTEED EVENT SHOP & MILESTONE REWARDS</h3>
+            </div>
+            
+            <div class="ak-event-hud__controls">
+              <!-- Deduct Toggle -->
+              <label class="ak-event-toggle" title="Toggle automatic deduction of guaranteed event rewards from farming deficits">
+                <input v-model="includeEventRewards" type="checkbox" />
+                <span class="ak-event-toggle__switch"></span>
+                <span class="ak-event-toggle__label">
+                  {{ includeEventRewards ? 'DEDUCTION ACTIVE' : 'DEDUCTION OFF' }}
+                </span>
+              </label>
+
+              <!-- Event Selector -->
+              <select
+                v-if="includeEventRewards"
+                v-model="selectedEventId"
+                class="ak-event-selector"
+              >
+                <option value="all">★ All Upcoming Events ({{ eventsList.length }})</option>
+                <option
+                  v-for="ev in eventsList"
+                  :key="ev.id"
+                  :value="ev.id"
+                >
+                  {{ ev.name }} [{{ ev.status.toUpperCase() }}]
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="ak-event-hud__body">
+            <p class="ak-event-hud__desc">
+              Guaranteed materials from <strong>{{ selectedEventName }}</strong> are automatically deducted from your material deficits so you don't over-farm before event stores open.
+              <span v-if="totalEventBonusItemsApplied > 0" class="ak-event-hud__highlight-stat">
+                (Saved: <strong>{{ totalEventBonusItemsApplied }}</strong> items from {{ activeEventsCount }} events)
+              </span>
+            </p>
+
+            <div v-if="includeEventRewards && displayedEventRewardHighlights.length > 0" class="ak-event-highlights">
+              <span class="ak-event-highlights__label">GUARANTEED REWARDS INCLUDED:</span>
+              <div class="ak-event-chips">
+                <div
+                  v-for="rew in displayedEventRewardHighlights"
+                  :key="rew.itemId"
+                  class="ak-event-chip"
+                  :class="`ak-event-chip--tier${rew.tier}`"
+                  :title="`Guaranteed incoming reward: ${rew.name}`"
+                >
+                  <span class="ak-event-chip__count">+{{ rew.count }}</span>
+                  <span class="ak-event-chip__name">{{ rew.name }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="ak-panel ak-panel--main">
           <!-- Main Panel Header with Filters -->
           <div class="ak-panel__head ak-panel__head--flex">
@@ -868,11 +988,23 @@ const adjustInventory = (itemId: string, delta: number) => {
                     }"
                     :class="{ 'ak-mat-bar__fill--ok': mat.isSufficient }"
                   />
+                  <div
+                    v-if="mat.eventRewards && mat.eventRewards > 0"
+                    class="ak-mat-bar__event-fill"
+                    :style="{
+                      left: `${Math.min(100, Math.floor((mat.owned / mat.required) * 100))}%`,
+                      width: `${Math.min(100 - Math.min(100, Math.floor((mat.owned / mat.required) * 100)), Math.floor((mat.eventRewards / mat.required) * 100))}%`,
+                    }"
+                    :title="`+${mat.eventRewards} guaranteed from event rewards`"
+                  />
                 </div>
 
                 <div class="ak-material-card__footer">
                   <div class="ak-mat-counts">
                     <span>Depot: <strong>{{ mat.owned }}</strong></span>
+                    <span v-if="mat.eventRewards && mat.eventRewards > 0" class="ak-mat-event-tag" :title="`+${mat.eventRewards} guaranteed from event rewards`">
+                      +{{ mat.eventRewards }} Event
+                    </span>
                     <span>/ Needed: <strong>{{ mat.required }}</strong></span>
                   </div>
 
@@ -1055,7 +1187,9 @@ const adjustInventory = (itemId: string, delta: number) => {
                       />
                       <div class="ak-table-mat__info">
                         <span class="ak-table-mat__name">{{ item.name }}</span>
-                        <span class="ak-table-mat__deficit">Need: {{ item.delta }} (Have: {{ item.owned }})</span>
+                        <span class="ak-table-mat__deficit">
+                          Need: {{ item.delta }} (Have: {{ item.owned }}<template v-if="item.eventRewards && item.eventRewards > 0">, +{{ item.eventRewards }} Event</template>)
+                        </span>
                       </div>
                     </div>
                   </td>
@@ -1246,6 +1380,13 @@ const adjustInventory = (itemId: string, delta: number) => {
       color: $ak-green;
     }
   }
+
+  &--purple {
+    border-left-color: #a855f7;
+    .ak-stat-pill__val {
+      color: #c084fc;
+    }
+  }
 }
 
 // Panels
@@ -1293,6 +1434,18 @@ const adjustInventory = (itemId: string, delta: number) => {
     background: rgba($ak-cyan, 0.12);
     padding: 0.15rem 0.45rem;
     font-weight: 700;
+
+    &--purple {
+      color: #c084fc;
+      background: rgba(#a855f7, 0.15);
+      border: 1px solid rgba(#a855f7, 0.3);
+    }
+
+    &--cyan {
+      color: $ak-cyan;
+      background: rgba($ak-cyan, 0.15);
+      border: 1px solid rgba($ak-cyan, 0.3);
+    }
   }
 }
 
@@ -2299,5 +2452,195 @@ const adjustInventory = (itemId: string, delta: number) => {
     opacity: 0.5;
     cursor: not-allowed;
   }
+}
+
+// -----------------------------------------------------------------------------
+// Guaranteed Event Rewards HUD & Tags
+// -----------------------------------------------------------------------------
+.ak-event-hud {
+  border-left: 3px solid #a855f7;
+  background: linear-gradient(135deg, rgba(25, 15, 38, 0.88) 0%, rgba($ak-bg-secondary, 0.92) 100%);
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+
+  &__title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  &__desc {
+    color: $ak-text-secondary;
+    font-size: 0.82rem;
+    margin: 0;
+    line-height: 1.4;
+
+    strong {
+      color: #e9d5ff;
+    }
+  }
+
+  &__highlight-stat {
+    color: $ak-cyan;
+    margin-left: 0.35rem;
+    font-weight: 600;
+  }
+}
+
+.ak-event-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  user-select: none;
+
+  input {
+    display: none;
+  }
+
+  &__switch {
+    position: relative;
+    width: 36px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 9px;
+    transition: background 0.25s ease;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform 0.25s ease;
+    }
+  }
+
+  input:checked + &__switch {
+    background: #9333ea;
+    &::after {
+      transform: translateX(18px);
+    }
+  }
+
+  &__label {
+    font-family: monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #d8b4fe;
+  }
+}
+
+.ak-event-selector {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(#a855f7, 0.4);
+  color: #f3e8ff;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  font-family: monospace;
+  outline: none;
+  cursor: pointer;
+  border-radius: 2px;
+
+  &:focus {
+    border-color: #c084fc;
+  }
+}
+
+.ak-event-highlights {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  &__label {
+    font-family: monospace;
+    font-size: 0.65rem;
+    color: $ak-text-muted;
+    letter-spacing: 1px;
+  }
+}
+
+.ak-event-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.ak-event-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.55rem;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.72rem;
+  font-family: monospace;
+
+  &__count {
+    color: #c084fc;
+    font-weight: 700;
+  }
+
+  &__name {
+    color: $ak-text-primary;
+  }
+
+  &--tier5 {
+    border-color: rgba($ak-rarity-6, 0.4);
+    background: rgba($ak-rarity-6, 0.1);
+  }
+  &--tier4 {
+    border-color: rgba($ak-rarity-5, 0.3);
+    background: rgba($ak-rarity-5, 0.08);
+  }
+}
+
+.ak-mat-bar {
+  position: relative;
+  overflow: hidden;
+
+  &__event-fill {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background: repeating-linear-gradient(
+      -45deg,
+      #9333ea,
+      #9333ea 4px,
+      #a855f7 4px,
+      #a855f7 8px
+    );
+    opacity: 0.85;
+    transition: all 0.3s ease;
+  }
+}
+
+.ak-mat-event-tag {
+  color: #c084fc;
+  font-size: 0.72rem;
+  font-family: monospace;
+  font-weight: 700;
+  background: rgba(#a855f7, 0.15);
+  border: 1px solid rgba(#a855f7, 0.3);
+  padding: 0.05rem 0.35rem;
+  border-radius: 2px;
 }
 </style>

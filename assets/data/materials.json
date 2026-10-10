@@ -190,36 +190,36 @@
   },
   {
     "id": "31014",
-    "name": "D32 Steel",
-    "tier": 5,
+    "name": "Polymerized Gel",
+    "tier": 4,
     "category": "material",
     "icon": "/images/items/31014.png"
   },
   {
     "id": "31024",
-    "name": "Bipolar Nanoflake",
-    "tier": 5,
+    "name": "Incandescent Alloy Block",
+    "tier": 4,
     "category": "material",
     "icon": "/images/items/31024.png"
   },
   {
     "id": "31034",
-    "name": "Polymerization Preparation",
-    "tier": 5,
+    "name": "Crystalline Circuit",
+    "tier": 4,
     "category": "material",
     "icon": "/images/items/31034.png"
   },
   {
     "id": "31044",
-    "name": "Crystalline Electronic Unit",
-    "tier": 5,
+    "name": "Refined Solvent",
+    "tier": 4,
     "category": "material",
     "icon": "/images/items/31044.png"
   },
   {
     "id": "31054",
-    "name": "Nucleic Sintering Catalyst",
-    "tier": 5,
+    "name": "Cutting Fluid Solution",
+    "tier": 4,
     "category": "material",
     "icon": "/images/items/31054.png"
   },
@@ -306,5 +306,152 @@
     "tier": 5,
     "category": "module",
     "icon": "/images/items/mod_unlock_token.png"
+  },
+  {
+    "id": "30115",
+    "name": "D32 Steel",
+    "tier": 5,
+    "category": "material",
+    "icon": "/images/items/31014.png"
+  },
+  {
+    "id": "30125",
+    "name": "Bipolar Nanoflake",
+    "tier": 5,
+    "category": "material",
+    "icon": "/images/items/31024.png"
+  },
+  {
+    "id": "30135",
+    "name": "Polymerization Preparation",
+    "tier": 5,
+    "category": "material",
+    "icon": "/images/items/31034.png"
+  },
+  {
+    "id": "30145",
+    "name": "Crystalline Electronic Unit",
+    "tier": 5,
+    "category": "material",
+    "icon": "/images/items/31044.png"
+  },
+  {
+    "id": "30155",
+    "name": "Nucleic Sintering Catalyst",
+    "tier": 5,
+    "category": "material",
+    "icon": "/images/items/31054.png"
+  },
+  {
+    "id": "30165",
+    "name": "Cyclicene Polycell",
+    "tier": 5,
+    "category": "material",
+    "icon": "/images/items/30165.png"
+  },
+  {
+    "id": "31013",
+    "name": "Coagulating Gel",
+    "tier": 3,
+    "category": "material",
+    "icon": "/images/items/31013.png"
+  },
+  {
+    "id": "31023",
+    "name": "Incandescent Alloy",
+    "tier": 3,
+    "category": "material",
+    "icon": "/images/items/31023.png"
+  },
+  {
+    "id": "31033",
+    "name": "Crystalline Component",
+    "tier": 3,
+    "category": "material",
+    "icon": "/images/items/31033.png"
+  },
+  {
+    "id": "31043",
+    "name": "Semi-Synthetic Solvent",
+    "tier": 3,
+    "category": "material",
+    "icon": "/images/items/31043.png"
+  },
+  {
+    "id": "31053",
+    "name": "Compound Cutting Fluid",
+    "tier": 3,
+    "category": "material",
+    "icon": "/images/items/31053.png"
+  },
+  {
+    "id": "31063",
+    "name": "Pure Resin",
+    "tier": 3,
+    "category": "material",
+    "icon": "/images/items/31063.png"
+  },
+  {
+    "id": "31064",
+    "name": "High-Purity Resin",
+    "tier": 4,
+    "category": "material",
+    "icon": "/images/items/31064.png"
+  },
+  {
+    "id": "31073",
+    "name": "Cyclicene",
+    "tier": 3,
+    "category": "material",
+    "icon": "/images/items/31073.png"
+  },
+  {
+    "id": "31074",
+    "name": "Cyclicene Prefab",
+    "tier": 4,
+    "category": "material",
+    "icon": "/images/items/31074.png"
+  },
+  {
+    "id": "31083",
+    "name": "Transmuted Natural Salt",
+    "tier": 3,
+    "category": "material",
+    "icon": "/images/items/31083.png"
+  },
+  {
+    "id": "31084",
+    "name": "Refined Natural Salt",
+    "tier": 4,
+    "category": "material",
+    "icon": "/images/items/31084.png"
+  },
+  {
+    "id": "31093",
+    "name": "Core-Flake",
+    "tier": 3,
+    "category": "material",
+    "icon": "/images/items/31093.png"
+  },
+  {
+    "id": "31094",
+    "name": "Solidified Core-Flake",
+    "tier": 4,
+    "category": "material",
+    "icon": "/images/items/31094.png"
+  },
+  {
+    "id": "mod_update_token_1",
+    "name": "Data-Supplement Stick",
+    "tier": 4,
+    "category": "module",
+    "icon": "/images/items/mod_update_token_1.png"
+  },
+  {
+    "id": "mod_update_token_2",
+    "name": "Data-Supplement Instrument",
+    "tier": 5,
+    "category": "module",
+    "icon": "/images/items/mod_update_token_2.png"
   }
 ]

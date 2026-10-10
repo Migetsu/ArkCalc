@@ -340,6 +340,63 @@ describe('Material Delta Calculator', () => {
       expect(deltas[1]?.delta).toBeGreaterThan(0)
       expect(deltas[2]?.delta).toBe(0)
     })
+
+    it('deducts guaranteed event rewards from material, LMD, and EXP deficits', () => {
+      const aggregated = {
+        lmd: 500000,
+        exp: 200000,
+        materials: {
+          '30115': 10, // D32 Steel
+          '30084': 10, // Manganese
+        },
+      }
+
+      // User owns 2 D32 and 0 Manganese, 100k LMD, 50k EXP
+      const inventory = {
+        '4001': 100000,
+        '2004': 50000,
+        '30115': 2,
+        '30084': 0,
+      }
+
+      // Event gives 5 D32 Steel, 10 Manganese, 400k LMD, 150k EXP
+      const eventRewards = {
+        '4001': 400000,
+        '2004': 150000,
+        '30115': 5,
+        '30084': 10,
+      }
+
+      const deltas = calculateMaterialDeltas(aggregated, inventory, catalog, eventRewards)
+
+      // D32: Need 10, Owned 2, Event 5 -> Effective 7 -> Deficit 3
+      const steelDelta = deltas.find((d) => d.itemId === '30115')
+      expect(steelDelta?.required).toBe(10)
+      expect(steelDelta?.owned).toBe(2)
+      expect(steelDelta?.eventRewards).toBe(5)
+      expect(steelDelta?.delta).toBe(3)
+      expect(steelDelta?.isSufficient).toBe(false)
+
+      // Manganese: Need 10, Owned 0, Event 10 -> Effective 10 -> Deficit 0
+      const mangDelta = deltas.find((d) => d.itemId === '30084')
+      expect(mangDelta?.required).toBe(10)
+      expect(mangDelta?.owned).toBe(0)
+      expect(mangDelta?.eventRewards).toBe(10)
+      expect(mangDelta?.delta).toBe(0)
+      expect(mangDelta?.isSufficient).toBe(true)
+
+      // LMD: Need 500k, Owned 100k, Event 400k -> Effective 500k -> Deficit 0
+      const lmdDelta = deltas.find((d) => d.itemId === '4001')
+      expect(lmdDelta?.eventRewards).toBe(400000)
+      expect(lmdDelta?.delta).toBe(0)
+      expect(lmdDelta?.isSufficient).toBe(true)
+
+      // EXP: Need 200k, Owned 50k, Event 150k -> Effective 200k -> Deficit 0
+      const expDelta = deltas.find((d) => d.itemId === '2004')
+      expect(expDelta?.eventRewards).toBe(150000)
+      expect(expDelta?.delta).toBe(0)
+      expect(expDelta?.isSufficient).toBe(true)
+    })
   })
 
   describe('filterMaterialDeltas', () => {
