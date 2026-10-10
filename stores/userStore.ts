@@ -58,6 +58,10 @@ export const useUserStore = defineStore(
     const isOperatorOwned = (operatorId: string): boolean =>
       Boolean(roster.value[operatorId])
 
+    const hasSyncedAccount = computed(() => {
+      return Boolean(isSynced.value || lastSyncedAt.value !== null || Object.keys(roster.value).length > 0)
+    })
+
     // -------------------------------------------------------------------------
     // Actions (Mutations)
     // -------------------------------------------------------------------------
@@ -458,6 +462,130 @@ export const useUserStore = defineStore(
       }
     }
 
+    const loadDemoData = async () => {
+      const demoData = {
+        profile: {
+          uid: '88492015',
+          nickname: 'Doctor Amiya',
+          level: 120,
+          server: (settings.value.server || 'EN').toUpperCase(),
+        },
+        gacha: {
+          orundum: 42600,
+          originite_prime: 54,
+          single_permits: 8,
+          ten_permits: 3,
+        },
+        inventory: {
+          '4001': 2450000,
+          'orundum': 42600,
+          'originite_prime': 54,
+          'single_permit': 8,
+          'ten_permit': 3,
+          '7001': 8,
+          '7002': 3,
+          '30013': 85,
+          '30014': 24,
+          '30073': 42,
+          '30074': 18,
+          '30083': 36,
+          '30084': 12,
+          '30093': 29,
+          '30094': 14,
+          '31014': 16,
+          '31024': 15,
+          '32001': 10,
+          '3303': 120,
+          'mod_unlock_token': 14,
+        },
+        roster: [
+          {
+            operator_id: 'char_4025_aprot',
+            elite: 2,
+            level: 90,
+            potential: 4,
+            skill_level: 7,
+            masteries: { skill_3: 3 },
+            modules: { uniequip_002_aprot: 3 },
+          },
+          {
+            operator_id: 'char_350_surtr',
+            elite: 2,
+            level: 90,
+            potential: 3,
+            skill_level: 7,
+            masteries: { skill_3: 3 },
+            modules: {},
+          },
+          {
+            operator_id: 'char_1028_texas2',
+            elite: 2,
+            level: 80,
+            potential: 5,
+            skill_level: 7,
+            masteries: { skill_2: 3, skill_3: 3 },
+            modules: { uniequip_002_texas2: 3 },
+          },
+          {
+            operator_id: 'char_1033_shu',
+            elite: 2,
+            level: 75,
+            potential: 2,
+            skill_level: 7,
+            masteries: { skill_3: 3 },
+            modules: {},
+          },
+          {
+            operator_id: 'char_1032_virtuosa',
+            elite: 2,
+            level: 80,
+            potential: 2,
+            skill_level: 7,
+            masteries: { skill_3: 3 },
+            modules: {},
+          },
+          {
+            operator_id: 'char_180_amgoat',
+            elite: 2,
+            level: 85,
+            potential: 6,
+            skill_level: 7,
+            masteries: { skill_2: 3, skill_3: 3 },
+            modules: {},
+          },
+          {
+            operator_id: 'char_003_kalts',
+            elite: 2,
+            level: 90,
+            potential: 4,
+            skill_level: 7,
+            masteries: { skill_3: 3 },
+            modules: { uniequip_002_kalts: 3 },
+          },
+          {
+            operator_id: 'char_222_bpipe',
+            elite: 2,
+            level: 80,
+            potential: 5,
+            skill_level: 7,
+            masteries: { skill_3: 3 } as Record<string, number>,
+            modules: { uniequip_002_bpipe: 3 } as Record<string, number>,
+          },
+        ] as Array<{
+          operator_id: string
+          elite: number
+          level: number
+          potential: number
+          skill_level: number
+          masteries: Record<string, number>
+          modules: Record<string, number>
+        }>,
+      }
+
+      await syncFromArkprtsData(demoData)
+      return demoData
+    }
+
     return {
       // State
       profile,
@@ -476,6 +604,7 @@ export const useUserStore = defineStore(
       getItemQuantity,
       getOperator,
       isOperatorOwned,
+      hasSyncedAccount,
 
       // Actions
       setProfile,
@@ -493,12 +622,13 @@ export const useUserStore = defineStore(
       fetchFromSupabase,
       syncToSupabase,
       syncFromArkprtsData,
+      loadDemoData,
     }
   },
   {
     persist: {
       key: 'arkcalc_user_store',
-      pick: ['profile', 'inventory', 'roster', 'settings', 'lastSyncedAt'],
+      pick: ['profile', 'inventory', 'roster', 'settings', 'lastSyncedAt', 'isSynced'],
     },
   }
 )

@@ -3,28 +3,13 @@ import { ref, computed } from 'vue'
 import fallbackOperators from '~/assets/data/operators.json'
 import type { TargetPlanItem, OperatorData } from '~/types'
 
-const defaultInitialTargets: TargetPlanItem[] = [
-  {
-    operatorId: (fallbackOperators[0] as OperatorData)?.id || 'char_4025_aprot',
-    operator: fallbackOperators[0] as OperatorData,
-    currentElite: 0,
-    targetElite: 2,
-    currentLevel: 1,
-    targetLevel: 90,
-    currentMastery: 0,
-    targetMastery: 3,
-    currentModule: 0,
-    targetModule: 3,
-  },
-]
-
 export const usePlannerStore = defineStore(
   'planner',
   () => {
     // -------------------------------------------------------------------------
     // State
     // -------------------------------------------------------------------------
-    const plannedTargets = ref<TargetPlanItem[]>(defaultInitialTargets)
+    const plannedTargets = ref<TargetPlanItem[]>([])
     const selectedOperatorId = ref<string>(
       (fallbackOperators[0] as OperatorData)?.id || 'char_4025_aprot'
     )

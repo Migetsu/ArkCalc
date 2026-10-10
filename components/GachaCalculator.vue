@@ -48,12 +48,33 @@ watch(selectedBannerId, (newId) => {
 })
 
 // -----------------------------------------------------------------------------
-// Current Player Resources
+// Current Player Resources (Synced with userStore / depot)
 // -----------------------------------------------------------------------------
-const orundum = ref<number>(userStore.getItemQuantity('orundum') || 12000)
-const originitePrime = ref<number>(userStore.getItemQuantity('originite_prime') || 35)
-const singlePermits = ref<number>(userStore.getItemQuantity('single_permit') || 6)
-const tenPermits = ref<number>(userStore.getItemQuantity('ten_permit') || 1)
+const getPermitCount = () => userStore.getItemQuantity('7001') || userStore.getItemQuantity('single_permit') || 0
+const getTenPermitCount = () => userStore.getItemQuantity('7002') || userStore.getItemQuantity('ten_permit') || 0
+
+const orundum = ref<number>(userStore.getItemQuantity('orundum') || 0)
+const originitePrime = ref<number>(userStore.getItemQuantity('originite_prime') || 0)
+const singlePermits = ref<number>(getPermitCount())
+const tenPermits = ref<number>(getTenPermitCount())
+
+// Keep local inputs in sync when userStore inventory is updated (e.g. account sync or demo loaded)
+watch(
+  () => [
+    userStore.getItemQuantity('orundum'),
+    userStore.getItemQuantity('originite_prime'),
+    userStore.getItemQuantity('7001'),
+    userStore.getItemQuantity('single_permit'),
+    userStore.getItemQuantity('7002'),
+    userStore.getItemQuantity('ten_permit'),
+  ],
+  () => {
+    orundum.value = userStore.getItemQuantity('orundum') || 0
+    originitePrime.value = userStore.getItemQuantity('originite_prime') || 0
+    singlePermits.value = getPermitCount()
+    tenPermits.value = getTenPermitCount()
+  }
+)
 
 // Options & Preferences
 const convertOP = ref<boolean>(true) // Whether to count OP as pulls (1 OP = 180 Orundum)
@@ -155,11 +176,30 @@ const sparkDeficit = computed(() => {
 })
 
 // Save current resources back to userStore
+const toast = useToast()
 const saveToStore = () => {
   userStore.setItemQuantity('orundum', orundum.value)
   userStore.setItemQuantity('originite_prime', originitePrime.value)
   userStore.setItemQuantity('single_permit', singlePermits.value)
+  userStore.setItemQuantity('7001', singlePermits.value)
   userStore.setItemQuantity('ten_permit', tenPermits.value)
+  userStore.setItemQuantity('7002', tenPermits.value)
+  toast.success('Gacha resources updated in local store!', {
+    title: 'STORE UPDATED',
+    tag: 'GCH // SAVED',
+  })
+}
+
+const loadDemoData = async () => {
+  try {
+    const demo = await userStore.loadDemoData()
+    toast.success(`Demo funds loaded: ${demo.gacha.orundum.toLocaleString()} Orundum, ${demo.gacha.originite_prime} OP`, {
+      title: 'DEMO FUNDS',
+      tag: 'GCH // DEMO',
+    })
+  } catch (e: any) {
+    toast.error('Failed to load demo data', { title: 'ERROR' })
+  }
 }
 </script>
 
@@ -255,10 +295,20 @@ const saveToStore = () => {
             </div>
           </div>
 
-          <!-- Quick Save to Store Button -->
-          <button type="button" class="ak-btn-secondary" @click="saveToStore">
-            SAVE CURRENT INVENTORY TO STORE
-          </button>
+          <!-- Quick Actions -->
+          <div class="ak-res-actions">
+            <button type="button" class="ak-btn-secondary" @click="saveToStore">
+              SAVE TO STORE
+            </button>
+            <button
+              v-if="!userStore.hasSyncedAccount && orundum === 0 && originitePrime === 0"
+              type="button"
+              class="ak-btn-demo-small"
+              @click="loadDemoData"
+            >
+              LOAD DEMO FUNDS
+            </button>
+          </div>
         </div>
 
         <!-- Section: Monthly Card & Income Options -->
@@ -625,6 +675,33 @@ const saveToStore = () => {
     background: rgba($ak-cyan, 0.15);
     border-color: $ak-cyan;
     color: $ak-cyan;
+  }
+}
+
+.ak-res-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ak-btn-demo-small {
+  padding: 0.6rem 0.9rem;
+  background: rgba($ak-amber, 0.1);
+  border: 1px solid rgba($ak-amber, 0.35);
+  color: $ak-amber;
+  font-size: 0.75rem;
+  font-family: monospace;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba($ak-amber, 0.25);
+    border-color: $ak-amber;
+    color: #fff;
+    box-shadow: 0 0 8px rgba($ak-amber, 0.3);
   }
 }
 

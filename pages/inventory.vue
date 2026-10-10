@@ -2,6 +2,8 @@
 import { ref, computed } from 'vue'
 import { useUserStore } from '~/stores/userStore'
 import { useAppSupabase } from '~/composables/useAppSupabase'
+import { useToast } from '~/composables/useToast'
+import AccountSyncModal from '~/components/AccountSyncModal.vue'
 import materialsData from '~/assets/data/materials.json'
 
 useHead({
@@ -162,6 +164,25 @@ const reloadFromCloud = async () => {
     syncErrorMessage.value = res.error || 'Failed to load'
   }
 }
+
+const toast = useToast()
+const isSyncModalOpen = ref(false)
+const isLoadingDemo = ref(false)
+
+const loadDemoData = async () => {
+  isLoadingDemo.value = true
+  try {
+    const demo = await userStore.loadDemoData()
+    toast.success(`Demo depot stock loaded! Welcome Doctor ${demo.profile.nickname}.`, {
+      title: 'DEMO LOADED',
+      tag: 'DEPOT // SYNC',
+    })
+  } catch (err: any) {
+    toast.error('Failed to load demo stock.', { title: 'ERROR' })
+  } finally {
+    isLoadingDemo.value = false
+  }
+}
 </script>
 
 <template>
@@ -231,8 +252,56 @@ const reloadFromCloud = async () => {
             PULL CLOUD
           </button>
         </div>
+        <div v-else class="ak-sync-widget__actions">
+          <button
+            type="button"
+            class="ak-sync-btn ak-sync-btn--ghost"
+            title="Load demo inventory"
+            :disabled="isLoadingDemo"
+            @click="loadDemoData"
+          >
+            DEMO
+          </button>
+          <button
+            type="button"
+            class="ak-sync-btn ak-sync-btn--cyan"
+            title="Synchronize Arknights game account"
+            @click="isSyncModalOpen = true"
+          >
+            SYNC
+          </button>
+        </div>
       </div>
     </header>
+
+    <!-- Quick Account Sync / Demo Prompt if unsynced & empty -->
+    <div v-if="!userStore.hasSyncedAccount && totalStockedTypes === 0" class="ak-unsynced-banner">
+      <div class="ak-unsynced-banner__info">
+        <span class="ak-unsynced-banner__badge">DEPOT // EMPTY</span>
+        <div class="ak-unsynced-banner__text">
+          <strong>NO GAME ACCOUNT SYNCHRONIZED</strong>
+          <p>Your depot stock is currently empty. Synchronize your Arknights account or load demo data to view materials.</p>
+        </div>
+      </div>
+      <div class="ak-unsynced-banner__actions">
+        <button
+          type="button"
+          class="ak-btn-demo"
+          :disabled="isLoadingDemo"
+          @click="loadDemoData"
+        >
+          <span v-if="isLoadingDemo">LOADING DEMO...</span>
+          <span v-else>LOAD DEMO DATA</span>
+        </button>
+        <button
+          type="button"
+          class="ak-btn-sync-cta"
+          @click="isSyncModalOpen = true"
+        >
+          SYNC ACCOUNT →
+        </button>
+      </div>
+    </div>
 
     <!-- Stock Summary Strip -->
     <section class="ak-summary-strip">
@@ -411,6 +480,13 @@ const reloadFromCloud = async () => {
         <p>NO MATERIALS MATCH CURRENT FILTERS</p>
       </div>
     </main>
+
+    <!-- Account Sync Modal -->
+    <AccountSyncModal
+      :is-open="isSyncModalOpen"
+      @close="isSyncModalOpen = false"
+      @synced="isSyncModalOpen = false"
+    />
   </div>
 </template>
 
@@ -559,6 +635,35 @@ const reloadFromCloud = async () => {
     color: $ak-cyan;
     border-color: $ak-cyan;
     background: rgba($ak-cyan, 0.1);
+  }
+
+  &--cyan {
+    background: $ak-cyan;
+    color: #000;
+    border-color: $ak-cyan;
+    font-weight: 800;
+
+    &:hover {
+      background: lighten($ak-cyan, 10%);
+      color: #000;
+      box-shadow: 0 0 8px rgba($ak-cyan, 0.4);
+    }
+  }
+
+  &--ghost {
+    background: rgba(255, 255, 255, 0.08);
+    color: $ak-text-primary;
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #fff;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   }
 }
 
@@ -906,6 +1011,110 @@ const reloadFromCloud = async () => {
   font-family: monospace;
   color: $ak-text-muted;
   border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.ak-unsynced-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: rgba($ak-amber, 0.08);
+  border: 1px solid rgba($ak-amber, 0.3);
+  border-left: 4px solid $ak-amber;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    @media (min-width: 640px) {
+      flex-direction: row;
+      align-items: center;
+      gap: 1rem;
+    }
+  }
+
+  &__badge {
+    align-self: flex-start;
+    font-size: 0.65rem;
+    font-family: monospace;
+    font-weight: 700;
+    color: $ak-amber;
+    background: rgba($ak-amber, 0.15);
+    padding: 0.2rem 0.5rem;
+    letter-spacing: 1px;
+    border: 1px solid rgba($ak-amber, 0.3);
+  }
+
+  &__text {
+    strong {
+      display: block;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      color: $ak-text-primary;
+    }
+
+    p {
+      margin: 0.2rem 0 0;
+      font-size: 0.75rem;
+      color: $ak-text-secondary;
+      line-height: 1.4;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+  }
+}
+
+.ak-btn-demo {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  font-family: monospace;
+  font-weight: 700;
+  color: $ak-amber;
+  background: rgba($ak-amber, 0.12);
+  border: 1px solid rgba($ak-amber, 0.4);
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba($ak-amber, 0.25);
+    border-color: $ak-amber;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.ak-btn-sync-cta {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  font-family: monospace;
+  font-weight: 700;
+  color: #000;
+  background: $ak-cyan;
+  border: 1px solid $ak-cyan;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #fff;
+    border-color: #fff;
+  }
 }
 
 @keyframes pulse {

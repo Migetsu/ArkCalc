@@ -5,6 +5,7 @@ import { usePlannerStore } from '~/stores/plannerStore'
 import { useOperatorStore } from '~/stores/operatorStore'
 import { useToast } from '~/composables/useToast'
 import BannerCardSkeleton from '~/components/ui/BannerCardSkeleton.vue'
+import AccountSyncModal from '~/components/AccountSyncModal.vue'
 import fallbackBanners from '~/assets/data/banners.json'
 import type { TargetPlanItem, OperatorData } from '~/types'
 
@@ -16,6 +17,24 @@ const userStore = useUserStore()
 const plannerStore = usePlannerStore()
 const operatorStore = useOperatorStore()
 const toast = useToast()
+
+const isSyncModalOpen = ref(false)
+const isLoadingDemo = ref(false)
+
+const loadDemoData = async () => {
+  isLoadingDemo.value = true
+  try {
+    const demo = await userStore.loadDemoData()
+    toast.success(`Demo data loaded! Welcome Doctor ${demo.profile.nickname}.`, {
+      title: 'DEMO LOADED',
+      tag: 'PRTS // DEMO',
+    })
+  } catch (err: any) {
+    toast.error('Failed to load demo data.', { title: 'ERROR' })
+  } finally {
+    isLoadingDemo.value = false
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Core Navigation Modules
@@ -284,6 +303,35 @@ const quickAddSuggested = (op: OperatorData) => {
         </NuxtLink>
       </div>
     </header>
+
+    <!-- Quick Account Sync / Demo Prompt if unsynced -->
+    <div v-if="!userStore.hasSyncedAccount" class="ak-unsynced-banner">
+      <div class="ak-unsynced-banner__info">
+        <span class="ak-unsynced-banner__badge">PRTS // STANDBY</span>
+        <div class="ak-unsynced-banner__text">
+          <strong>NO GAME ACCOUNT SYNCHRONIZED</strong>
+          <p>Depot stock, gacha currency, and operator promotion goals are currently empty. Synchronize your Arknights account or load interactive demo data to explore ArkCalc.</p>
+        </div>
+      </div>
+      <div class="ak-unsynced-banner__actions">
+        <button
+          type="button"
+          class="ak-btn-demo"
+          :disabled="isLoadingDemo"
+          @click="loadDemoData"
+        >
+          <span v-if="isLoadingDemo">LOADING DEMO...</span>
+          <span v-else>LOAD DEMO DATA</span>
+        </button>
+        <button
+          type="button"
+          class="ak-btn-sync-cta"
+          @click="isSyncModalOpen = true"
+        >
+          SYNC ACCOUNT →
+        </button>
+      </div>
+    </div>
 
     <!-- Top Tactical Metrics Ribbon -->
     <section class="ak-ribbon">
@@ -614,6 +662,13 @@ const quickAddSuggested = (op: OperatorData) => {
         </NuxtLink>
       </div>
     </section>
+
+    <!-- Account Sync Modal -->
+    <AccountSyncModal
+      :is-open="isSyncModalOpen"
+      @close="isSyncModalOpen = false"
+      @synced="isSyncModalOpen = false"
+    />
   </div>
 </template>
 
@@ -754,6 +809,114 @@ const quickAddSuggested = (op: OperatorData) => {
   font-weight: 800;
   font-family: monospace;
   color: $ak-cyan;
+}
+
+// Unsynced Alert Banner
+.ak-unsynced-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: rgba($ak-amber, 0.08);
+  border: 1px solid rgba($ak-amber, 0.3);
+  border-left: 4px solid $ak-amber;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    @media (min-width: 640px) {
+      flex-direction: row;
+      align-items: center;
+      gap: 1rem;
+    }
+  }
+
+  &__badge {
+    align-self: flex-start;
+    padding: 0.2rem 0.5rem;
+    font-family: monospace;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    background: rgba($ak-amber, 0.2);
+    color: $ak-amber;
+    border: 1px solid rgba($ak-amber, 0.5);
+    white-space: nowrap;
+  }
+
+  &__text {
+    strong {
+      display: block;
+      font-size: 0.85rem;
+      letter-spacing: 0.5px;
+      color: $ak-amber;
+      margin-bottom: 0.2rem;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.78rem;
+      color: $ak-text-secondary;
+      line-height: 1.4;
+      max-width: 680px;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+  }
+}
+
+.ak-btn-demo {
+  padding: 0.55rem 0.95rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: $ak-text-primary;
+  font-family: monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.ak-btn-sync-cta {
+  padding: 0.55rem 1.1rem;
+  background: $ak-cyan;
+  border: 1px solid $ak-cyan;
+  color: #000;
+  font-family: monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: lighten($ak-cyan, 10%);
+    box-shadow: 0 0 10px rgba($ak-cyan, 0.4);
+  }
 }
 
 // Tactical Ribbon

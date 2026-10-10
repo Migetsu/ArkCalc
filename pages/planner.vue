@@ -7,6 +7,7 @@ import { usePlannerStore } from '~/stores/plannerStore'
 import { useToast } from '~/composables/useToast'
 import OperatorCardSkeleton from '~/components/ui/OperatorCardSkeleton.vue'
 import FarmingTableSkeleton from '~/components/ui/FarmingTableSkeleton.vue'
+import AccountSyncModal from '~/components/AccountSyncModal.vue'
 import operatorsData from '~/assets/data/operators.json'
 import materialsData from '~/assets/data/materials.json'
 import type {
@@ -26,6 +27,40 @@ const operatorStore = useOperatorStore()
 const plannerStore = usePlannerStore()
 const toast = useToast()
 const route = useRoute()
+
+const isSyncModalOpen = ref(false)
+const isLoadingDemo = ref(false)
+
+const loadDemoData = async () => {
+  isLoadingDemo.value = true
+  try {
+    const demo = await userStore.loadDemoData()
+    // Select first operator and add to plan if empty
+    if (plannerStore.plannedTargets.length === 0 && allOperators.value[0]) {
+      const firstOp = allOperators.value[0]
+      plannerStore.addTarget({
+        operatorId: firstOp.id,
+        operator: firstOp,
+        currentElite: 0,
+        targetElite: 2,
+        currentLevel: 1,
+        targetLevel: 90,
+        currentMastery: 0,
+        targetMastery: 3,
+        currentModule: 0,
+        targetModule: 3,
+      })
+    }
+    toast.success(`Demo account loaded! Welcome Doctor ${demo.profile.nickname}.`, {
+      title: 'DEMO LOADED',
+      tag: 'PRTS // DEMO',
+    })
+  } catch (err: any) {
+    toast.error('Failed to load demo data.', { title: 'ERROR' })
+  } finally {
+    isLoadingDemo.value = false
+  }
+}
 
 // Load Penguin stats items & stages if not already loaded
 const server = computed(() => userStore.profile.server || 'EN')
@@ -875,12 +910,38 @@ const adjustInventory = (itemId: string, delta: number) => {
 
           <!-- Empty State -->
           <div v-else class="ak-empty-materials">
-            <p v-if="plannedTargets.length === 0">
-              NO OPERATORS IN PLAN. SELECT AN OPERATOR ON THE LEFT TO BEGIN.
-            </p>
-            <p v-else>
-              ✓ ALL REQUIRED MATERIALS ARE FULLY STOCKED IN YOUR DEPOT!
-            </p>
+            <template v-if="plannedTargets.length === 0">
+              <span class="ak-empty-materials__icon">📋</span>
+              <p class="ak-empty-materials__title">NO OPERATOR TARGETS IN ACTIVE PLAN</p>
+              <p class="ak-empty-materials__desc">
+                Select an operator from the left panel and click <strong>"+ ADD / UPDATE IN PLAN"</strong> to calculate material deficits.
+              </p>
+              <div v-if="!userStore.hasSyncedAccount" class="ak-empty-materials__actions">
+                <button
+                  type="button"
+                  class="ak-btn-demo"
+                  :disabled="isLoadingDemo"
+                  @click="loadDemoData"
+                >
+                  <span v-if="isLoadingDemo">LOADING DEMO...</span>
+                  <span v-else>LOAD DEMO DATA</span>
+                </button>
+                <button
+                  type="button"
+                  class="ak-btn-sync-cta"
+                  @click="isSyncModalOpen = true"
+                >
+                  SYNC ACCOUNT →
+                </button>
+              </div>
+            </template>
+            <template v-else>
+              <span class="ak-empty-materials__icon ak-text-green">✓</span>
+              <p class="ak-empty-materials__title ak-text-green">ALL MATERIALS FULLY STOCKED</p>
+              <p class="ak-empty-materials__desc">
+                Your depot inventory contains sufficient resources to complete all planned upgrades!
+              </p>
+            </template>
           </div>
         </div>
 
@@ -1027,6 +1088,13 @@ const adjustInventory = (itemId: string, delta: number) => {
         </div>
       </main>
     </div>
+
+    <!-- Account Sync Modal -->
+    <AccountSyncModal
+      :is-open="isSyncModalOpen"
+      @close="isSyncModalOpen = false"
+      @synced="isSyncModalOpen = false"
+    />
   </div>
 </template>
 
@@ -1406,6 +1474,47 @@ const adjustInventory = (itemId: string, delta: number) => {
   }
 }
 
+.ak-btn-demo {
+  padding: 0.55rem 0.95rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: $ak-text-primary;
+  font-family: monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.ak-btn-sync-cta {
+  padding: 0.55rem 1.1rem;
+  background: $ak-cyan;
+  border: 1px solid $ak-cyan;
+  color: #000;
+  font-family: monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: lighten($ak-cyan, 10%);
+    box-shadow: 0 0 10px rgba($ak-cyan, 0.4);
+  }
+}
+
 // Planned targets chips
 .ak-target-chips {
   display: flex;
@@ -1776,11 +1885,48 @@ const adjustInventory = (itemId: string, delta: number) => {
 }
 
 .ak-empty-materials {
-  padding: 4rem 2rem;
+  padding: 3.5rem 2rem;
   text-align: center;
   font-family: monospace;
   color: $ak-text-muted;
   border: 1px dashed rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  &__icon {
+    font-size: 2.2rem;
+    margin-bottom: 0.35rem;
+  }
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: $ak-text-primary;
+    margin: 0;
+  }
+
+  &__desc {
+    max-width: 520px;
+    font-size: 0.8rem;
+    color: $ak-text-secondary;
+    line-height: 1.45;
+    margin: 0;
+
+    strong {
+      color: $ak-cyan;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
 }
 
 // -----------------------------------------------------------------------------

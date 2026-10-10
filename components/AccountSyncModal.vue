@@ -185,11 +185,10 @@ const handleSync = async () => {
 
     if (activeTab.value === 'demo') {
       // Simulate network latency for demo
-      await new Promise((r) => setTimeout(r, 800))
-      syncStage.value = 'DECODING DEPOT INVENTORY & TROOP ROSTER...'
       await new Promise((r) => setTimeout(r, 600))
-      const demo = generateDemoData()
-      await userStore.syncFromArkprtsData(demo)
+      syncStage.value = 'DECODING DEPOT INVENTORY & TROOP ROSTER...'
+      await new Promise((r) => setTimeout(r, 500))
+      const demo = await userStore.loadDemoData()
       successData.value = demo
       emit('synced', demo)
       toast.success(
