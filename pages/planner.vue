@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '~/stores/userStore'
 import { usePenguinStats } from '~/composables/usePenguinStats'
 import { useOperatorStore } from '~/stores/operatorStore'
+import { usePlannerStore } from '~/stores/plannerStore'
 import operatorsData from '~/assets/data/operators.json'
 import materialsData from '~/assets/data/materials.json'
 import type {
@@ -19,6 +20,8 @@ useHead({
 const userStore = useUserStore()
 const penguin = usePenguinStats()
 const operatorStore = useOperatorStore()
+const plannerStore = usePlannerStore()
+const route = useRoute()
 
 // Load Penguin stats items & stages if not already loaded
 const server = computed(() => userStore.profile.server || 'EN')
@@ -41,16 +44,20 @@ onMounted(async () => {
     refreshPenguinStats(false),
   ])
 
+  // Support deep-linking from dashboard: /planner?op=char_xxx
+  if (route.query.op) {
+    selectedOperatorId.value = String(route.query.op)
+  } else if (!selectedOperatorId.value && allOperators.value[0]) {
+    selectedOperatorId.value = allOperators.value[0]!.id
+  }
+
   if (allOperators.value.length > 0) {
-    if (!selectedOperatorId.value) {
-      selectedOperatorId.value = allOperators.value[0]!.id
-    }
-    if (plannedTargets.value.length > 0 && plannedTargets.value[0]) {
-      const matched = allOperators.value.find(
-        (op) => op.id === plannedTargets.value[0]!.operatorId
-      )
-      if (matched) {
-        plannedTargets.value[0]!.operator = matched
+    if (plannedTargets.value.length > 0) {
+      for (const target of plannedTargets.value) {
+        const matched = allOperators.value.find((op) => op.id === target.operatorId)
+        if (matched) {
+          target.operator = matched
+        }
       }
     }
   }
@@ -146,29 +153,12 @@ watch(selectedOperatorId, (newId) => {
 })
 
 // -----------------------------------------------------------------------------
-// Active Planner Targets List
+// Active Planner Targets List (Backed by plannerStore + LocalStorage)
 // -----------------------------------------------------------------------------
-const plannedTargets = ref<TargetPlanItem[]>([
-  {
-    operatorId: (operatorsData[0] as OperatorData)?.id || '',
-    operator: operatorsData[0] as OperatorData,
-    currentElite: 0,
-    targetElite: 2,
-    currentLevel: 1,
-    targetLevel: 90,
-    currentMastery: 0,
-    targetMastery: 3,
-    currentModule: 0,
-    targetModule: 3,
-  },
-])
+const plannedTargets = computed(() => plannerStore.plannedTargets)
 
 const addCurrentToPlan = () => {
   if (!currentOperator.value) return
-
-  const existingIdx = plannedTargets.value.findIndex(
-    (t) => t.operatorId === currentOperator.value.id
-  )
 
   const newTarget: TargetPlanItem = {
     operatorId: currentOperator.value.id,
@@ -183,15 +173,11 @@ const addCurrentToPlan = () => {
     targetModule: targetModule.value,
   }
 
-  if (existingIdx >= 0) {
-    plannedTargets.value[existingIdx] = newTarget
-  } else {
-    plannedTargets.value.push(newTarget)
-  }
+  plannerStore.addTarget(newTarget)
 }
 
 const removeTarget = (operatorId: string) => {
-  plannedTargets.value = plannedTargets.value.filter((t) => t.operatorId !== operatorId)
+  plannerStore.removeTarget(operatorId)
 }
 
 // -----------------------------------------------------------------------------
