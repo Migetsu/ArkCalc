@@ -9,6 +9,7 @@
     "preview": "nuxt preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "icons:generate": "node scripts/generate-icons.mjs",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
+    "@vite-pwa/nuxt": "^1.1.1",
     "sass": "^1.105.1",
     "sharp": "^0.35.5",
     "typescript": "^5.9.3",

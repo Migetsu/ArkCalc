@@ -3,11 +3,160 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
 
+  app: {
+    head: {
+      title: 'ArkCalc // PRTS Tactical Terminal',
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+        { name: 'theme-color', content: '#0d1117' },
+        { name: 'description', content: 'Arknights Doctor tactical assistant: promotion calculator, spark simulator, recruitment matrix and depot inventory.' },
+        { name: 'mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+        { name: 'apple-mobile-web-app-title', content: 'ArkCalc' },
+      ],
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+      ],
+    },
+  },
+
   modules: [
     '@pinia/nuxt',
     'pinia-plugin-persistedstate/nuxt',
     '@nuxtjs/supabase',
+    '@vite-pwa/nuxt',
   ],
+
+  pwa: {
+    registerType: 'autoUpdate',
+    manifest: {
+      name: 'ArkCalc - Arknights PRTS Tactical Terminal',
+      short_name: 'ArkCalc',
+      description: 'Arknights planning assistant: operator promotions, gacha spark projections, recruitment tags and depot inventory.',
+      theme_color: '#0d1117',
+      background_color: '#0a0d14',
+      display: 'standalone',
+      orientation: 'portrait-primary',
+      start_url: '/',
+      scope: '/',
+      lang: 'ru',
+      categories: ['games', 'utilities'],
+      icons: [
+        {
+          src: '/pwa-64x64.png',
+          sizes: '64x64',
+          type: 'image/png',
+        },
+        {
+          src: '/pwa-192x192.png',
+          sizes: '192x192',
+          type: 'image/png',
+        },
+        {
+          src: '/pwa-512x512.png',
+          sizes: '512x512',
+          type: 'image/png',
+        },
+        {
+          src: '/maskable-icon-512x512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'maskable',
+        },
+        {
+          src: '/apple-touch-icon.png',
+          sizes: '180x180',
+          type: 'image/png',
+        },
+      ],
+    },
+    workbox: {
+      navigateFallback: '/',
+      globPatterns: ['**/*.{js,css,html,png,svg,ico,json,woff,woff2}'],
+      runtimeCaching: [
+        {
+          urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/gh\/PuppiizSunniiz\/Arknight-Images\/.*/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'arkcalc-operator-avatars',
+            expiration: {
+              maxEntries: 600,
+              maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+            },
+            cacheableResponse: {
+              statuses: [0, 200],
+            },
+          },
+        },
+        {
+          urlPattern: /^https:\/\/arknights\.wiki\.gg\/.*/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'arkcalc-wiki-assets',
+            expiration: {
+              maxEntries: 200,
+              maxAgeSeconds: 60 * 60 * 24 * 14, // 14 days
+            },
+            cacheableResponse: {
+              statuses: [0, 200],
+            },
+          },
+        },
+        {
+          urlPattern: /^https:\/\/penguin-stats\.io\/PenguinStats\/api\/.*/i,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'arkcalc-penguin-api',
+            expiration: {
+              maxEntries: 40,
+              maxAgeSeconds: 60 * 60 * 24, // 1 day
+            },
+            networkTimeoutSeconds: 4,
+          },
+        },
+        {
+          urlPattern: /\/api\/(events|banners|operators|penguin\/matrix).*/i,
+          handler: 'StaleWhileRevalidate',
+          options: {
+            cacheName: 'arkcalc-local-api',
+            expiration: {
+              maxEntries: 50,
+              maxAgeSeconds: 60 * 60 * 12, // 12 hours
+            },
+            cacheableResponse: {
+              statuses: [0, 200],
+            },
+          },
+        },
+        {
+          urlPattern: /\/images\/(items|operators)\/.*\.(png|jpg|webp|svg)$/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'arkcalc-static-images',
+            expiration: {
+              maxEntries: 400,
+              maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+            },
+            cacheableResponse: {
+              statuses: [0, 200],
+            },
+          },
+        },
+      ],
+    },
+    client: {
+      installPrompt: true,
+      periodicSyncForUpdates: 3600,
+    },
+    devOptions: {
+      enabled: true,
+      type: 'module',
+    },
+  },
 
   supabase: {
     redirect: false,
