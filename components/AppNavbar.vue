@@ -183,31 +183,42 @@ const closeMobileMenu = () => {
   &__container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 1.5rem;
-    height: 64px;
+    padding: 0 1rem;
+    height: 56px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1.5rem;
+    gap: 0.75rem;
+
+    @media (min-width: 768px) {
+      padding: 0 1.5rem;
+      height: 64px;
+      gap: 1.5rem;
+    }
   }
 
   // Brand
   &__brand {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
     text-decoration: none;
     color: inherit;
     transition: opacity 0.2s ease;
+    flex-shrink: 0;
 
     &:hover {
       opacity: 0.85;
     }
+
+    @media (min-width: 768px) {
+      gap: 0.75rem;
+    }
   }
 
   &__logo-icon {
-    width: 34px;
-    height: 34px;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -217,8 +228,18 @@ const closeMobileMenu = () => {
     clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
 
     .ak-icon {
-      width: 20px;
-      height: 20px;
+      width: 16px;
+      height: 16px;
+    }
+
+    @media (min-width: 768px) {
+      width: 34px;
+      height: 34px;
+
+      .ak-icon {
+        width: 20px;
+        height: 20px;
+      }
     }
   }
 
@@ -228,18 +249,28 @@ const closeMobileMenu = () => {
   }
 
   &__title {
-    font-size: 1.15rem;
+    font-size: 1rem;
     font-weight: 800;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
     color: $ak-text-primary;
     line-height: 1.1;
+
+    @media (min-width: 768px) {
+      font-size: 1.15rem;
+      letter-spacing: 2px;
+    }
   }
 
   &__subtitle {
-    font-size: 0.65rem;
-    letter-spacing: 1.5px;
+    font-size: 0.55rem;
+    letter-spacing: 1px;
     color: $ak-cyan;
     font-family: monospace;
+
+    @media (min-width: 768px) {
+      font-size: 0.65rem;
+      letter-spacing: 1.5px;
+    }
   }
 
   // Desktop Navigation
@@ -257,7 +288,11 @@ const closeMobileMenu = () => {
   &__status {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
+
+    @media (min-width: 768px) {
+      gap: 1rem;
+    }
   }
 
   // Mobile Hamburger
@@ -418,14 +453,19 @@ const closeMobileMenu = () => {
 .ak-status-card {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.35rem 0.75rem;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   font-family: monospace;
   cursor: pointer;
   text-align: left;
   transition: all 0.2s ease;
+
+  @media (min-width: 768px) {
+    padding: 0.35rem 0.75rem;
+    gap: 0.6rem;
+  }
 
   &:hover {
     background: rgba(255, 255, 255, 0.07);
@@ -452,14 +492,27 @@ const closeMobileMenu = () => {
   }
 
   &__name {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 600;
     color: $ak-text-primary;
+    max-width: 90px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    @media (min-width: 768px) {
+      font-size: 0.75rem;
+      max-width: none;
+    }
   }
 
   &__sub {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     color: $ak-text-muted;
+
+    @media (min-width: 768px) {
+      font-size: 0.65rem;
+    }
   }
 }
 
@@ -467,22 +520,42 @@ const closeMobileMenu = () => {
 .ak-btn-sync {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.75rem;
+  gap: 0.35rem;
+  padding: 0.3rem 0.5rem;
   background: rgba($ak-cyan, 0.12);
   border: 1px solid rgba($ak-cyan, 0.4);
   color: $ak-cyan;
   font-family: monospace;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   cursor: pointer;
   transition: all 0.2s ease;
   clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
 
+  @media (min-width: 768px) {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    gap: 0.4rem;
+  }
+
   &__icon {
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
+
+    @media (min-width: 768px) {
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  &__label {
+    display: none;
+
+    @media (min-width: 480px) {
+      display: inline;
+    }
   }
 
   &:hover {

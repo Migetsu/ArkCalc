@@ -93,20 +93,35 @@ const tools = [
   }
 
   &__title {
-    font-size: 3rem;
+    font-size: 2rem;
     font-weight: 900;
-    letter-spacing: 3px;
+    letter-spacing: 2px;
     margin: 0;
     color: $ak-text-primary;
-    line-height: 1;
+    line-height: 1.05;
+
+    @media (min-width: 640px) {
+      font-size: 2.5rem;
+      letter-spacing: 2.5px;
+    }
+
+    @media (min-width: 1024px) {
+      font-size: 3rem;
+      letter-spacing: 3px;
+    }
   }
 
   &__desc {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     color: $ak-text-secondary;
     max-width: 600px;
     margin: 0;
-    line-height: 1.5;
+    line-height: 1.45;
+
+    @media (min-width: 768px) {
+      font-size: 1.1rem;
+      line-height: 1.5;
+    }
   }
 }
 

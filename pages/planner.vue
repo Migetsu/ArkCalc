@@ -963,19 +963,31 @@ const adjustInventory = (itemId: string, delta: number) => {
   }
 
   &__title {
-    font-size: 2.2rem;
+    font-size: 1.4rem;
     font-weight: 800;
     margin: 0.25rem 0;
     color: $ak-text-primary;
-    line-height: 1.1;
+    line-height: 1.15;
+
+    @media (min-width: 640px) {
+      font-size: 1.8rem;
+    }
+
+    @media (min-width: 1024px) {
+      font-size: 2.2rem;
+    }
   }
 
   &__desc {
     color: $ak-text-secondary;
     margin: 0;
     max-width: 800px;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     line-height: 1.4;
+
+    @media (min-width: 768px) {
+      font-size: 0.95rem;
+    }
   }
 
   &__layout {
@@ -1696,10 +1708,16 @@ const adjustInventory = (itemId: string, delta: number) => {
 
 .ak-farming-plan-summary {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 1.25rem;
+  gap: 0.75rem 1.25rem;
   font-family: monospace;
   font-size: 0.72rem;
+  margin-top: 0.5rem;
+
+  @media (min-width: 640px) {
+    margin-top: 0;
+  }
 }
 
 .ak-fps-item {

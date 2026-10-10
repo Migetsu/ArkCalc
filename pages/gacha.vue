@@ -73,17 +73,31 @@ const activeTab = ref<'calculator' | 'timeline'>('calculator')
   }
 
   &__title {
-    font-size: 2.2rem;
+    font-size: 1.4rem;
     font-weight: 800;
     margin: 0;
     color: $ak-text-primary;
+    line-height: 1.15;
+
+    @media (min-width: 640px) {
+      font-size: 1.8rem;
+    }
+
+    @media (min-width: 1024px) {
+      font-size: 2.2rem;
+    }
   }
 
   &__desc {
     color: $ak-text-secondary;
     margin: 0;
     max-width: 750px;
+    font-size: 0.85rem;
     line-height: 1.45;
+
+    @media (min-width: 768px) {
+      font-size: 0.95rem;
+    }
   }
 }
 

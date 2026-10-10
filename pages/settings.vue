@@ -433,18 +433,33 @@ onMounted(() => {
   }
 
   &__title {
-    font-size: 2rem;
+    font-size: 1.4rem;
     font-weight: 800;
-    letter-spacing: 1.5px;
+    letter-spacing: 1px;
     margin: 0.25rem 0 0.5rem;
     color: $ak-text-primary;
+
+    @media (min-width: 640px) {
+      font-size: 1.75rem;
+      letter-spacing: 1.2px;
+    }
+
+    @media (min-width: 1024px) {
+      font-size: 2rem;
+      letter-spacing: 1.5px;
+    }
   }
 
   &__desc {
     color: $ak-text-secondary;
-    font-size: 0.9rem;
-    line-height: 1.5;
+    font-size: 0.85rem;
+    line-height: 1.45;
     margin: 0;
+
+    @media (min-width: 768px) {
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
   }
 
   &__grid {

@@ -40,16 +40,30 @@ useHead({
   }
 
   &__title {
-    font-size: 2rem;
+    font-size: 1.4rem;
     font-weight: 800;
     margin: 0;
     color: $ak-text-primary;
+    line-height: 1.15;
+
+    @media (min-width: 640px) {
+      font-size: 1.75rem;
+    }
+
+    @media (min-width: 1024px) {
+      font-size: 2rem;
+    }
   }
 
   &__desc {
     color: $ak-text-secondary;
     margin: 0;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
+
+    @media (min-width: 768px) {
+      font-size: 0.95rem;
+    }
   }
 
   &__content {

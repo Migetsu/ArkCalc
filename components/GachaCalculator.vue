@@ -712,12 +712,20 @@ const saveToStore = () => {
   }
 
   &__big-num {
-    font-size: 4rem;
+    font-size: 2.75rem;
     font-weight: 900;
     line-height: 1;
     color: $ak-text-primary;
     text-shadow: 0 0 20px rgba($ak-cyan, 0.4);
     letter-spacing: -1px;
+
+    @media (min-width: 640px) {
+      font-size: 3.5rem;
+    }
+
+    @media (min-width: 1024px) {
+      font-size: 4rem;
+    }
   }
 
   &__unit {
