@@ -36,6 +36,12 @@ const goToPlanner = () => {
   emit('close')
   router.push(`/planner?op=${props.operator.id}`)
 }
+
+const goToProfile = () => {
+  if (!props.operator) return
+  emit('close')
+  router.push(`/operators/${props.operator.id}`)
+}
 </script>
 
 <template>
@@ -176,10 +182,18 @@ const goToPlanner = () => {
         </button>
         <button
           type="button"
+          class="ak-btn-profile-jump"
+          @click="goToProfile"
+        >
+          <span>ДОСЬЕ, СТАТЫ И СКИЛЛЫ</span>
+          <span class="ak-btn-arrow">➜</span>
+        </button>
+        <button
+          type="button"
           class="ak-btn-planner-jump"
           @click="goToPlanner"
         >
-          <span>РАССЧИТАТЬ В ПЛАНИРОВЩИКЕ ПРОКАЧКИ</span>
+          <span>РАССЧИТАТЬ В ПЛАНИРОВЩИКЕ</span>
           <span class="ak-btn-arrow">➜</span>
         </button>
       </div>
@@ -485,6 +499,32 @@ const goToPlanner = () => {
   &:hover {
     color: #fff;
     border-color: rgba(255, 255, 255, 0.4);
+  }
+}
+
+.ak-btn-profile-jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.1rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  font-family: monospace;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: #fff;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
+  }
+
+  .ak-btn-arrow {
+    font-weight: 800;
   }
 }
 

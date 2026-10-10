@@ -58,6 +58,10 @@ const goToPlanner = (op: CatalogOperator) => {
   router.push(`/planner?op=${op.id}`)
 }
 
+const goToDetail = (op: CatalogOperator) => {
+  router.push(`/operators/${op.id}`)
+}
+
 // -----------------------------------------------------------------------------
 // Lifecycle
 // -----------------------------------------------------------------------------
@@ -522,8 +526,16 @@ const getRarityTheme = (rarity: number) => {
           <div class="ak-op-card__actions">
             <button
               type="button"
+              class="ak-card-btn ak-card-btn--detail"
+              title="Характеристики на Elite 0-2 и навыки"
+              @click="goToDetail(op)"
+            >
+              СТАТЫ
+            </button>
+            <button
+              type="button"
               class="ak-card-btn ak-card-btn--info"
-              title="Посмотреть тактическое досье и скиллы"
+              title="Посмотреть быстрое досье"
               @click="openDossier(op)"
             >
               ДОСЬЕ
@@ -534,7 +546,7 @@ const getRarityTheme = (rarity: number) => {
               title="Открыть в калькуляторе прокачки"
               @click="goToPlanner(op)"
             >
-              В ПЛАННЕР ➜
+              ПЛАН ➜
             </button>
           </div>
         </article>
@@ -615,6 +627,14 @@ const getRarityTheme = (rarity: number) => {
                   <div class="ak-list-actions">
                     <button
                       type="button"
+                      class="ak-list-btn ak-list-btn--detail"
+                      title="Характеристики и навыки"
+                      @click="goToDetail(op)"
+                    >
+                      СТАТЫ
+                    </button>
+                    <button
+                      type="button"
                       class="ak-list-btn ak-list-btn--info"
                       title="Досье"
                       @click="openDossier(op)"
@@ -627,7 +647,7 @@ const getRarityTheme = (rarity: number) => {
                       title="В планнер"
                       @click="goToPlanner(op)"
                     >
-                      ПЛАННЕР ➜
+                      ПЛАН ➜
                     </button>
                   </div>
                 </td>
@@ -1379,6 +1399,16 @@ const getRarityTheme = (rarity: number) => {
   text-align: center;
 }
 
+.ak-card-btn--detail {
+  color: #38bdf8;
+  border-right: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.ak-card-btn--detail:hover {
+  background: rgba(56, 189, 248, 0.15);
+  color: #ffffff;
+}
+
 .ak-card-btn--info {
   color: #94a3b8;
   border-right: 1px solid rgba(75, 85, 99, 0.3);
@@ -1520,6 +1550,17 @@ const getRarityTheme = (rarity: number) => {
   cursor: pointer;
   letter-spacing: 0.05em;
   transition: all 0.15s ease;
+}
+
+.ak-list-btn--detail {
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+}
+
+.ak-list-btn--detail:hover {
+  background: #38bdf8;
+  color: #0b0e14;
 }
 
 .ak-list-btn--info {
