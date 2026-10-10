@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import BannerTimeline from '~/components/BannerTimeline.vue'
+
 useHead({
-  title: 'Gacha Calculator // ArkCalc',
+  title: 'Gacha & Banner Timeline // ArkCalc',
 })
 </script>
 
@@ -8,16 +10,14 @@ useHead({
   <div class="ak-page">
     <div class="ak-page__header">
       <span class="ak-page__tag">MODULE // GCH-02</span>
-      <h1 class="ak-page__title">Headhunting & Spark Calculator</h1>
-      <p class="ak-page__desc">Simulate gacha pulls, calculate 300-spark safety margins, and evaluate pull odds.</p>
+      <h1 class="ak-page__title">Headhunting & Banner Timeline</h1>
+      <p class="ak-page__desc">
+        Track upcoming CN banners, calculate estimated Global release dates with 175-day offset, and plan sparks.
+      </p>
     </div>
 
     <div class="ak-page__content">
-      <div class="ak-placeholder-card">
-        <div class="ak-placeholder-card__icon">💎</div>
-        <h2>Headhunting Module Ready</h2>
-        <p>Calculate pulls from Orundum, Originite Prime, and Headhunting Permits with pity rate curve simulation.</p>
-      </div>
+      <BannerTimeline :initial-offset-days="175" />
     </div>
   </div>
 </template>
@@ -42,7 +42,7 @@ useHead({
   }
 
   &__title {
-    font-size: 2rem;
+    font-size: 2.2rem;
     font-weight: 800;
     margin: 0;
     color: $ak-text-primary;
@@ -51,32 +51,7 @@ useHead({
   &__desc {
     color: $ak-text-secondary;
     margin: 0;
-  }
-}
-
-.ak-placeholder-card {
-  background: rgba(26, 26, 30, 0.6);
-  border: 1px dashed rgba(255, 255, 255, 0.15);
-  padding: 3rem 2rem;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-
-  &__icon {
-    font-size: 3rem;
-  }
-
-  h2 {
-    color: $ak-amber;
-    margin: 0;
-  }
-
-  p {
-    color: $ak-text-secondary;
-    max-width: 500px;
-    margin: 0;
+    max-width: 750px;
   }
 }
 </style>

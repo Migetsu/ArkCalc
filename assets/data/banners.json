@@ -1,0 +1,252 @@
+[
+  {
+    "id": "banner_cn_2026_05_anni",
+    "name": "Shatter the Black Sky",
+    "nameZh": "碎裂黑天",
+    "type": "limited",
+    "category": "Celebration",
+    "cnStartDate": "2026-05-01T16:00:00+08:00",
+    "cnEndDate": "2026-05-15T03:59:00+08:00",
+    "sparkCost": 300,
+    "freePulls": 24,
+    "description": "7th Anniversary Celebration Limited Headhunting featuring new Alters.",
+    "featuredOperators": [
+      {
+        "id": "char_1037_talulah",
+        "name": "Talulah the Liberator",
+        "rarity": 6,
+        "profession": "Guard",
+        "isLimited": true,
+        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_010_chen.png"
+      },
+      {
+        "id": "char_1038_theresa",
+        "name": "Theresa",
+        "rarity": 6,
+        "profession": "Supporter",
+        "isLimited": false,
+        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_003_kalts.png"
+      },
+      {
+        "id": "char_1039_guard",
+        "name": "Astra",
+        "rarity": 5,
+        "profession": "Caster",
+        "isLimited": false,
+        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_002_amiya.png"
+      }
+    ]
+  },
+  {
+    "id": "banner_cn_2026_04_dungeon",
+    "name": "Delicious on Terra II",
+    "nameZh": "泰拉饭·再会",
+    "type": "collab",
+    "category": "Collaboration",
+    "cnStartDate": "2026-04-09T16:00:00+08:00",
+    "cnEndDate": "2026-04-23T03:59:00+08:00",
+    "sparkCost": 120,
+    "freePulls": 20,
+    "description": "Special Collaboration Part 2 with Dungeon Meshi. Guaranteed collab 6★ within 120 pulls.",
+    "featuredOperators": [
+      {
+        "id": "char_collab_senshi",
+        "name": "Senshi",
+        "rarity": 6,
+        "profession": "Defender",
+        "isLimited": true,
+        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_202_demkni.png"
+      },
+      {
+        "id": "char_collab_falun",
+        "name": "Falin",
+        "rarity": 5,
+        "profession": "Medic",
+        "isLimited": true,
+        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_179_cgbird.png"
+      }
+    ]
+  },
+  {
+    "id": "banner_cn_2026_03_standard",
+    "name": "Gears of Order",
+    "nameZh": "秩序齿轮",
+    "type": "standard",
+    "category": "Standard",
+    "cnStartDate": "2026-03-12T16:00:00+08:00",
+    "cnEndDate": "2026-03-26T03:59:00+08:00",
+    "sparkCost": 300,
+    "freePulls": 0,
+    "description": "Side Story: Rim Billiton Tech Corporation. New vanguard and sniper operators.",
+    "featuredOperators": [
+      {
+        "id": "char_4125_baird",
+        "name": "Kestrel",
+        "rarity": 6,
+        "profession": "Sniper",
+        "isLimited": false,
+        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_340_shwaz.png"
+      },
+      {
+        "id": "char_4126_scout",
+        "name": "Orehound",
+        "rarity": 5,
+        "profession": "Vanguard",
+        "isLimited": false,
+        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_222_bpipe.png"
+      }
+    ]
+  },
+  {
+    "id": "banner_cn_2026_02_cny",
+    "name": "Here A People Sows",
+    "nameZh": "怀黍离",
+    "type": "limited",
+    "category": "Sui Spring Festival",
+    "cnStartDate": "2026-02-01T16:00:00+08:00",
+    "cnEndDate": "2026-02-15T03:59:00+08:00",
+    "sparkCost": 300,
+    "freePulls": 24,
+    "description": "Spring Festival limited event featuring the Sui sibling Shu and Zuo Le.",
+    "featuredOperators": [
+      {
+        "id": "char_1033_shu",
+        "name": "Shu",
+        "rarity": 6,
+        "profession": "Defender",
+        "isLimited": true,
+        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_2014_nian.png"
+      },
+      {
+        "id": "char_1034_zuole",
+        "name": "Zuo Le",
+        "rarity": 6,
+        "profession": "Guard",
+        "isLimited": false,
+        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_293_thorns.png"
+      },
+      {
+        "id": "char_1035_grain",
+        "name": "Grain Buds",
+        "rarity": 5,
+        "profession": "Supporter",
+        "isLimited": false,
+        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_242_otter.png"
+      }
+    ]
+  },
+  {
+    "id": "banner_cn_2026_01_collab",
+    "name": "Through the Looking Glass",
+    "nameZh": "镜中奇遇",
+    "type": "collab",
+    "category": "Collaboration",
+    "cnStartDate": "2026-01-10T16:00:00+08:00",
+    "cnEndDate": "2026-01-24T03:59:00+08:00",
+    "sparkCost": 120,
+    "freePulls": 10,
+    "description": "Special Collaboration event with limited rate-up crossover characters.",
+    "featuredOperators": [
+      {
+        "id": "char_collab_marcille",
+        "name": "Marcille",
+        "rarity": 6,
+        "profession": "Caster",
+        "isLimited": true,
+        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_113_cqbw.png"
+      },
+      {
+        "id": "char_collab_laios",
+        "name": "Laios",
+        "rarity": 5,
+        "profession": "Guard",
+        "isLimited": true,
+        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_172_svrash.png"
+      },
+      {
+        "id": "char_collab_chilchuck",
+        "name": "Chilchuck",
+        "rarity": 5,
+        "profession": "Specialist",
+        "isLimited": true,
+        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_214_kafka.png"
+      }
+    ]
+  },
+  {
+    "id": "banner_cn_2025_11_leithanien",
+    "name": "Zwillingstürme im Herbst",
+    "nameZh": "秋风崔嵬双子塔",
+    "type": "limited",
+    "category": "Thank-You Celebration",
+    "cnStartDate": "2025-11-01T16:00:00+08:00",
+    "cnEndDate": "2025-11-15T03:59:00+08:00",
+    "sparkCost": 300,
+    "freePulls": 24,
+    "description": "Thank-You Celebration event in Leithanien with Viviana and Virtuosa.",
+    "featuredOperators": [
+      {
+        "id": "char_1032_virtuosa",
+        "name": "Virtuosa",
+        "rarity": 6,
+        "profession": "Supporter",
+        "isLimited": true,
+        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_248_mgllan.png"
+      },
+      {
+        "id": "char_1031_viviana",
+        "name": "Viviana",
+        "rarity": 6,
+        "profession": "Guard",
+        "isLimited": false,
+        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_1012_skadi2.png"
+      },
+      {
+        "id": "char_1030_bassi",
+        "name": "Bassline",
+        "rarity": 5,
+        "profession": "Defender",
+        "isLimited": false,
+        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_198_blackd.png"
+      }
+    ]
+  },
+  {
+    "id": "banner_cn_2025_09_siesta",
+    "name": "So Long, Adele",
+    "nameZh": "火山旅梦",
+    "type": "limited",
+    "category": "Summer Carnival",
+    "cnStartDate": "2025-08-01T16:00:00+08:00",
+    "cnEndDate": "2025-08-15T03:59:00+08:00",
+    "sparkCost": 300,
+    "freePulls": 24,
+    "description": "Summer Carnival limited event in Siesta featuring Eyjafjalla the Hvit Aska and Swire the Elegant Wit.",
+    "featuredOperators": [
+      {
+        "id": "char_1036_eyjafjalla2",
+        "name": "Eyjafjalla the Hvít Aska",
+        "rarity": 6,
+        "profession": "Medic",
+        "isLimited": true,
+        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_180_amgoat.png"
+      },
+      {
+        "id": "char_1033_swire2",
+        "name": "Swire the Elegant Wit",
+        "rarity": 6,
+        "profession": "Specialist",
+        "isLimited": false,
+        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_308_swire.png"
+      },
+      {
+        "id": "char_1034_poncirus",
+        "name": "Poncirus",
+        "rarity": 5,
+        "profession": "Vanguard",
+        "isLimited": false,
+        "avatar": "https://raw.githubusercontent.com/Aceship/Arknight-Images/master/avatars/char_222_bpipe.png"
+      }
+    ]
+  }
+]

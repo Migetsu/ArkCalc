@@ -45,3 +45,4 @@ export interface UserSettings {
 
 export * from './database.types'
 export * from './penguin'
+export * from './banner'
