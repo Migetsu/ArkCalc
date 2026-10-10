@@ -349,6 +349,69 @@ export const useUserStore = defineStore(
       }
     }
 
+    const syncFromArkprtsData = async (data: {
+      profile?: { uid?: string; nickname?: string; level?: number; server?: string }
+      inventory?: Record<string, number>
+      roster?: Array<{
+        operator_id: string
+        elite: number
+        level: number
+        potential: number
+        skill_level: number
+        masteries?: Record<string, number>
+        modules?: Record<string, number>
+      }>
+      gacha?: {
+        orundum?: number
+        originite_prime?: number
+        single_permits?: number
+        ten_permits?: number
+      }
+    }) => {
+      if (data.profile) {
+        if (data.profile.nickname) profile.value.username = data.profile.nickname
+        if (data.profile.uid) profile.value.doctor_id = data.profile.uid
+        if (data.profile.level) profile.value.level = data.profile.level
+        if (data.profile.server) profile.value.server = data.profile.server
+      }
+
+      if (data.inventory) {
+        inventory.value = {
+          ...inventory.value,
+          ...data.inventory,
+        }
+      }
+
+      if (data.roster && Array.isArray(data.roster)) {
+        for (const op of data.roster) {
+          roster.value[op.operator_id] = {
+            operator_id: op.operator_id,
+            elite: op.elite ?? 0,
+            level: op.level ?? 1,
+            potential: op.potential ?? 1,
+            skill_level: op.skill_level ?? 1,
+            masteries: op.masteries || {},
+            modules: op.modules || {},
+            is_favorite: roster.value[op.operator_id]?.is_favorite || false,
+          }
+        }
+      }
+
+      lastSyncedAt.value = new Date().toISOString()
+      isSynced.value = true
+
+      // If user is authenticated in Supabase, push changes to cloud database
+      try {
+        const client = useSupabaseClient<Database>()
+        const user = useSupabaseUser()
+        if (user.value) {
+          await syncToSupabase()
+        }
+      } catch (err) {
+        // Local mode fallback
+      }
+    }
+
     return {
       // State
       profile,
@@ -383,6 +446,7 @@ export const useUserStore = defineStore(
       clearUserData,
       fetchFromSupabase,
       syncToSupabase,
+      syncFromArkprtsData,
     }
   },
   {

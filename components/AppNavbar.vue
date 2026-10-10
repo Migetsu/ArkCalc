@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useUserStore } from '~/stores/userStore'
+import AccountSyncModal from '~/components/AccountSyncModal.vue'
 
 const userStore = useUserStore()
 const isMobileMenuOpen = ref(false)
+const isSyncModalOpen = ref(false)
 
 const navLinks = [
   {
@@ -77,7 +79,12 @@ const closeMobileMenu = () => {
 
       <!-- User Info & Terminal Status -->
       <div class="ak-navbar__status">
-        <div class="ak-status-card">
+        <button
+          type="button"
+          class="ak-status-card"
+          title="Click to synchronize Arknights account"
+          @click="isSyncModalOpen = true"
+        >
           <div class="ak-status-card__indicator" :class="{ 'ak-status-card__indicator--synced': userStore.isSynced }" />
           <div class="ak-status-card__meta">
             <span class="ak-status-card__name">{{ userStore.profile.username || 'Doctor' }}</span>
@@ -85,7 +92,19 @@ const closeMobileMenu = () => {
               LV.{{ userStore.profile.level || 1 }} [{{ userStore.profile.server || 'EN' }}]
             </span>
           </div>
-        </div>
+        </button>
+
+        <button
+          type="button"
+          class="ak-btn-sync"
+          title="PRTS Account Synchronization"
+          @click="isSyncModalOpen = true"
+        >
+          <svg class="ak-btn-sync__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span class="ak-btn-sync__label">SYNC</span>
+        </button>
 
         <!-- Mobile Menu Toggle Button -->
         <button
@@ -123,6 +142,9 @@ const closeMobileMenu = () => {
         </nav>
       </div>
     </transition>
+
+    <!-- Account Sync Modal -->
+    <AccountSyncModal v-model="isSyncModalOpen" />
   </header>
 </template>
 
@@ -395,6 +417,14 @@ const closeMobileMenu = () => {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   font-family: monospace;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba($ak-cyan, 0.4);
+  }
 
   &__indicator {
     width: 8px;
@@ -424,6 +454,35 @@ const closeMobileMenu = () => {
   &__sub {
     font-size: 0.65rem;
     color: $ak-text-muted;
+  }
+}
+
+// Sync Button
+.ak-btn-sync {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  background: rgba($ak-cyan, 0.12);
+  border: 1px solid rgba($ak-cyan, 0.4);
+  color: $ak-cyan;
+  font-family: monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+
+  &__icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover {
+    background: $ak-cyan;
+    color: #000;
+    box-shadow: 0 0 10px rgba($ak-cyan, 0.5);
   }
 }
 
