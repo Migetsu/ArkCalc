@@ -129,6 +129,33 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // Sign in with Third-party OAuth (Google, Discord)
+  async function signInWithOAuth(provider: 'google' | 'discord'): Promise<{ success: boolean; error?: string }> {
+    isLoading.value = true;
+    syncError.value = null;
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: window.location.origin,
+        },
+      });
+
+      if (error) {
+        syncError.value = error.message;
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      const msg = err?.message || `Ошибка авторизации через ${provider}`;
+      syncError.value = msg;
+      return { success: false, error: msg };
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   // Sign out
   async function signOut(): Promise<void> {
     isLoading.value = true;
@@ -419,6 +446,7 @@ export const useAuthStore = defineStore('auth', () => {
     initAuth,
     signUp,
     signIn,
+    signInWithOAuth,
     signOut,
     saveLanguagePreference,
     savePlanOrderToCloud,

@@ -19,6 +19,7 @@ const EventsView = defineAsyncComponent(() => import('@/components/events/Events
 const SettingsModal = defineAsyncComponent(() => import('@/components/common/SettingsModal.vue'));
 const AuthModal = defineAsyncComponent(() => import('@/components/auth/AuthModal.vue'));
 const GachaPlannerView = defineAsyncComponent(() => import('@/components/gacha/GachaPlannerView.vue'));
+const DpsCalculatorView = defineAsyncComponent(() => import('@/components/dps/DpsCalculatorView.vue'));
 
 import { exportDatabaseToJson } from '@/services/syncService';
 import {
@@ -42,6 +43,7 @@ import {
   Menu,
   Download,
   Sparkles,
+  Swords,
 } from 'lucide-vue-next';
 
 const gameData = useGameDataStore();
@@ -52,13 +54,14 @@ const auth = useAuthStore();
 const locale = useLocaleStore();
 const pwa = usePwaStore();
 
-type TabType = 'operators' | 'roster' | 'inventory' | 'calculator' | 'events' | 'recruitment' | 'wiki' | 'gacha';
+type TabType = 'operators' | 'roster' | 'inventory' | 'calculator' | 'events' | 'recruitment' | 'wiki' | 'gacha' | 'dps';
 const currentTab = ref<TabType>('operators');
 const isSettingsOpen = ref<boolean>(false);
 const isAuthModalOpen = ref<boolean>(false);
 const isDrawerOpen = ref<boolean>(false);
+const dpsSelectedOpId = ref<string>('');
 
-const isSecondaryTabActive = computed(() => ['events', 'roster', 'recruitment', 'wiki', 'gacha'].includes(currentTab.value));
+const isSecondaryTabActive = computed(() => ['events', 'roster', 'recruitment', 'wiki', 'gacha', 'dps'].includes(currentTab.value));
 
 const activeSecondaryTabInfo = computed(() => {
   switch (currentTab.value) {
@@ -72,14 +75,23 @@ const activeSecondaryTabInfo = computed(() => {
       return { id: 'wiki', label: locale.t('nav.wiki'), icon: BookOpen, color: 'text-blue-400', border: 'border-blue-500/40', bg: 'bg-blue-500/10' };
     case 'gacha':
       return { id: 'gacha', label: locale.currentLang === 'ru' ? 'Крутки & Spark' : 'Gacha & Spark', icon: Sparkles, color: 'text-amber-400', border: 'border-amber-500/40', bg: 'bg-amber-500/10' };
+    case 'dps':
+      return { id: 'dps', label: locale.currentLang === 'ru' ? 'Симулятор DPS' : 'DPS Simulator', icon: Swords, color: 'text-cyan-400', border: 'border-cyan-500/40', bg: 'bg-cyan-500/10' };
     default:
       return null;
   }
 });
 
+function openDpsCalculator(opId?: string) {
+  if (opId) {
+    dpsSelectedOpId.value = opId;
+  }
+  selectTab('dps');
+}
+
 function parseHashToTab(): TabType | null {
   const hash = window.location.hash.replace('#', '').toLowerCase();
-  const validTabs: TabType[] = ['operators', 'roster', 'inventory', 'calculator', 'events', 'recruitment', 'wiki', 'gacha'];
+  const validTabs: TabType[] = ['operators', 'roster', 'inventory', 'calculator', 'events', 'recruitment', 'wiki', 'gacha', 'dps'];
   if (validTabs.includes(hash as TabType)) {
     return hash as TabType;
   }
@@ -423,14 +435,19 @@ onUnmounted(() => {
 
       <!-- Active Workspace View -->
       <div v-else class="h-full">
-        <OperatorSelector v-show="currentTab === 'operators'" />
+        <OperatorSelector v-show="currentTab === 'operators'" @open-dps="openDpsCalculator" />
         <RosterView v-show="currentTab === 'roster'" @open-settings="isSettingsOpen = true" />
         <RecruitmentView v-show="currentTab === 'recruitment'" />
         <InventoryGrid v-show="currentTab === 'inventory'" />
         <ResourceSummary v-show="currentTab === 'calculator'" />
         <EventsView v-show="currentTab === 'events'" />
-        <WikiView v-show="currentTab === 'wiki'" />
+        <WikiView v-show="currentTab === 'wiki'" @open-dps="openDpsCalculator" />
         <GachaPlannerView v-show="currentTab === 'gacha'" />
+        <DpsCalculatorView
+          v-show="currentTab === 'dps'"
+          :initial-operator-id="dpsSelectedOpId"
+          @select-operator="(id) => dpsSelectedOpId = id"
+        />
       </div>
     </main>
 
@@ -792,6 +809,32 @@ onUnmounted(() => {
                   </div>
                 </div>
                 <ChevronRight class="w-4 h-4 text-slate-500 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+              </button>
+
+              <!-- Tool 5: Combat DPS Simulator -->
+              <button
+                type="button"
+                class="w-full p-3 rounded-2xl border text-left flex items-center justify-between gap-3 transition-all active:scale-[0.98] group"
+                :class="currentTab === 'dps' ? 'bg-cyan-950/50 border-cyan-500/50 shadow-md ring-1 ring-cyan-500/30' : 'bg-slate-900/70 border-slate-800 hover:border-cyan-500/40 hover:bg-slate-900'"
+                @click="selectTab('dps')"
+              >
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-9 h-9 rounded-xl bg-cyan-950/80 border border-cyan-700/60 flex items-center justify-center text-cyan-400 flex-shrink-0 group-hover:scale-105 transition-transform">
+                    <Swords class="w-4.5 h-4.5" />
+                  </div>
+                  <div class="min-w-0">
+                    <div class="font-bold text-xs text-slate-100 flex items-center gap-2">
+                      <span>{{ locale.currentLang === 'ru' ? 'Симулятор боевого DPS' : 'Combat DPS Simulator' }}</span>
+                      <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 font-bold">
+                        COMBAT
+                      </span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 truncate">
+                      {{ locale.currentLang === 'ru' ? 'Расчет чистого урона, бурстов и графики брони' : 'Damage calculations, burst timings & armor curves' }}
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight class="w-4 h-4 text-slate-500 group-hover:text-cyan-400 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
               </button>
             </div>
 

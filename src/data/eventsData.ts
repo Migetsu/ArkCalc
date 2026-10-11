@@ -62,6 +62,47 @@ export interface ArknightsEvent {
 
 export const ARKNIGHTS_EVENTS: ArknightsEvent[] = [
   {
+    "id": "banner_special_drifter_of_the_depth",
+    "nameEn": "Drifter of the Depth",
+    "nameRu": "Drifter of the Depth",
+    "nameCn": "Drifter of the Depth",
+    "headerTagEn": "[SPECIAL] Drifter of the Depth",
+    "headerTagRu": "[SPECIAL] Drifter of the Depth",
+    "headerTagCn": "[SPECIAL] Drifter of the Depth",
+    "type": "headhunting",
+    "status": "upcoming_global",
+    "bannerPosterUrl": "/banners/banner_special_drifter_of_the_depth.png",
+    "cnStartDate": "2026/10/09",
+    "cnEndDate": "2026/10/23",
+    "globalEstimatedArrival": "2027/03",
+    "sixStarOps": [
+      {
+        "charId": "char_clementia",
+        "name": "Clementia",
+        "rarity": 6,
+        "avatarUrl": "/avatars/avatar_clementia.png"
+      },
+      {
+        "charId": "char_de_toledo",
+        "name": "De Toledo",
+        "rarity": 6,
+        "avatarUrl": "/avatars/avatar_de_toledo.png"
+      },
+      {
+        "charId": "char_firewhistle",
+        "name": "Firewhistle",
+        "rarity": 6,
+        "avatarUrl": "/avatars/avatar_firewhistle.png"
+      }
+    ],
+    "fiveStarOps": [],
+    "shopItems": [],
+    "farmingStages": [],
+    "summaryEn": "Upcoming Drifter of the Depth banner on CN.",
+    "summaryRu": "Будущий баннер Drifter of the Depth на CN сервере.",
+    "summaryCn": "国服最新寻访：Drifter of the Depth"
+  },
+  {
     "id": "banner_standard_headhunting_orienteering_8",
     "nameEn": "Orienteering #8 (Directional Selection)",
     "nameRu": "Orienteering #8 (Выборочный хедхантинг)",

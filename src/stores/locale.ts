@@ -302,6 +302,10 @@ const TRANSLATIONS = {
     'auth.createAccount': 'Create Account',
     'auth.signInBtn': 'Sign In',
     'auth.cloudFooterHint': 'Cloud account allows synchronizing your depot, upgrade plans, and operator roster across PC, smartphone, and tablet.',
+    'auth.orContinueWith': 'Or continue with',
+    'auth.oauthGoogle': 'Google',
+    'auth.oauthDiscord': 'Discord',
+    'auth.oauthRedirecting': 'Redirecting to login...',
 
     // Additional Depot keys
     'depot.onlyNeeded': 'Only needed in plans',
@@ -672,6 +676,10 @@ const TRANSLATIONS = {
     'auth.createAccount': 'Создать аккаунт',
     'auth.signInBtn': 'Войти в аккаунт',
     'auth.cloudFooterHint': 'Облачный аккаунт позволяет синхронизировать склад, планы прокачки и ростер между ПК и смартфоном.',
+    'auth.orContinueWith': 'Или войти через',
+    'auth.oauthGoogle': 'Google',
+    'auth.oauthDiscord': 'Discord',
+    'auth.oauthRedirecting': 'Перенаправление на страницу входа...',
 
     // Additional Depot keys
     'depot.onlyNeeded': 'Только нужные в планах',
