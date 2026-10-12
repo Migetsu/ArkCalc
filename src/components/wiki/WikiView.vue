@@ -23,10 +23,6 @@ const searchQuery = ref('');
 const selectedRarity = ref<number | null>(null);
 const selectedProfession = ref<Profession | null>(null);
 
-const emit = defineEmits<{
-  (e: 'open-dps', opId: string): void;
-}>();
-
 const selectedOperatorForDossier = ref<OperatorSummary | null>(null);
 const isDossierOpen = ref(false);
 
@@ -360,7 +356,6 @@ function getRarityColor(rarity: number) {
       :is-open="isDossierOpen"
       @close="closeDossier"
       @open-plan="openPlanFromDossier"
-      @open-dps="(opId) => emit('open-dps', opId)"
     />
 
     <!-- Plan Editor Modal (if user clicks configure plan from wiki) -->

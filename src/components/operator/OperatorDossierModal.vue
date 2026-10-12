@@ -86,15 +86,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'open-plan', operator: OperatorSummary): void;
-  (e: 'open-dps', opId: string): void;
 }>();
-
-function handleOpenDps() {
-  if (props.operator) {
-    emit('open-dps', props.operator.id);
-    emit('close');
-  }
-}
 
 // ==================== STATE DECLARATIONS ====================
 // Selected outfit identifier: 'default_1', 'default_2', or skin.skinId
@@ -581,16 +573,6 @@ watch(
         </div>
 
         <div class="flex items-center gap-2">
-          <button
-            type="button"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/50 text-cyan-300 hover:text-white font-bold text-xs transition-all shadow-sm active:scale-95"
-            :title="gameData.itemLanguage === 'ru' ? 'Рассчитать DPS в боевом симуляторе' : 'Open in Combat DPS Simulator'"
-            @click="handleOpenDps"
-          >
-            <Swords class="w-3.5 h-3.5 text-cyan-400" />
-            <span class="hidden sm:inline font-mono">{{ gameData.itemLanguage === 'ru' ? 'Симулятор DPS' : 'DPS Simulator' }}</span>
-          </button>
-
           <button
             type="button"
             class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"

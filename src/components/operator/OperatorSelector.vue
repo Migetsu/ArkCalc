@@ -23,10 +23,6 @@ const gameData = useGameDataStore();
 const planner = usePlannerStore();
 const locale = useLocaleStore();
 
-const emit = defineEmits<{
-  (e: 'open-dps', opId: string): void;
-}>();
-
 const searchQuery = ref('');
 const selectedRarity = ref<number | null>(null);
 const selectedProfession = ref<Profession | null>(null);
@@ -401,7 +397,6 @@ function clearFilters() {
       :is-open="isDossierOpen"
       @close="closeDossier"
       @open-plan="openPlanEditor"
-      @open-dps="(opId) => emit('open-dps', opId)"
     />
   </div>
 </template>
